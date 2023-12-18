@@ -43,11 +43,11 @@ jobs:
         make dist-py
       if: ${{ matrix.os == 'ubuntu-latest' }}
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: ./dist/*.tar.gz
       if: ${{ matrix.os == 'ubuntu-latest' }}
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: ./dist/*.whl
