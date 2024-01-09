@@ -1,16 +1,21 @@
 graft airflow_supervisor
-graft airflow_supervisor/tests
 
 include LICENSE
 include README.md
-include CONTRIBUTING.md
 
-include .bumpversion.cfg
-include pyproject.toml
-include Makefile
-
+prune docs
 prune .vscode
 prune .github
+
+prune .pytest_cache
+prune .ruff_cache
+prune .mypy_cache
+
+exclude CONTRIBUTING.md
+exclude .bumpversion.cfg
+exclude pyproject.toml
+exclude Makefile
+
 exclude .gitignore
 exclude .gitattributes
 
