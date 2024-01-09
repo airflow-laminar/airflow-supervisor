@@ -1,27 +1,16 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend="setuptools.build_meta"
+requires = ["hatchling"]
+build-backend="hatchling.build"
 
 [project]
 name = "airflow-supervisor"
-authors = [{name = "Tim Paine", email = "t.paine154@gmail.com"}]
-description="Airflow utilities for running long-running or always-on jobs with supervisord"
+authors = [{name = "the airflow-supervisor authors", email = "3105306+timkpaine@users.noreply.github.com"}]
+description="Supervisor operators and configuration for long-running tasks"
 readme = "README.md"
 license = { text = "Apache-2.0" }
-version = "0.1.0"
-requires-python = ">=3.8"
-keywords = [
-    "airflow",
-    "scheduler",
-    "supervisor",
-    "supervisord",
-    "process",
-    "manager",
-]
-dependencies = [
-    "apache-airflow",
-    "supervisor",
-]
+version = "0.1.2"
+requires-python = ">=3.9"
+keywords = []
 
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -35,43 +24,113 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
 ]
 
+dependencies = [
+    "apache-airflow>=2,<3",
+]
 
 [project.urls]
-Repository = "https://github.com/timkpaine/airflow-supervisor"
-Homepage = "https://github.com/timkpaine/airflow-supervisor"
+Repository = "https://github.com/airflow-laminar/airflow-supervisor"
+Homepage = "https://github.com/airflow-laminar/airflow-supervisor"
 
 [project.optional-dependencies]
 develop = [
-    "bump2version",
+    "build",
+    "bump-my-version",
     "check-manifest",
-    "isort",
+    "hatchling",
     "pytest",
     "pytest-cov",
     "ruff",
     "twine",
     "wheel",
+    # Config
+    "airflow-config>=0.1.2",
+]
+config = [
+    "airflow-config>=0.1.2",
 ]
 
+[project.scripts]
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = true
+tag = false
+
+[[tool.bumpversion.files]]
+filename = "airflow_supervisor/__init__.py"
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
 [tool.check-manifest]
-ignore = []
+ignore = [
+    ".copier-answers.yml",
+    "Makefile",
+    "setup.py",
+    "docs/*/*",
+]
 
-[tool.isort]
-combine_as_imports = true
-include_trailing_comma = true
-line_length = 120
-profile = "black"
+[tool.hatch.build]
+artifacts = []
 
-default_section = "THIRDPARTY"
-sections = "FUTURE,THIRDPARTY,FIRSTPARTY,LOCALFOLDER"
+[tool.hatch.build.sources]
+src = "/"
 
-known_first_party = "airflow_supervisor"
+[tool.hatch.build.targets.sdist]
+include = [
+    "/airflow_supervisor",
+    "LICENSE",
+    "README.md",
+]
+exclude = [
+    "/.github",
+    "/.gitattributes",
+    "/.gitignore",
+    "/docs",
+]
+
+[tool.hatch.build.targets.wheel]
+include = [
+    "/airflow_supervisor",
+]
+exclude = [
+    "/.github",
+    "/.gitattributes",
+    "/.gitignore",
+    "/pyproject.toml",
+    "/docs",
+]
+
+[tool.hatch.build.targets.wheel.shared-data]
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
 testpaths = "airflow_supervisor/tests"
 
 [tool.ruff]
-line-length = 120
+line-length = 150
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.isort]
+combine-as-imports = true
+default-section = "third-party"
+known-first-party = ["airflow_supervisor"]
+section-order = [
+    "future",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401", "F403"]
+
+[tool.yardang]
+title = "airflow-supervisor"
+root = "README.md"
+pages = ["docs/src/API.md"]
+use-autoapi = false
