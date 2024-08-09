@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+*.dll
 
 # Distribution / packaging
 .Python
@@ -125,9 +126,12 @@ dmypy.json
 
 # Documentation
 docs/_build/
+docs/src/_build/
 /site
 docs/api
 docs/index.md
+docs/html
+index.md
 _template/labextension
 
 # Jupyter
@@ -136,3 +140,6 @@ _template/labextension
 
 # Mac
 .DS_Store
+
+# Rust
+target

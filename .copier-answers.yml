@@ -1,0 +1,10 @@
+# Changes here will be overwritten by Copier
+_commit: acb4a69
+_src_path: ../../templates/base
+add_extension: python
+email: 3105306+timkpaine@users.noreply.github.com
+github: airflow-laminar
+project_description: Supervisor operators and configuration for long-running tasks
+project_name: airflow-supervisor
+python_version_primary: '3.11'
+team: the airflow-supervisor authors
