@@ -4,5 +4,6 @@
 .. autosummary::
    :toctree: _build
 
-    airflow_supervisor
+    airflow_supervisor.config
+    airflow_supervisor.daggen
 ```
