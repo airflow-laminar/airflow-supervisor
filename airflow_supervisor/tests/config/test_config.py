@@ -5,19 +5,16 @@ from unittest.mock import patch
 from pydantic import ValidationError
 from pytest import raises
 
-from airflow_supervisor import (
-    EventListenerConfiguration,
-    FcgiProgramConfiguration,
-    GroupConfiguration,
-    IncludeConfiguration,
-    InetHttpServerConfiguration,
-    ProgramConfiguration,
-    RpcInterfaceConfiguration,
-    SupervisorConfiguration,
-    SupervisorctlConfiguration,
-    SupervisordConfiguration,
-    UnixHttpServerConfiguration,
-)
+from airflow_supervisor import (EventListenerConfiguration,
+                                FcgiProgramConfiguration, GroupConfiguration,
+                                IncludeConfiguration,
+                                InetHttpServerConfiguration,
+                                ProgramConfiguration,
+                                RpcInterfaceConfiguration,
+                                SupervisorConfiguration,
+                                SupervisorctlConfiguration,
+                                SupervisordConfiguration,
+                                UnixHttpServerConfiguration)
 from airflow_supervisor.config import _generate_supervisor_config_path
 
 

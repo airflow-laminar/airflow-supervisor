@@ -5,7 +5,8 @@ from pathlib import Path
 from tempfile import gettempdir
 from typing import Any, Callable, Dict, List, Literal, Optional
 
-from pydantic import AnyUrl, BaseModel, Field, SecretStr, field_serializer, field_validator
+from pydantic import (AnyUrl, BaseModel, Field, SecretStr, field_serializer,
+                      field_validator)
 from pydantic.functional_validators import AfterValidator
 from typing_extensions import Annotated
 
