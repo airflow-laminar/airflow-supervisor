@@ -1,5 +1,4 @@
 from .common import SupervisorClientBase
 
 
-class SupervisorRemoteXMLRPCClient(SupervisorClientBase):
-    ...
+class SupervisorRemoteXMLRPCClient(SupervisorClientBase): ...

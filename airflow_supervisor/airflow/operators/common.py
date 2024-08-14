@@ -1,6 +1,4 @@
 from airflow.models.operator import BaseOperator
 
 
-class SupervisorOperator(BaseOperator):
-    ...
-
+class SupervisorOperator(BaseOperator): ...

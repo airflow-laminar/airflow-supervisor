@@ -1,5 +1,4 @@
 from typing import List, Optional, Union
-from xmlrpc.client import ServerProxy
 
 from airflow.providers.ssh.hooks.ssh import SSHHook
 

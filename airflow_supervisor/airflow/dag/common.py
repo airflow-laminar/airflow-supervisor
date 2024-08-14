@@ -1,5 +1,3 @@
-from typing import TYPE_CHECKING, List, Optional, Union
-
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 

@@ -26,6 +26,11 @@ classifiers = [
 
 dependencies = [
     "apache-airflow>=2,<3",
+    "colorlog",
+    "hydra-core",
+    "jinja2",
+    "omegaconf",
+    "pydantic>=2",
 ]
 
 [project.urls]
