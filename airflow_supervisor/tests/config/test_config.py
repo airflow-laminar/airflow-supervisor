@@ -43,7 +43,7 @@ def test_inst():
 
 def test_cfg():
     c = SupervisorConfiguration(program={"test": ProgramConfiguration(command="test")})
-    assert c.to_cfg().strip() == "[program:test]\ncommand=test"
+    assert c.to_cfg().strip() == "[supervisord]\n\n[program:test]\ncommand=test"
 
 
 def test_cfg_all():
@@ -63,7 +63,7 @@ def test_cfg_all():
         group={"testgroup": GroupConfiguration(programs=["test"])},
         fcgiprogram={"testfcgi": FcgiProgramConfiguration(command="echo 'test'", socket="test")},
         eventlistener={"testeventlistener": EventListenerConfiguration(command="echo 'test'")},
-        rpcinterface={"testrpcinterface": RpcInterfaceConfiguration(supervisor_rpcinterface_factory="a.test.module")},
+        rpcinterface={"testrpcinterface": RpcInterfaceConfiguration(rpcinterface_factory="a.test.module")},
     )
     print(c.to_cfg().strip())
     assert (
@@ -104,5 +104,5 @@ socket=test
 command=echo 'test'
 
 [rpcinterface:testrpcinterface]
-supervisor_rpcinterface_factory=a.test.module"""
+supervisor.rpcinterface_factory=a.test.module"""
     )

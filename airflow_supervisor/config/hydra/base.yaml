@@ -2,6 +2,7 @@
 
 defaults:
   # https://hydra.cc/docs/configure_hydra/logging/
+  - supervisord/default
   - override hydra/job_logging: custom
   - override hydra/hydra_logging: custom
   - _self_
@@ -9,7 +10,6 @@ defaults:
 _target_: airflow_supervisor.SupervisorConfiguration
 unix_http_server:
 inet_http_server:
-supervisord:
 supervisorctl:
 include:
 program:

@@ -59,7 +59,7 @@ class SupervisorConfiguration(BaseModel):
     # supervisor setup
     unix_http_server: Optional[UnixHttpServerConfiguration] = Field(default=None)
     inet_http_server: Optional[InetHttpServerConfiguration] = Field(default=None)
-    supervisord: Optional[SupervisordConfiguration] = Field(default=None)
+    supervisord: SupervisordConfiguration = Field(default=SupervisordConfiguration())
     supervisorctl: Optional[SupervisorctlConfiguration] = Field(default=None)
     include: Optional[IncludeConfiguration] = Field(default=None)
 
