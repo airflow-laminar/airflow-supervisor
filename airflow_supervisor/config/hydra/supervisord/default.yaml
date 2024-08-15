@@ -1,0 +1,3 @@
+# @package _global_
+supervisord:
+  _target_: airflow_supervisor.SupervisordConfiguration

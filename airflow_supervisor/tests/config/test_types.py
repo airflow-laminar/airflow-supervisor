@@ -1,6 +1,6 @@
 from pytest import raises
 
-from airflow_supervisor.config import _is_octal, _is_username, _is_username_or_usernamegroup
+from airflow_supervisor.config.base import _is_octal, _is_username, _is_username_or_usernamegroup
 
 
 def test_is_octal():
