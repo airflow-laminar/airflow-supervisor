@@ -183,7 +183,7 @@
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
       </div>
-      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
         <div class="visually-hidden">Toggle table of contents sidebar</div>
         <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
       </label>
@@ -244,7 +244,7 @@
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
           </div>
-          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
             <div class="visually-hidden">Toggle table of contents sidebar</div>
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
@@ -257,6 +257,18 @@
 <a class="reference external" href="https://codecov.io/gh/timkpaine/airflow-supervisor"><img alt="codecov" src="https://codecov.io/gh/timkpaine/airflow-supervisor/branch/main/graph/badge.svg" /></a>
 <a class="reference external" href="https://github.com/timkpaine/airflow-supervisor"><img alt="License" src="https://img.shields.io/github/license/timkpaine/airflow-supervisor" /></a>
 <a class="reference external" href="https://pypi.python.org/pypi/airflow-supervisor"><img alt="PyPI" src="https://img.shields.io/pypi/v/airflow-supervisor.svg" /></a></p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>This library provides a configuration-driven way of generating <a class="reference external" href="http://supervisord.org">supervisor</a> configurations and airflow <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html">operators</a>/<a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html">sensors</a> for long-running or always-on jobs. Configuration is managed by <a class="reference external" href="https://pydantic.dev">Pydantic</a>, <a class="reference external" href="https://hydra.cc">Hydra</a>, and <a class="reference external" href="https://omegaconf.readthedocs.io/">OmegaConf</a>.</p>
+</section>
+<section id="how-to-use-in-airflow">
+<h2>How To: Use in Airflow<a class="headerlink" href="#how-to-use-in-airflow" title="Link to this heading">¶</a></h2>
+<p>Docs coming soon!</p>
+</section>
+<section id="how-to-use-as-a-standalone-supervisord-frontend">
+<h2>How To: Use as a standalone supervisord frontend<a class="headerlink" href="#how-to-use-as-a-standalone-supervisord-frontend" title="Link to this heading">¶</a></h2>
+<p>This library can be used outside airflow as a generic supervisord configuration framework, with the static typing benefits that entails. For an example, look at the <a class="reference download internal" download="" href="_downloads/4ee16d3236381c91a180104ac3c7abf2/test_hydra.py"><span class="xref download myst">hydra configuration test</span></a>. This example generates a supervisor configuration file by composing independent hydra configs.</p>
+</section>
 </section>
 
         </article>
@@ -284,8 +296,29 @@
         
       </footer>
     </div>
-    <aside class="toc-drawer no-toc">
+    <aside class="toc-drawer">
       
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">airflow-supervisor</a><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#how-to-use-in-airflow">How To: Use in Airflow</a></li>
+<li><a class="reference internal" href="#how-to-use-as-a-standalone-supervisord-frontend">How To: Use as a standalone supervisord frontend</a></li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
       
       
     </aside>
