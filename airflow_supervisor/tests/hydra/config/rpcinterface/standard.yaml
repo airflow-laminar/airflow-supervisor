@@ -1,0 +1,2 @@
+supervisor:
+  rpcinterface_factory: supervisor.rpcinterface:make_main_rpcinterface

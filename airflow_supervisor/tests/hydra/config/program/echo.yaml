@@ -1,4 +1,3 @@
-# program:
-test:
+echo:
   _target_: airflow_supervisor.ProgramConfiguration
   command: echo
