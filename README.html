@@ -263,10 +263,29 @@
 </section>
 <section id="how-to-use-in-airflow">
 <h2>How To: Use in Airflow<a class="headerlink" href="#how-to-use-in-airflow" title="Link to this heading">¶</a></h2>
-<p>Docs coming soon!</p>
+<p><code class="docutils literal notranslate"><span class="pre">airflow-supervisor</span></code> can be installed in your airflow server environment and imported in your dag files. It provides two convenient top level DAG subclasses:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SupervisorLocal</span></code>: creates a DAG representing a local supervisor instance running on the airflow worker node (underlying task will use <code class="docutils literal notranslate"><span class="pre">PythonOperator</span></code> and <code class="docutils literal notranslate"><span class="pre">BashOperator</span></code> to communicate between airflow and supervisor)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SupervisorRemote</span></code>: creates a DAG representing a remote supervisor instance running on another machine (underlying tasks will use <code class="docutils literal notranslate"><span class="pre">SSHOperator</span></code> to communicate between airflow and supervisor)</p></li>
+</ul>
+<p>We expose DAGs composed of a variety of tasks and sensors, which are exposed as a discrete pipeline of steps:</p>
+<ol class="arabic simple">
+<li><p>Setup <code class="docutils literal notranslate"><span class="pre">supervisord</span></code> configuration</p></li>
+<li><p>Start the <code class="docutils literal notranslate"><span class="pre">supervisord</span></code> daemon</p></li>
+<li><p>Start the supervised programs with <code class="docutils literal notranslate"><span class="pre">supervisorctl</span></code></p></li>
+<li><p>Start sensors to query the programs’ state via <a class="reference external" href="http://supervisord.org/api.html">supervisor’s XML-RPC API</a></p></li>
+<li><p>Evaluate and take action according to the program’s state changes</p></li>
+<li><p>Restart programs if necessary</p></li>
+<li><p>Tear down the sensors from (4)</p></li>
+<li><p>Stop the supervised programs from (3)</p></li>
+<li><p>Stop the <code class="docutils literal notranslate"><span class="pre">supervisord</span></code> daemon from (2)</p></li>
+<li><p>Remove configuration from (1)</p></li>
+</ol>
+<p>This setup provides maximal configureability with a minimal requirements on the machine (for example, no requirements on an existing <code class="docutils literal notranslate"><span class="pre">supervisord</span></code> daemon via e.g. <code class="docutils literal notranslate"><span class="pre">systemd</span></code>). It also lets you hook your own tasks into any step of the process. For example, if we detect a process has died in step (5), you could configure your own task to take some custom action before/instead of the default restart of step 6.</p>
+<p>More docs and code examples coming soon!</p>
 </section>
-<section id="how-to-use-as-a-standalone-supervisord-frontend">
-<h2>How To: Use as a standalone supervisord frontend<a class="headerlink" href="#how-to-use-as-a-standalone-supervisord-frontend" title="Link to this heading">¶</a></h2>
+<section id="how-to-use-as-a-supervisord-configuration-frontend">
+<h2>How To: Use as a supervisord configuration frontend<a class="headerlink" href="#how-to-use-as-a-supervisord-configuration-frontend" title="Link to this heading">¶</a></h2>
 <p>This library can be used outside airflow as a generic supervisord configuration framework, with the static typing benefits that entails. For an example, look at the <a class="reference download internal" download="" href="_downloads/4ee16d3236381c91a180104ac3c7abf2/test_hydra.py"><span class="xref download myst">hydra configuration test</span></a>. This example generates a supervisor configuration file by composing independent hydra configs.</p>
 </section>
 </section>
@@ -311,7 +330,7 @@
 <li><a class="reference internal" href="#">airflow-supervisor</a><ul>
 <li><a class="reference internal" href="#overview">Overview</a></li>
 <li><a class="reference internal" href="#how-to-use-in-airflow">How To: Use in Airflow</a></li>
-<li><a class="reference internal" href="#how-to-use-as-a-standalone-supervisord-frontend">How To: Use as a standalone supervisord frontend</a></li>
+<li><a class="reference internal" href="#how-to-use-as-a-supervisord-configuration-frontend">How To: Use as a supervisord configuration frontend</a></li>
 </ul>
 </li>
 </ul>
