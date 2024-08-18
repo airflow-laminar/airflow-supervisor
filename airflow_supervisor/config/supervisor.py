@@ -1,5 +1,5 @@
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from subprocess import Popen
 from tempfile import gettempdir
@@ -32,7 +32,7 @@ __all__ = (
 
 
 def _generate_supervisor_config_path() -> Path:
-    return Path(gettempdir()).resolve() / f"supervisor-{datetime.now(UTC).strftime('%Y-%m-%dT%H:%M:%S')}"
+    return Path(gettempdir()).resolve() / f"supervisor-{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')}"
 
 
 class SupervisorConfiguration(BaseModel):
