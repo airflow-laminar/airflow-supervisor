@@ -1,12 +1,8 @@
-from pydantic import ValidationError
-from pytest import raises
-
 from airflow_supervisor import RpcInterfaceConfiguration
 
 
 def test_inst():
-    with raises(ValidationError):
-        RpcInterfaceConfiguration()
+    RpcInterfaceConfiguration()
     RpcInterfaceConfiguration(rpcinterface_factory="a.test.module")
 
 

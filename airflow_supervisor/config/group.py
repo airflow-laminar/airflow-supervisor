@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from pydantic import Field, field_serializer
+
 from .base import _BaseCfgModel
 
 __all__ = ("GroupConfiguration",)

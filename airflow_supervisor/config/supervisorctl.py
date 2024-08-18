@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import AnyUrl, Field, SecretStr, field_serializer
-from .base import _BaseCfgModel, UnixUserName
+
+from .base import UnixUserName, _BaseCfgModel
 
 __all__ = ("SupervisorctlConfiguration",)
 

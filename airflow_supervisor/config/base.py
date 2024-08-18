@@ -34,10 +34,17 @@ def _is_username_or_usernamegroup(v: str) -> str:
     return v
 
 
+def _is_host_port(v: str) -> str:
+    splits = v.split(":")
+    assert 0 < int(splits[1]) < 65_535
+    return v
+
+
 Octal = Annotated[str, AfterValidator(_is_octal(4))]
 OctalUmask = Annotated[str, AfterValidator(_is_octal(3))]
 UnixUserNameOrGroup = Annotated[str, AfterValidator(_is_username_or_usernamegroup)]
 UnixUserName = Annotated[str, AfterValidator(_is_username)]
+HostPort = Annotated[str, AfterValidator(_is_host_port)]
 LogLevel = Literal["critical", "error", "warn", "info", "debug", "trace", "blather"]
 Signal = Literal["TERM", "HUP", "INT", "QUIT", "KILL", "USR1", "USR2"]
 EventType = Literal[
@@ -68,6 +75,7 @@ EventType = Literal[
     "PROCESS_GROUP_ADDED",
     "PROCESS_GROUP_REMOVED",
 ]
+SupervisorLocation = Literal["local", "remote"]
 
 
 class _BaseCfgModel(BaseModel):
@@ -76,6 +84,9 @@ class _BaseCfgModel(BaseModel):
         # round trip to json so we're fully
         # cfg-compatible
         for k, v in loads(self.model_dump_json()).items():
-            if v:
-                ret += f"\n{k}={v}"
+            if v is not None:
+                if isinstance(v, bool):
+                    ret += f"\n{k}={str(v).lower()}"
+                else:
+                    ret += f"\n{k}={v}"
         return ret.strip() + "\n"

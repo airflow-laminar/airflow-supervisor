@@ -1,8 +1,9 @@
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional, Union
 
 from pydantic import Field, field_serializer
-from .base import _BaseCfgModel, Signal, UnixUserName, OctalUmask
+
+from .base import OctalUmask, Signal, UnixUserName, _BaseCfgModel
 
 __all__ = ("ProgramConfiguration",)
 
@@ -39,7 +40,7 @@ class ProgramConfiguration(_BaseCfgModel):
         default=None,
         description="The number of serial failure attempts that supervisord will allow when attempting to start the program before giving up and putting the process into an FATAL state. After each failed restart, process will be put in BACKOFF state and each retry attempt will take increasingly more time.",
     )
-    autorestart: Optional[str] = Field(
+    autorestart: Optional[Union[bool, Literal["unexpected"]]] = Field(
         default=None,
         description="Specifies if supervisord should automatically restart a process if it exits when it is in the RUNNING state. May be one of false, unexpected, or true. If false, the process will not be autorestarted. If unexpected, the process will be restarted when the program exits with an exit code that is not one of the exit codes associated with this process’ configuration (see exitcodes). If true, the process will be unconditionally restarted when it exits, without regard to its exit code. autorestart controls whether supervisord will autorestart a program if it exits after it has successfully started up (the process is in the RUNNING state). supervisord has a different restart mechanism for when the process is starting up (the process is in the STARTING state). Retries during process startup are controlled by startsecs and startretries.",
     )
@@ -129,5 +130,13 @@ class ProgramConfiguration(_BaseCfgModel):
     @field_serializer("exitcodes", when_used="json")
     def _dump_exitcodes(self, v):
         if v:
-            return ",".join(v)
+            return ",".join(str(_) for _ in v)
+        return None
+
+    @field_serializer("autorestart", when_used="json")
+    def _dump_autorestart(self, v):
+        if isinstance(v, bool):
+            return str(v).lower()
+        elif isinstance(v, str):
+            return v.lower()
         return None
