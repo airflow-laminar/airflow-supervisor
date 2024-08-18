@@ -50,6 +50,8 @@ develop = [
     "wheel",
     # Config
     "airflow-config>=0.1.2",
+    # NOTE: this is not a runtime dep as supervisord need not be installed locally
+    "supervisor",
 ]
 config = [
     "airflow-config>=0.1.2",

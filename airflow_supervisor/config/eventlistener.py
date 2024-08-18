@@ -1,5 +1,7 @@
 from typing import List, Optional
+
 from pydantic import Field, field_serializer, field_validator
+
 from .base import EventType
 from .program import ProgramConfiguration
 

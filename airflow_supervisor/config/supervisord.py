@@ -1,7 +1,9 @@
 from pathlib import Path
 from typing import Optional
+
 from pydantic import Field, field_serializer
-from .base import _BaseCfgModel, LogLevel, OctalUmask, UnixUserName
+
+from .base import LogLevel, OctalUmask, UnixUserName, _BaseCfgModel
 
 __all__ = ("SupervisordConfiguration",)
 

@@ -1,7 +1,8 @@
 from typing import Optional
 
 from pydantic import Field
-from .base import UnixUserNameOrGroup, Octal
+
+from .base import Octal, UnixUserNameOrGroup
 from .program import ProgramConfiguration
 
 __all__ = ("FcgiProgramConfiguration",)

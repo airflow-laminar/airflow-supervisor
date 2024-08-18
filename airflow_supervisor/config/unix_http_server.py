@@ -2,7 +2,8 @@ from pathlib import Path
 from typing import Optional
 
 from pydantic import Field, SecretStr, field_serializer
-from .base import _BaseCfgModel, Octal, UnixUserNameOrGroup, UnixUserName
+
+from .base import Octal, UnixUserName, UnixUserNameOrGroup, _BaseCfgModel
 
 __all__ = ("UnixHttpServerConfiguration",)
 

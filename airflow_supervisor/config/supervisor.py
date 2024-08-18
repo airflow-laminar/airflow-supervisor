@@ -1,12 +1,17 @@
 import os
 from datetime import UTC, datetime
 from pathlib import Path
+from subprocess import Popen
 from tempfile import gettempdir
 from typing import Dict, Optional
 
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
+
+from ..exceptions import ConfigNotFoundError
+from ..utils import _get_calling_dag
+from .airflow import AirflowConfiguration
 from .eventlistener import EventListenerConfiguration
 from .fcgiprogram import FcgiProgramConfiguration
 from .group import GroupConfiguration
@@ -17,13 +22,12 @@ from .rpcinterface import RpcInterfaceConfiguration
 from .supervisorctl import SupervisorctlConfiguration
 from .supervisord import SupervisordConfiguration
 from .unix_http_server import UnixHttpServerConfiguration
-from ..exceptions import ConfigNotFoundError
-from ..utils import _get_calling_dag
-
 
 __all__ = (
     "SupervisorConfiguration",
+    "SupervisorAirflowConfiguration",
     "load_config",
+    "load_airflow_config",
 )
 
 
@@ -73,8 +77,11 @@ class SupervisorConfiguration(BaseModel):
     # other configuration
     path: Optional[Path] = Field(default_factory=_generate_supervisor_config_path, description="Path to supervisor configuration")
 
-    @staticmethod
-    def _find_parent_config_folder(config_dir: str = "config", config_name: str = "", *, basepath: str = "", _offset: int = 2):
+    # internal/testing
+    _supervisor_process: Optional[Popen] = PrivateAttr(default=None)
+
+    @classmethod
+    def _find_parent_config_folder(cls, config_dir: str = "config", config_name: str = "", *, basepath: str = "", _offset: int = 2):
         if basepath:
             if basepath.endswith((".py", ".cfg", ".yml", ".yaml")):
                 calling_dag = Path(basepath)
@@ -105,8 +112,9 @@ class SupervisorConfiguration(BaseModel):
             return folder.resolve(), config_dir, (folder / config_dir / f"{config_name}.yml").resolve()
         return folder.resolve(), config_dir, (folder / config_dir / f"{config_name}.yaml").resolve()
 
-    @staticmethod
+    @classmethod
     def load(
+        cls: "SupervisorConfiguration",
         config_dir: str = "config",
         config_name: str = "",
         overrides: Optional[list[str]] = None,
@@ -118,7 +126,7 @@ class SupervisorConfiguration(BaseModel):
 
         with initialize_config_dir(config_dir=str(Path(__file__).resolve().parent / "hydra"), version_base=None):
             if config_dir:
-                hydra_folder, config_dir, _ = SupervisorConfiguration._find_parent_config_folder(
+                hydra_folder, config_dir, _ = cls._find_parent_config_folder(
                     config_dir=config_dir, config_name=config_name, basepath=basepath, _offset=_offset
                 )
 
@@ -133,9 +141,60 @@ class SupervisorConfiguration(BaseModel):
             cfg = compose(config_name="base", overrides=overrides)
             config = instantiate(cfg)
 
-            if not isinstance(config, SupervisorConfiguration):
-                config = SupervisorConfiguration(**config)
+            if not isinstance(config, cls):
+                if issubclass(cls, type(config)):
+                    config = config.model_dump()
+                config = cls(**config)
             return config
+
+    def _get_supervisor_instance(self) -> Popen:
+        if self._supervisor_process and self._supervisor_process.poll() is not None:
+            return self._supervisor_process
+        self.path.write_text(self.to_cfg())
+        self._supervisor_process = Popen(["supervisord", "-n", "-c", str(self.path)])
+        return self._supervisor_process
+
+    def _kill_supervisor_instance(self) -> None:
+        if self._supervisor_process and self._supervisor_process.poll() is not None:
+            self._supervisor_process.kill()
+            self._supervisor_process = None
+
+
+class SupervisorAirflowConfiguration(SupervisorConfiguration):
+    airflow: AirflowConfiguration = Field(default_factory=AirflowConfiguration, description="Required configurations for Airflow integration")
+
+    @model_validator(mode="after")
+    def _setup_airflow_defaults(self):
+        """Method to overload configuration with values needed for the setup
+        of airflow tasks that we construct"""
+        # inet_http_server
+        if not self.inet_http_server:
+            self.inet_http_server = InetHttpServerConfiguration()
+
+        self.inet_http_server.port = self.airflow.port
+        self.inet_http_server.username = self.airflow.username
+        self.inet_http_server.password = self.airflow.password
+
+        # rpcinterface
+        if not self.rpcinterface:
+            self.rpcinterface = {"supervisor": RpcInterfaceConfiguration()}
+        self.rpcinterface["supervisor"].rpcinterface_factory = self.airflow.rpcinterface_factory
+
+        # supervisord
+        self.supervisord.nodaemon = True
+        self.supervisord.identifier = "supervisor"
+
+        # programs
+        for config in self.program.values():
+            config.autostart = False
+            config.autorestart = False
+            config.startsecs = self.airflow.startsecs
+            config.startretries = self.airflow.startretries
+            config.exitcodes = self.airflow.exitcodes
+            config.stopsignal = self.airflow.stopsignal
+            config.stopwaitsecs = self.airflow.stopwaitsecs
+        return self
 
 
 load_config = SupervisorConfiguration.load
+load_airflow_config = SupervisorAirflowConfiguration.load
