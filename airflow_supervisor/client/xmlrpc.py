@@ -20,12 +20,13 @@ class State(Enum):
     FATAL = 200
     UNKNOWN = 1000
 
-    def __init__(self, code: int) -> "State":
+    @classmethod
+    def _missing_(cls, code):
         if isinstance(code, str):
-            return getattr(self.__class__, code)
+            return getattr(cls, code)
         if code not in (0, 10, 20, 30, 40, 100, 200):
             return super().__init__(1000)
-        return super().__init__(code)
+        raise ValueError(code)
 
 
 class SupervisorState(Enum):
@@ -34,10 +35,11 @@ class SupervisorState(Enum):
     RESTARTING = 0
     SHUTDOWN = -1
 
-    def __init__(self, code: int) -> "SupervisorState":
+    @classmethod
+    def _missing_(cls, code):
         if isinstance(code, str):
-            return getattr(self.__class__, code)
-        return super().__init__(code)
+            return getattr(cls, code)
+        raise ValueError(code)
 
 
 class SupervisorMethodResult(Enum):
