@@ -31,10 +31,6 @@ __all__ = (
 )
 
 
-def _generate_supervisor_config_path() -> Path:
-    return Path(gettempdir()).resolve() / f"supervisor-{datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%S')}"
-
-
 class SupervisorConfiguration(BaseModel):
     def to_cfg(self) -> str:
         ret = ""
@@ -75,10 +71,29 @@ class SupervisorConfiguration(BaseModel):
     rpcinterface: Optional[Dict[str, RpcInterfaceConfiguration]] = Field(default=None)
 
     # other configuration
-    path: Optional[Path] = Field(default_factory=_generate_supervisor_config_path, description="Path to supervisor configuration")
+    config_path: Optional[Path] = Field(default="", description="Path to supervisor configuration file")
+    working_dir: Optional[Path] = Field(default="", description="Path to supervisor working directory")
 
     # internal/testing
     _supervisor_process: Optional[Popen] = PrivateAttr(default=None)
+
+    @model_validator(mode="after")
+    def _setup_config_and_working_dir(self):
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        tempdir = Path(gettempdir()).resolve()
+
+        if self.working_dir == "":
+            self.working_dir = tempdir / f"supervisor-{now}"
+            using_default_working_dir = True
+        else:
+            using_default_working_dir = False
+
+        if self.config_path == "":
+            if using_default_working_dir:
+                self.config_path = self.working_dir / "supervisor.cfg"
+            else:
+                self.config_path = self.working_dir / f"supervisor-{now}.cfg"
+        return self
 
     @classmethod
     def _find_parent_config_folder(cls, config_dir: str = "config", config_name: str = "", *, basepath: str = "", _offset: int = 2):
@@ -150,8 +165,9 @@ class SupervisorConfiguration(BaseModel):
     def _get_supervisor_instance(self) -> Popen:
         if self._supervisor_process and self._supervisor_process.poll() is not None:
             return self._supervisor_process
-        self.path.write_text(self.to_cfg())
-        self._supervisor_process = Popen(["supervisord", "-n", "-c", str(self.path)])
+        self.working_dir.mkdir(parents=True, exist_ok=True)
+        self.config_path.write_text(self.to_cfg())
+        self._supervisor_process = Popen(["supervisord", "-n", "-c", str(self.config_path)])
         return self._supervisor_process
 
     def _kill_supervisor_instance(self) -> None:

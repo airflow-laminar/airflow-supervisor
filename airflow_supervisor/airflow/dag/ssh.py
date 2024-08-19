@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Union
 
 from airflow.models.operator import Operator
+from airflow.operators.python import PythonOperator
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.ssh.operators.ssh import SSHOperator
 
@@ -10,6 +11,8 @@ from .common import SupervisorCommon, _SupervisorTaskStep
 
 
 class SupervisorRemote(SupervisorCommon):
+    _base_prefix = "supervisor-remote"
+
     # Mimic SSH Operator: https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/_api/airflow/providers/ssh/operators/ssh/index.html
     def __init__(
         self,
@@ -46,8 +49,7 @@ class SupervisorRemote(SupervisorCommon):
             self._ssh_operator_kwargs["banner_timeout"] = banner_timeout
         if skip_on_exit_code:
             self._ssh_operator_kwargs["skip_on_exit_code"] = skip_on_exit_code
-        super().__init__(supervisor_cfg=supervisor_cfg, **kwargs)
-        self._supervisor_cfg = supervisor_cfg
+        super().__init__(supervisor_cfg=supervisor_cfg, _airflow_supervisor_offset=2, **kwargs)
 
     def get_base_operator_kwargs(self) -> Dict:
         return dict(dag=self, **self._ssh_operator_kwargs)
@@ -56,4 +58,8 @@ class SupervisorRemote(SupervisorCommon):
         return dict(command=f"{self._command_prefix}")
 
     def get_step_operator(self, step: _SupervisorTaskStep) -> Operator:
-        return SSHOperator(**{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)})
+        if step in ("configure-supervisor", "start-supervisor", "unconfigure-supervisor", "force-kill"):
+            # These steps use the SSHOperator
+            return SSHOperator(**{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)})
+        # Other steps can go via PythonOperator and the XMLRPC API
+        return PythonOperator(**{"task_id": f"{self.dag_id}-{step}", **super().get_base_operator_kwargs(), **super().get_step_kwargs(step)})
