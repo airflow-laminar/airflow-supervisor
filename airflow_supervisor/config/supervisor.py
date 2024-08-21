@@ -83,7 +83,13 @@ class SupervisorConfiguration(BaseModel):
         tempdir = Path(gettempdir()).resolve()
 
         if self.working_dir == "":
-            self.working_dir = tempdir / f"supervisor-{now}"
+            if self.supervisord.directory:
+                # use this as the dir
+                self.working_dir = self.supervisord.directory
+            else:
+                self.working_dir = tempdir / f"supervisor-{now}"
+                self.working_dir.mkdir(parents=True, exist_ok=True)
+                self.supervisord.directory = self.working_dir
             using_default_working_dir = True
         else:
             using_default_working_dir = False
@@ -93,6 +99,11 @@ class SupervisorConfiguration(BaseModel):
                 self.config_path = self.working_dir / "supervisor.cfg"
             else:
                 self.config_path = self.working_dir / f"supervisor-{now}.cfg"
+
+        for name, program_config in self.program.items():
+            if program_config.directory is None:
+                program_config.directory = self.working_dir / name
+                program_config.directory.mkdir(exist_ok=True)
         return self
 
     @classmethod
