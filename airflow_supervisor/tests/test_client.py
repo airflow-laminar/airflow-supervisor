@@ -29,10 +29,10 @@ def supervisor_instance(open_port):
                 )
             },
         )
-        cfg._get_supervisor_instance()
+        cfg.start(daemon=False)
         sleep(3)
         yield cfg
-        cfg._kill_supervisor_instance()
+        cfg.kill()
 
 
 def test_supervisor_client(supervisor_instance):

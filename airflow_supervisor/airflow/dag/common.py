@@ -268,6 +268,7 @@ class SupervisorCommon(DAG):
 
             def _configure_supervisor(supervisor_cfg=self._supervisor_cfg, *args, **kwargs):
                 # write supervisor config to filesystem
+                self._clent
                 Path(supervisor_cfg.path).write_text(supervisor_cfg.to_cfg())
         elif step == "start-supervisor":
 
