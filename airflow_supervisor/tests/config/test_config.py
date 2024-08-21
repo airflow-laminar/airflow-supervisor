@@ -38,8 +38,16 @@ def test_cfg():
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)
         c = SupervisorConfiguration(program={"test": ProgramConfiguration(command="test")})
-        assert c.to_cfg().strip() == "[supervisord]\ndirectory={dir}\n\n[program:test]\ncommand=test\ndirectory={dir}/test".format(
-            dir=str(pth / "supervisor-2000-01-01T00:00:00")
+        assert (
+            c.to_cfg().strip()
+            == """[supervisord]
+logfile={dir}/supervisord.log
+pidfile={dir}/supervisord.pid
+directory={dir}
+
+[program:test]
+command=test
+directory={dir}/test""".format(dir=str(pth / "supervisor-2000-01-01T00:00:00"))
         )
 
 
@@ -82,6 +90,8 @@ username=test
 password=testpw
 
 [supervisord]
+logfile={dir}/supervisord.log
+pidfile={dir}/supervisord.pid
 directory={dir}
 
 [supervisorctl]

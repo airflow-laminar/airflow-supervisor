@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timezone
 from pathlib import Path
+from signal import SIGTERM
 from subprocess import Popen
 from tempfile import gettempdir
 from typing import Dict, Optional
@@ -89,7 +90,17 @@ class SupervisorConfiguration(BaseModel):
             else:
                 self.working_dir = tempdir / f"supervisor-{now}"
                 self.supervisord.directory = self.working_dir
+
+            # force pidfile to be in working dir if not otherwise set
+            if not self.supervisord.pidfile:
+                self.supervisord.pidfile = self.working_dir / "supervisord.pid"
+
+            # force logfile to be in working dir if not otherwise set
+            if not self.supervisord.logfile:
+                self.supervisord.logfile = self.working_dir / "supervisord.log"
+
             using_default_working_dir = True
+
         else:
             using_default_working_dir = False
 
@@ -171,27 +182,34 @@ class SupervisorConfiguration(BaseModel):
                 config = cls(**config)
             return config
 
-    def mkdir(self):
+    def write(self):
         self.working_dir.mkdir(parents=True, exist_ok=True)
         for program_config in self.program.values():
             if program_config.directory:
                 program_config.directory.mkdir(exist_ok=True)
-
-    def write(self):
-        self.mkdir()
         self.config_path.write_text(self.to_cfg())
 
-    def _get_supervisor_instance(self) -> Popen:
-        if self._supervisor_process and self._supervisor_process.poll() is not None:
-            return self._supervisor_process
-        self.write()
-        self._supervisor_process = Popen(["supervisord", "-n", "-c", str(self.config_path)])
-        return self._supervisor_process
+    def rmdir(self):
+        self.working_dir.rmdir()
 
-    def _kill_supervisor_instance(self) -> None:
+    def start(self, daemon: bool = False):
+        self.write()
+        if daemon is False:
+            if self._supervisor_process and self._supervisor_process.poll() is not None:
+                return
+            self._supervisor_process = Popen(["supervisord", "-n", "-c", str(self.config_path)])
+            return
+        self._supervisor_process = Popen(["supervisord", "-c", str(self.config_path)])
+        self._supervisor_process.wait()
+
+    def kill(self):
+        # if started as non-daemon, just kill it
         if self._supervisor_process and self._supervisor_process.poll() is not None:
             self._supervisor_process.kill()
             self._supervisor_process = None
+        # grab the pidfile, find the process with the pid, and kill
+        pid = int(self.supervisord.pidfile.read_text())
+        os.kill(pid, SIGTERM)
 
 
 class SupervisorAirflowConfiguration(SupervisorConfiguration):

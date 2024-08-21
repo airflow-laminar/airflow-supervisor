@@ -14,7 +14,22 @@ def test_hydra_config():
         cfg = load_config("config", overrides=["+program=[sleep,echo]", "+rpcinterface=standard", "+inet_http_server=local"])
         assert (
             cfg.to_cfg().strip()
-            == "[inet_http_server]\nport=localhost:8000\n\n[supervisord]\ndirectory={dir}\n\n[program:sleep]\ncommand=sleep 1000\ndirectory={dir}/sleep\n\n[program:echo]\ncommand=echo\ndirectory={dir}/echo\n\n[rpcinterface:supervisor]\nsupervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface".format(
-                dir=str(pth / "supervisor-2000-01-01T00:00:00")
-            )
+            == """[inet_http_server]
+port=localhost:8000
+
+[supervisord]
+logfile={dir}/supervisord.log
+pidfile={dir}/supervisord.pid
+directory={dir}
+
+[program:sleep]
+command=sleep 1000
+directory={dir}/sleep
+
+[program:echo]
+command=echo
+directory={dir}/echo
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface""".format(dir=str(pth / "supervisor-2000-01-01T00:00:00"))
         )
