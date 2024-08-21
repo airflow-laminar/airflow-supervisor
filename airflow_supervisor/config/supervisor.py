@@ -88,7 +88,6 @@ class SupervisorConfiguration(BaseModel):
                 self.working_dir = self.supervisord.directory
             else:
                 self.working_dir = tempdir / f"supervisor-{now}"
-                self.working_dir.mkdir(parents=True, exist_ok=True)
                 self.supervisord.directory = self.working_dir
             using_default_working_dir = True
         else:
@@ -103,7 +102,6 @@ class SupervisorConfiguration(BaseModel):
         for name, program_config in self.program.items():
             if program_config.directory is None:
                 program_config.directory = self.working_dir / name
-                program_config.directory.mkdir(exist_ok=True)
         return self
 
     @classmethod
@@ -173,11 +171,20 @@ class SupervisorConfiguration(BaseModel):
                 config = cls(**config)
             return config
 
+    def mkdir(self):
+        self.working_dir.mkdir(parents=True, exist_ok=True)
+        for program_config in self.program.values():
+            if program_config.directory:
+                program_config.directory.mkdir(exist_ok=True)
+
+    def write(self):
+        self.mkdir()
+        self.config_path.write_text(self.to_cfg())
+
     def _get_supervisor_instance(self) -> Popen:
         if self._supervisor_process and self._supervisor_process.poll() is not None:
             return self._supervisor_process
-        self.working_dir.mkdir(parents=True, exist_ok=True)
-        self.config_path.write_text(self.to_cfg())
+        self.write()
         self._supervisor_process = Popen(["supervisord", "-n", "-c", str(self.config_path)])
         return self._supervisor_process
 
