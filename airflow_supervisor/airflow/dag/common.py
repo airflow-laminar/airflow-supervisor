@@ -1,4 +1,5 @@
 from inspect import currentframe
+from pathlib import Path
 from typing import Dict, Literal
 
 from airflow.exceptions import AirflowSkipException
@@ -36,17 +37,25 @@ _SupervisorTaskStep = Literal[
 
 
 class SupervisorCommon(DAG):
+    _base_prefix = "supervisor-local"
     _base_dag_id: str
+
     _supervisor_dag_role: _DagRole
+
     _supervisor_setup: DAG
     _supervisor_monitor: DAG
     _supervisor_teardown: DAG
     _supervisor_restart: DAG
     _supervisor_kill: DAG
 
+    _supervisor_xmlrpc_client: SupervisorRemoteXMLRPCClient
+
     def __init__(self, supervisor_cfg: SupervisorAirflowConfiguration, **kwargs):
         # store config
         self._supervisor_cfg = supervisor_cfg
+        self._supervisor_xmlrpc_client = kwargs.pop("supervisor_xmlrpc_client", SupervisorRemoteXMLRPCClient(self._supervisor_cfg))
+
+        _offset = kwargs.pop("_airflow_supervisor_offset", 1)
 
         # setup role and tweak dag id
         if "airflow_supervisor_dag_role" not in kwargs:
@@ -61,9 +70,9 @@ class SupervisorCommon(DAG):
         setattr(self, f"_supervisor_{self._supervisor_dag_role}", self)
 
         # store base dag id for setting up downstream dags
-        if not kwargs["dag_id"].endswith(f"-supervisor-{self._supervisor_dag_role}"):
+        if not kwargs["dag_id"].endswith(f"-{self._base_prefix}-{self._supervisor_dag_role}"):
             self._base_dag_id = kwargs["dag_id"]
-            kwargs["dag_id"] = f"{kwargs['dag_id']}-supervisor-{self._supervisor_dag_role}"
+            kwargs["dag_id"] = f"{kwargs['dag_id']}-{self._base_prefix}-{self._supervisor_dag_role}"
 
         # set downstream dags to be on-demand
         if self._supervisor_dag_role != "setup":
@@ -84,7 +93,8 @@ class SupervisorCommon(DAG):
                 **{
                     **kwargs,
                     "supervisor_cfg": supervisor_cfg,
-                    "dag_id": f"{self._base_dag_id}-supervisor-kill",
+                    "supervisor_xmlrpc_client": self._supervisor_xmlrpc_client,
+                    "dag_id": f"{self._base_dag_id}-{self._base_prefix}-kill",
                     "airflow_supervisor_dag_role": "kill",
                     "supervisor_setup_dag": self,
                 }
@@ -94,7 +104,8 @@ class SupervisorCommon(DAG):
                 **{
                     **kwargs,
                     "supervisor_cfg": supervisor_cfg,
-                    "dag_id": f"{self._base_dag_id}-supervisor-teardown",
+                    "supervisor_xmlrpc_client": self._supervisor_xmlrpc_client,
+                    "dag_id": f"{self._base_dag_id}-{self._base_prefix}-teardown",
                     "airflow_supervisor_dag_role": "teardown",
                     "supervisor_setup_dag": self,
                 }
@@ -104,7 +115,8 @@ class SupervisorCommon(DAG):
                 **{
                     **kwargs,
                     "supervisor_cfg": supervisor_cfg,
-                    "dag_id": f"{self._base_dag_id}-supervisor-restart",
+                    "supervisor_xmlrpc_client": self._supervisor_xmlrpc_client,
+                    "dag_id": f"{self._base_dag_id}-{self._base_prefix}-restart",
                     "airflow_supervisor_dag_role": "restart",
                     "supervisor_setup_dag": self,
                 }
@@ -114,7 +126,8 @@ class SupervisorCommon(DAG):
                 **{
                     **kwargs,
                     "supervisor_cfg": supervisor_cfg,
-                    "dag_id": f"{self._base_dag_id}-supervisor-monitor",
+                    "supervisor_xmlrpc_client": self._supervisor_xmlrpc_client,
+                    "dag_id": f"{self._base_dag_id}-{self._base_prefix}-monitor",
                     "airflow_supervisor_dag_role": "monitor",
                     "supervisor_setup_dag": self,
                 }
@@ -124,7 +137,9 @@ class SupervisorCommon(DAG):
                 if role == "setup":
                     continue
                 cur_frame = currentframe()
-                cur_frame.f_back.f_globals[f"{self._base_dag_id}-supervisor-{role}"] = getattr(self, f"_supervisor_{role}")
+                for _ in range(_offset):
+                    cur_frame = cur_frame.f_back
+                cur_frame.f_globals[f"{self._base_dag_id}-{self._base_prefix}-{role}"] = getattr(self, f"_supervisor_{role}")
 
         # tasks
         if self._supervisor_dag_role == "setup":
@@ -139,7 +154,7 @@ class SupervisorCommon(DAG):
 
         if self._supervisor_dag_role == "monitor":
             self._start_programs = self.get_step_operator("start-programs")
-            self._check_programs = self.get_base_operator("check-programs")
+            self._check_programs = self.get_step_operator("check-programs")
 
             trigger_self_task_id = f"{self.dag_id}-trigger-self"
             trigger_restart_task_id = f"{self.dag_id}-trigger-restart"
@@ -180,7 +195,7 @@ class SupervisorCommon(DAG):
 
         if self._supervisor_dag_role == "teardown":
             self._stop_supervisor = self.get_step_operator("stop-supervisor")
-            self._unconfigure_supervisor = self.get_base_operator("unconfigure-supervisor")
+            self._unconfigure_supervisor = self.get_step_operator("unconfigure-supervisor")
             self._stop_supervisor >> self._unconfigure_supervisor
 
         if self._supervisor_dag_role == "kill":
@@ -190,35 +205,35 @@ class SupervisorCommon(DAG):
 
     @property
     def configure_supervisor(self) -> Operator:
-        return self._supervisor_setup._configure_supervisor
+        return self.setup_dag._configure_supervisor
 
     @property
     def start_supervisor(self) -> Operator:
-        return self._supervisor_setup._start_supervisor
+        return self.setup_dag._start_supervisor
 
     @property
     def start_programs(self) -> Operator:
-        return self._supervisor_monitor._start_programs
+        return self.monitor_dag._start_programs
 
     @property
     def check_programs(self) -> Operator:
-        return self._supervisor_monitor._check_programs
-
-    @property
-    def restart_programs(self) -> Operator:
-        return self._supervisor_restart._restart_programs
+        return self.monitor_dag._check_programs
 
     @property
     def stop_programs(self) -> Operator:
-        return self._supervisor_monitor._stop_programs
+        return self.monitor_dag._stop_programs
+
+    @property
+    def restart_programs(self) -> Operator:
+        return self.restart_dag._restart_programs
 
     @property
     def stop_supervisor(self) -> Operator:
-        return self._supervisor_teardown._stop_supervisor
+        return self.teardown_dag._stop_supervisor
 
     @property
     def unconfigure_supervisor(self) -> Operator:
-        return self._supervisor_teardown._unconfigure_supervisor
+        return self.teardown_dag._unconfigure_supervisor
 
     @property
     def supervisor_client(self) -> SupervisorRemoteXMLRPCClient:
@@ -248,6 +263,35 @@ class SupervisorCommon(DAG):
         return dict(dag=self)
 
     def get_step_kwargs(self, step: _SupervisorTaskStep) -> Dict:
+        # return_kwargs = {}
+        if step == "configure-supervisor":
+
+            def _configure_supervisor(supervisor_cfg=self._supervisor_cfg, *args, **kwargs):
+                # write supervisor config to filesystem
+                Path(supervisor_cfg.path).write_text(supervisor_cfg.to_cfg())
+        elif step == "start-supervisor":
+
+            def _start_supervisor(*args, **kwargs):
+                # start supervisor daemon
+                pass
+        elif step == "start-programs":
+
+            def _start_programs(*args, **kwargs):
+                # start supervised programs
+                pass
+        elif step == "check-programs":
+            ...
+        elif step == "restart-programs":
+            ...
+        elif step == "stop-supervisor":
+            ...
+        elif step == "unconfigure-supervisor":
+
+            def _unconfigure_supervisor(supervisor_cfg=self._supervisor_cfg, *args, **kwargs):
+                # remove supervisor config to filesystem
+                Path(supervisor_cfg.path).unlink(missing_ok=True)
+        elif step == "force-kill":
+            ...
         return dict(python_callable=lambda *args, **kwargs: True)
 
     def get_step_operator(self, step: _SupervisorTaskStep) -> Operator:
