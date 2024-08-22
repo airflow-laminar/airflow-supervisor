@@ -29,8 +29,11 @@ def supervisor_instance(open_port):
                 )
             },
         )
+        cfg.write()
         cfg.start(daemon=False)
-        sleep(3)
+        for _ in range(5):
+            if not cfg.running():
+                sleep(1)
         yield cfg
         cfg.kill()
 

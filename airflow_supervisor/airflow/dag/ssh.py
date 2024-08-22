@@ -11,8 +11,6 @@ from .common import SupervisorCommon, _SupervisorTaskStep
 
 
 class SupervisorRemote(SupervisorCommon):
-    _base_prefix = "supervisor-remote"
-
     # Mimic SSH Operator: https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/_api/airflow/providers/ssh/operators/ssh/index.html
     def __init__(
         self,

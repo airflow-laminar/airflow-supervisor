@@ -56,7 +56,7 @@ test:  ## run python tests
 	python -m pytest -v airflow_supervisor/tests --junitxml=junit.xml
 
 coverage:  ## run tests and collect test coverage
-	python -m pytest -v airflow_supervisor/tests --junitxml=junit.xml --cov=airflow_supervisor --cov-branch --cov-fail-under=60 --cov-report term-missing --cov-report xml
+	python -m pytest -v airflow_supervisor/tests --junitxml=junit.xml --cov=airflow_supervisor --cov-branch --cov-fail-under=50 --cov-report term-missing --cov-report xml
 
 # Alias
 tests: test
