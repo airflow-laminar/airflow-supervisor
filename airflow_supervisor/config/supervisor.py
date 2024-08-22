@@ -1,14 +1,14 @@
 import os
 from datetime import datetime, timezone
 from pathlib import Path
-from signal import SIGTERM
+from signal import SIGKILL, SIGTERM
 from subprocess import Popen
 from tempfile import gettempdir
 from typing import Dict, Optional
 
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
-from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ..exceptions import ConfigNotFoundError
 from ..utils import _get_calling_dag
@@ -74,9 +74,6 @@ class SupervisorConfiguration(BaseModel):
     # other configuration
     config_path: Optional[Path] = Field(default="", description="Path to supervisor configuration file")
     working_dir: Optional[Path] = Field(default="", description="Path to supervisor working directory")
-
-    # internal/testing
-    _supervisor_process: Optional[Popen] = PrivateAttr(default=None)
 
     @model_validator(mode="after")
     def _setup_config_and_working_dir(self):
@@ -190,26 +187,35 @@ class SupervisorConfiguration(BaseModel):
         self.config_path.write_text(self.to_cfg())
 
     def rmdir(self):
-        self.working_dir.rmdir()
+        if not self.running():
+            self.working_dir.rmdir()
 
     def start(self, daemon: bool = False):
-        self.write()
-        if daemon is False:
-            if self._supervisor_process and self._supervisor_process.poll() is not None:
+        if not self.running():
+            if daemon is False:
+                Popen(["supervisord", "-n", "-c", str(self.config_path)])
                 return
-            self._supervisor_process = Popen(["supervisord", "-n", "-c", str(self.config_path)])
-            return
-        self._supervisor_process = Popen(["supervisord", "-c", str(self.config_path)])
-        self._supervisor_process.wait()
+            Popen(["supervisord", "-c", str(self.config_path)])
+
+    def running(self):
+        # grab the pidfile, find the process with the pid, and kill
+        if not self.supervisord.pidfile.exists():
+            return False
+        try:
+            os.kill(int(self.supervisord.pidfile.read_text()), 0)
+        except OSError:
+            return False
+        return True
+
+    def stop(self):
+        if self.running():
+            # grab the pidfile, find the process with the pid, and kill with SIGTERM
+            os.kill(int(self.supervisord.pidfile.read_text()), SIGTERM)
 
     def kill(self):
-        # if started as non-daemon, just kill it
-        if self._supervisor_process and self._supervisor_process.poll() is not None:
-            self._supervisor_process.kill()
-            self._supervisor_process = None
-        # grab the pidfile, find the process with the pid, and kill
-        pid = int(self.supervisord.pidfile.read_text())
-        os.kill(pid, SIGTERM)
+        if self.running():
+            # grab the pidfile, find the process with the pid, and kill with SIGKILL
+            os.kill(int(self.supervisord.pidfile.read_text()), SIGKILL)
 
 
 class SupervisorAirflowConfiguration(SupervisorConfiguration):

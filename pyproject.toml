@@ -31,6 +31,8 @@ dependencies = [
     "jinja2",
     "omegaconf",
     "pydantic>=2",
+    "rich",
+    "typer",
 ]
 
 [project.urls]
@@ -58,6 +60,7 @@ config = [
 ]
 
 [project.scripts]
+_airflow_supervisor_command = "airflow_supervisor.airflow.commands:main"
 
 [tool.bumpversion]
 current_version = "0.1.0"
