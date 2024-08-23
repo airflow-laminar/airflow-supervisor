@@ -110,8 +110,8 @@ def start_programs(
         timeout=5,
     )
     all_ok = _wait_or_while(
-        until=lambda: all(_.ok() for _ in client.getAllProcessInfo()),
-        unless=lambda: any(_.bad() for _ in client.getAllProcessInfo()),
+        until=lambda: all(_.ok(ok_exitstatuses=cfg_obj.airflow.exitcodes) for _ in client.getAllProcessInfo()),
+        unless=lambda: any(_.bad(ok_exitstatuses=cfg_obj.airflow.exitcodes) for _ in client.getAllProcessInfo()),
         timeout=10,
     )
     if not all_ok:
@@ -138,13 +138,13 @@ def check_programs(
         log.info(r.model_dump_json())
 
     if check_running:
-        meth = "running"
+        if all(p.running() for p in ret):
+            log.info("all processes ok")
+            return _raise_or_exit(True, _exit)
     else:
-        meth = "ok"
-
-    if all(getattr(p, meth)() for p in ret):
-        log.info("all processes ok")
-        return _raise_or_exit(True, _exit)
+        if all(p.ok(ok_exitstatuses=cfg_obj.airflow.exitcodes)() for p in ret):
+            log.info("all processes ok")
+            return _raise_or_exit(True, _exit)
     log.warn("not all processes ok")
     return _raise_or_exit(False, _exit)
 

@@ -84,17 +84,19 @@ class ProcessInfo(BaseModel):
     def stopped(self):
         return self.state in (ProcessState.STOPPED, ProcessState.EXITED, ProcessState.FATAL)
 
-    def ok(self):
+    def ok(self, ok_exitstatuses=None):
+        ok_exitstatuses = ok_exitstatuses or (0,)
         return self.state in (
             # ProcessState.STARTING,
             ProcessState.RUNNING,
             ProcessState.STOPPING,
             ProcessState.STOPPED,
-        ) or (self.state == ProcessState.EXITED and self.exitstatus == 0)
+        ) or (self.state == ProcessState.EXITED and self.exitstatus in ok_exitstatuses)
 
-    def bad(self):
+    def bad(self, ok_exitstatuses=None):
+        ok_exitstatuses = ok_exitstatuses or (0,)
         return self.state in (ProcessState.FATAL, ProcessState.UNKNOWN) or (
-            self.state == ProcessState.EXITED and self.exitstatus != 0
+            self.state == ProcessState.EXITED and self.exitstatus not in ok_exitstatuses
         )
 
 
