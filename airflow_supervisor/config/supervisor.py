@@ -3,7 +3,8 @@ from datetime import datetime, timezone
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
 from pathlib import Path
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, PrivateAttr, model_validator
+from shutil import rmtree
 from signal import SIGKILL, SIGTERM
 from subprocess import Popen
 from tempfile import gettempdir
@@ -112,7 +113,9 @@ class SupervisorConfiguration(BaseModel):
         return self
 
     @classmethod
-    def _find_parent_config_folder(cls, config_dir: str = "config", config_name: str = "", *, basepath: str = "", _offset: int = 2):
+    def _find_parent_config_folder(
+        cls, config_dir: str = "config", config_name: str = "", *, basepath: str = "", _offset: int = 2
+    ):
         if basepath:
             if basepath.endswith((".py", ".cfg", ".yml", ".yaml")):
                 calling_dag = Path(basepath)
@@ -124,7 +127,10 @@ class SupervisorConfiguration(BaseModel):
         exists = (
             (folder / config_dir).exists()
             if not config_name
-            else ((folder / config_dir / f"{config_name}.yml").exists() or (folder / config_dir / f"{config_name}.yaml").exists())
+            else (
+                (folder / config_dir / f"{config_name}.yml").exists()
+                or (folder / config_dir / f"{config_name}.yaml").exists()
+            )
         )
         while not exists:
             folder = folder.parent
@@ -133,7 +139,10 @@ class SupervisorConfiguration(BaseModel):
             exists = (
                 (folder / config_dir).exists()
                 if not config_name
-                else ((folder / config_dir / f"{config_name}.yml").exists() or (folder / config_dir / f"{config_name}.yaml").exists())
+                else (
+                    (folder / config_dir / f"{config_name}.yml").exists()
+                    or (folder / config_dir / f"{config_name}.yaml").exists()
+                )
             )
 
         config_dir = (folder / config_dir).resolve()
@@ -165,7 +174,11 @@ class SupervisorConfiguration(BaseModel):
                 searchpaths = cfg["hydra"]["searchpath"]
                 searchpaths.extend([hydra_folder, config_dir])
                 if config_name:
-                    overrides = [f"+config={config_name}", *overrides.copy(), f"hydra.searchpath=[{','.join(searchpaths)}]"]
+                    overrides = [
+                        f"+config={config_name}",
+                        *overrides.copy(),
+                        f"hydra.searchpath=[{','.join(searchpaths)}]",
+                    ]
                 else:
                     overrides = [*overrides.copy(), f"hydra.searchpath=[{','.join(searchpaths)}]"]
 
@@ -187,7 +200,7 @@ class SupervisorConfiguration(BaseModel):
 
     def rmdir(self):
         if not self.running():
-            self.working_dir.rmdir()
+            rmtree(self.working_dir)
 
     def start(self, daemon: bool = False):
         if not self.running():
@@ -218,7 +231,15 @@ class SupervisorConfiguration(BaseModel):
 
 
 class SupervisorAirflowConfiguration(SupervisorConfiguration):
-    airflow: AirflowConfiguration = Field(default_factory=AirflowConfiguration, description="Required configurations for Airflow integration")
+    airflow: AirflowConfiguration = Field(
+        default_factory=AirflowConfiguration, description="Required configurations for Airflow integration"
+    )
+    _pydantic_path: Path = PrivateAttr(default="pydantic.json")
+
+    def _write_self(self):
+        # TODO make config driven
+        self.write()
+        (Path(self.working_dir) / self._pydantic_path).write_text(self.model_dump_json())
 
     @model_validator(mode="after")
     def _setup_airflow_defaults(self):
@@ -250,6 +271,10 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
             config.exitcodes = self.airflow.exitcodes
             config.stopsignal = self.airflow.stopsignal
             config.stopwaitsecs = self.airflow.stopwaitsecs
+
+        # other
+        if str(self.working_dir) not in str(self._pydantic_path):
+            self._pydantic_path = self.working_dir / "pydantic.json"
         return self
 
 

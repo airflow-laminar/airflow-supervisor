@@ -9,7 +9,12 @@ __all__ = ("RpcInterfaceConfiguration",)
 class RpcInterfaceConfiguration(_BaseCfgModel):
     def to_cfg(self, key: str) -> str:
         # Overload to require key
-        return super().to_cfg(key=key).replace("[rpc_interface", "[rpcinterface").replace("rpcinterface_factory=", "supervisor.rpcinterface_factory=")
+        return (
+            super()
+            .to_cfg(key=key)
+            .replace("[rpc_interface", "[rpcinterface")
+            .replace("rpcinterface_factory=", "supervisor.rpcinterface_factory=")
+        )
 
     rpcinterface_factory: str = Field(
         default="supervisor.rpcinterface:make_main_rpcinterface",

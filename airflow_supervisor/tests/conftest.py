@@ -33,7 +33,9 @@ def supervisor_airflow_configuration(open_port: int) -> Iterator[SupervisorAirfl
 
 
 @fixture(scope="module")
-def supervisor_instance(supervisor_airflow_configuration: SupervisorAirflowConfiguration) -> Iterator[SupervisorAirflowConfiguration]:
+def supervisor_instance(
+    supervisor_airflow_configuration: SupervisorAirflowConfiguration,
+) -> Iterator[SupervisorAirflowConfiguration]:
     cfg = supervisor_airflow_configuration
     cfg.write()
     cfg.start(daemon=False)
