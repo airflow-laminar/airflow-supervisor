@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
 from pathlib import Path
@@ -232,6 +232,13 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
     airflow: AirflowConfiguration = Field(
         default_factory=AirflowConfiguration, description="Required configurations for Airflow integration"
     )
+    check_interval: timedelta = Field(
+        default=timedelta(seconds=5), description="Interval between supervisor program status checks"
+    )
+    check_timeout: timedelta = Field(
+        default=timedelta(seconds=15), description="Timeout to wait for supervisor program status checks"
+    )
+
     _pydantic_path: Path = PrivateAttr(default="pydantic.json")
 
     def _write_self(self):

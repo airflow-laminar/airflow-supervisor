@@ -7,7 +7,7 @@ from typing_extensions import Annotated
 
 from ..client import SupervisorRemoteXMLRPCClient
 from ..config import SupervisorAirflowConfiguration
-from .setup import SupervisorTaskStep
+from .common import SupervisorTaskStep
 
 log = getLogger(__name__)
 

@@ -1,46 +1,20 @@
-from airflow.exceptions import AirflowFailException, AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-from typing import Dict, Literal
+from airflow.sensors.python import PythonSensor
+from typing import Dict
 
 from airflow_supervisor.client import SupervisorRemoteXMLRPCClient
 from airflow_supervisor.config import SupervisorAirflowConfiguration
 
+from .common import SupervisorTaskStep, fail_, pass_, skip_
 
-def _skip():
-    raise AirflowSkipException
-
-
-def _fail():
-    raise AirflowFailException
-
-
-def _pass():
-    pass
-
-
-SupervisorTaskStep = Literal[
-    "configure-supervisor",
-    "start-supervisor",
-    "start-programs",
-    "stop-programs",
-    "check-programs",
-    "restart-programs",
-    "stop-supervisor",
-    "unconfigure-supervisor",
-    "force-kill",
-]
-
-__all__ = (
-    "Supervisor",
-    "SupervisorTaskStep",
-)
+__all__ = ("Supervisor",)
 
 
 class Supervisor(DAG):
-    _cfg: SupervisorAirflowConfiguration
+    _supervisor_cfg: SupervisorAirflowConfiguration
     _supervisor_kill: DAG
     _supervisor_xmlrpc_client: SupervisorRemoteXMLRPCClient
 
@@ -64,18 +38,10 @@ class Supervisor(DAG):
         # init with base DAG
         super().__init__(**kwargs)
 
-        # tasks
-        self._configure_supervisor = self.get_step_operator(step="configure-supervisor")
-        self._start_supervisor = self.get_step_operator(step="start-supervisor")
-        self._start_programs = self.get_step_operator("start-programs")
-        self._stop_programs = self.get_step_operator("stop-programs")
-        self._restart_programs = self.get_step_operator("restart-programs")
-        self._stop_supervisor = self.get_step_operator("stop-supervisor")
-        self._unconfigure_supervisor = self.get_step_operator("unconfigure-supervisor")
+        # initialize tasks
+        self.initialize_tasks()
 
-        # TODO check programs should be sensor
-        self._check_programs = self.get_step_operator("check-programs")
-
+        # configure graph
         trigger_self_good = TriggerDagRunOperator(
             task_id=f"{self.dag_id}-trigger-loop",
             trigger_dag_id=self.dag_id,
@@ -84,9 +50,9 @@ class Supervisor(DAG):
             task_id=f"{self.dag_id}-trigger-redo",
             trigger_dag_id=self.dag_id,
         )
-        fail_ = PythonOperator(task_id=f"{self.dag_id}-fail", python_callable=_fail)
-        skip_ = PythonOperator(task_id=f"{self.dag_id}-skip", python_callable=_skip)
-        pass_ = PythonOperator(task_id=f"{self.dag_id}-pass", python_callable=_pass)
+        fail_task = PythonOperator(task_id=f"{self.dag_id}-fail", python_callable=fail_)
+        skip_task = PythonOperator(task_id=f"{self.dag_id}-skip", python_callable=skip_)
+        pass_task = PythonOperator(task_id=f"{self.dag_id}-pass", python_callable=pass_)
 
         def _choose_branch(**kwargs):
             task_instance = kwargs["task_instance"]
@@ -105,16 +71,29 @@ class Supervisor(DAG):
         self.check_programs >> check_programs_decide
 
         # fail, restart
-        check_programs_decide >> self.restart_programs >> trigger_self_bad >> fail_
+        check_programs_decide >> self.restart_programs >> trigger_self_bad >> fail_task
         # pass, finish
-        check_programs_decide >> self.stop_programs >> self.stop_supervisor >> self.unconfigure_supervisor >> pass_
+        check_programs_decide >> self.stop_programs >> self.stop_supervisor >> self.unconfigure_supervisor >> pass_task
         # loop
-        check_programs_decide >> trigger_self_good >> pass_
+        check_programs_decide >> trigger_self_good >> pass_task
 
         # TODO make helper dag
         self._force_kill = self.get_step_operator("force-kill")
         # Default non running
-        skip_ >> self._force_kill
+        skip_task >> self._force_kill
+
+    def initialize_tasks(self):
+        # tasks
+        self._configure_supervisor = self.get_step_operator(step="configure-supervisor")
+        self._start_supervisor = self.get_step_operator(step="start-supervisor")
+        self._start_programs = self.get_step_operator("start-programs")
+        self._stop_programs = self.get_step_operator("stop-programs")
+        self._restart_programs = self.get_step_operator("restart-programs")
+        self._stop_supervisor = self.get_step_operator("stop-supervisor")
+        self._unconfigure_supervisor = self.get_step_operator("unconfigure-supervisor")
+
+        # TODO check programs should be sensor
+        self._check_programs = self.get_step_operator("check-programs")
 
     @property
     def configure_supervisor(self) -> Operator:
@@ -156,46 +135,56 @@ class Supervisor(DAG):
         return dict(dag=self)
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
-        # return_kwargs = {}
         if step == "configure-supervisor":
             from .commands import write_supervisor_config
 
-            return dict(python_callable=lambda: write_supervisor_config(self._cfg))
+            return dict(python_callable=lambda: write_supervisor_config(self._supervisor_cfg))
         elif step == "start-supervisor":
             from .commands import start_supervisor
 
-            return dict(python_callable=lambda: start_supervisor(self._cfg._pydantic_path))
+            return dict(python_callable=lambda: start_supervisor(self._supervisor_cfg._pydantic_path))
         elif step == "start-programs":
             from .commands import start_programs
 
-            return dict(python_callable=lambda: start_programs(self._cfg))
+            return dict(python_callable=lambda: start_programs(self._supervisor_cfg))
         elif step == "stop-programs":
             from .commands import stop_programs
 
-            return dict(python_callable=lambda: stop_programs(self._cfg))
+            return dict(python_callable=lambda: stop_programs(self._supervisor_cfg))
         elif step == "check-programs":
             from .commands import check_programs
 
-            return dict(python_callable=lambda: check_programs(self._cfg))
+            return dict(python_callable=lambda: check_programs(self._supervisor_cfg))
         elif step == "restart-programs":
             from .commands import restart_programs
 
-            return dict(python_callable=lambda: restart_programs(self._cfg))
+            return dict(python_callable=lambda: restart_programs(self._supervisor_cfg))
         elif step == "stop-supervisor":
             from .commands import stop_supervisor
 
-            return dict(python_callable=lambda: stop_supervisor(self._cfg))
+            return dict(python_callable=lambda: stop_supervisor(self._supervisor_cfg))
         elif step == "unconfigure-supervisor":
             from .commands import remove_supervisor_config
 
-            return dict(python_callable=lambda: remove_supervisor_config(self._cfg))
+            return dict(python_callable=lambda: remove_supervisor_config(self._supervisor_cfg))
         elif step == "force-kill":
             from .commands import kill_supervisor
 
-            return dict(python_callable=lambda: kill_supervisor(self._cfg))
-        return dict(python_callable=lambda *args, **kwargs: True)
+            return dict(python_callable=lambda: kill_supervisor(self._supervisor_cfg))
+        raise NotImplementedError
 
     def get_step_operator(self, step: SupervisorTaskStep) -> Operator:
+        if step == "check-programs":
+            return PythonSensor(
+                **{
+                    "task_id": f"{self.dag_id}-{step}",
+                    "poke_interval": self._supervisor_cfg.check_interval.total_seconds(),
+                    "timeout": self._supervisor_cfg.check_timeout.total_seconds(),
+                    "mode": "reschedule",
+                    **self.get_base_operator_kwargs(),
+                    **self.get_step_kwargs(step),
+                }
+            )
         return PythonOperator(
             **{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
         )
