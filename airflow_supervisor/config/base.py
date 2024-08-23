@@ -1,9 +1,8 @@
 import re
 from json import loads
-from typing import Callable, Literal
-
 from pydantic import BaseModel
 from pydantic.functional_validators import AfterValidator
+from typing import Callable, Literal
 from typing_extensions import Annotated
 
 _un_regex = re.compile(r"^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$")

@@ -1,6 +1,5 @@
+from pydantic import Field, SecretStr, field_serializer, field_validator, model_validator
 from typing import List, Optional
-
-from pydantic import Field, SecretStr, model_validator
 
 from .base import HostPort, Signal, SupervisorLocation, UnixUserName, _BaseCfgModel
 
@@ -85,3 +84,18 @@ class AirflowConfiguration(_BaseCfgModel):
         if self.local_or_remote == "remote" and self.host.startswith(("localhost", "127.0.0.1")):
             raise ValueError("Supervisor client expecting hostname, got localhost/127.0.0.1")
         return self
+
+    @field_serializer("exitcodes", when_used="json")
+    def _dump_exitcodes(self, v):
+        if v:
+            return ",".join(str(_) for _ in v)
+        return None
+
+    @field_validator("exitcodes", mode="before")
+    @classmethod
+    def _load_exitcodes(cls, v):
+        if isinstance(v, str):
+            v = v.split(",")
+        if isinstance(v, list):
+            return [int(_) for _ in v]
+        return v

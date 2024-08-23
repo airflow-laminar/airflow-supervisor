@@ -1,7 +1,6 @@
 from pathlib import Path
+from pydantic import Field, field_serializer, field_validator
 from typing import Optional
-
-from pydantic import Field, field_serializer
 
 from .base import LogLevel, OctalUmask, UnixUserName, _BaseCfgModel
 
@@ -67,3 +66,15 @@ class SupervisordConfiguration(_BaseCfgModel):
         if v:
             return ",".join(f"{k}={v}" for k, v in v.items())
         return None
+
+    @field_validator("environment", mode="before")
+    @classmethod
+    def _load_environment(cls, v):
+        if v:
+            d = {}
+            splits = v.split(",")
+            for split in splits:
+                split_splits = split.split("=")
+                d[split_splits[0]] = split_splits[1]
+            return d
+        return v
