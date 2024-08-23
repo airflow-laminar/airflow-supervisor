@@ -36,6 +36,8 @@ def _check_same(cfg: SupervisorAirflowConfiguration) -> bool:
     if _check_exists(cfg) and cfg.config_path.read_text().strip() == cfg.to_cfg().strip():
         # same file contents
         return True
+    elif not _check_exists(cfg):
+        return True
     return False
 
 
