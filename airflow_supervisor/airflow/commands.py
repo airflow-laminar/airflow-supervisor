@@ -2,6 +2,7 @@ from logging import getLogger
 from pathlib import Path
 from time import sleep
 from typer import Argument, Exit, Option, Typer
+from typing import Callable, Optional
 from typing_extensions import Annotated
 
 from ..client import SupervisorRemoteXMLRPCClient
@@ -31,10 +32,12 @@ def _check_running(cfg: SupervisorAirflowConfiguration) -> bool:
     return False
 
 
-def _wait_or_while(until, timeout: int = 5) -> bool:
+def _wait_or_while(until: Callable, unless: Optional[Callable] = None, timeout: int = 5) -> bool:
     for _ in range(timeout):
         if until():
             return True
+        if unless and unless():
+            return False
         sleep(1)
     return False
 
@@ -80,9 +83,26 @@ def start_programs(
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
-    # TODO
+
     ret = client.startAllProcesses()
     log.info(ret)
+
+    _wait_or_while(
+        until=lambda: all(_.running() for _ in client.getAllProcessInfo()),
+        unless=lambda: any(_.stopped() for _ in client.getAllProcessInfo()),
+        timeout=5,
+    )
+    all_ok = _wait_or_while(
+        until=lambda: all(_.ok() for _ in client.getAllProcessInfo()),
+        unless=lambda: any(_.bad() for _ in client.getAllProcessInfo()),
+        timeout=10,
+    )
+    if not all_ok:
+        for r in client.getAllProcessInfo():
+            log.info(r.model_dump_json())
+        log.warn("not all processes started")
+        return _raise_or_exit(False, _exit)
+    log.info("all processes started")
     return _raise_or_exit(True, _exit)
 
 
@@ -95,19 +115,43 @@ def check_programs(
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
-    # TODO
+
     ret = client.getAllProcessInfo()
     for r in ret:
         log.info(r.model_dump_json())
+
     if check_running:
         meth = "running"
     else:
         meth = "ok"
+
     if all(getattr(p, meth)() for p in ret):
         log.info("all processes ok")
         return _raise_or_exit(True, _exit)
-    log.info("processes not ok")
+    log.warn("not all processes ok")
     return _raise_or_exit(False, _exit)
+
+
+def stop_programs(
+    cfg: Annotated[
+        Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
+    ],
+    _exit: Annotated[bool, Argument(hidden=True)] = True,
+):
+    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
+
+    ret = client.stopAllProcesses()
+    log.info(ret)
+
+    all_stopped = _wait_or_while(until=lambda: all(_.stopped() for _ in client.getAllProcessInfo()), timeout=10)
+    if not all_stopped:
+        for r in client.getAllProcessInfo():
+            log.info(r.model_dump_json())
+        log.warn("not all processes stopped")
+        return _raise_or_exit(False, _exit)
+    log.info("all processes stopped")
+    return _raise_or_exit(True, _exit)
 
 
 def restart_programs(
@@ -116,13 +160,12 @@ def restart_programs(
     ],
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
-    client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
-    # TODO
-    ret1 = client.stopAllProcesses()
-    log.info(ret1)
-    ret2 = client.startAllProcesses()
-    log.info(ret2)
+    if not stop_programs(cfg, False):
+        log.warn("could not stop programs")
+        return _raise_or_exit(False, _exit)
+    if not start_programs(cfg, False):
+        log.warn("could not start programs")
+        return _raise_or_exit(False, _exit)
     return _raise_or_exit(True, _exit)
 
 
@@ -188,6 +231,7 @@ def main():
     _add_to_typer(app, "configure-supervisor", write_supervisor_config)
     _add_to_typer(app, "start-supervisor", start_supervisor)
     _add_to_typer(app, "start-programs", start_programs)
+    _add_to_typer(app, "stop-programs", stop_programs)
     _add_to_typer(app, "check-programs", check_programs)
     _add_to_typer(app, "restart-programs", restart_programs)
     _add_to_typer(app, "stop-supervisor", stop_supervisor)

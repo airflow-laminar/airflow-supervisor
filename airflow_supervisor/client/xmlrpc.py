@@ -79,15 +79,23 @@ class ProcessInfo(BaseModel):
     pid: int
 
     def running(self):
-        return self.state in (ProcessState.STARTING, ProcessState.RUNNING, ProcessState.STOPPING)
+        return self.state in (ProcessState.RUNNING, ProcessState.STOPPING)
+
+    def stopped(self):
+        return self.state in (ProcessState.STOPPED, ProcessState.EXITED, ProcessState.FATAL)
 
     def ok(self):
         return self.state in (
-            ProcessState.STARTING,
+            # ProcessState.STARTING,
             ProcessState.RUNNING,
             ProcessState.STOPPING,
             ProcessState.STOPPED,
         ) or (self.state == ProcessState.EXITED and self.exitstatus == 0)
+
+    def bad(self):
+        return self.state in (ProcessState.FATAL, ProcessState.UNKNOWN) or (
+            self.state == ProcessState.EXITED and self.exitstatus != 0
+        )
 
 
 class SupervisorRemoteXMLRPCClient(object):

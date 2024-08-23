@@ -20,6 +20,7 @@ _SupervisorTaskStep = Literal[
     "start-programs",
     "check-programs",
     "restart-programs",
+    "stop-programs",
     "stop-supervisor",
     "unconfigure-supervisor",
     "force-kill",
