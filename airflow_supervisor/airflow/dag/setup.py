@@ -1,11 +1,10 @@
-from pathlib import Path
-from typing import Dict, Literal
-
 from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from pathlib import Path
+from typing import Dict, Literal
 
 from airflow_supervisor.client import SupervisorRemoteXMLRPCClient
 from airflow_supervisor.config import SupervisorAirflowConfiguration

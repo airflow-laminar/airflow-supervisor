@@ -1,7 +1,6 @@
 from pathlib import Path
+from pydantic import Field, field_serializer, field_validator
 from typing import Dict, List, Literal, Optional, Union
-
-from pydantic import Field, field_serializer
 
 from .base import OctalUmask, Signal, UnixUserName, _BaseCfgModel
 
@@ -133,6 +132,15 @@ class ProgramConfiguration(_BaseCfgModel):
             return ",".join(str(_) for _ in v)
         return None
 
+    @field_validator("exitcodes", mode="before")
+    @classmethod
+    def _load_exitcodes(cls, v):
+        if isinstance(v, str):
+            v = v.split(",")
+        if isinstance(v, list):
+            return [int(_) for _ in v]
+        return v
+
     @field_serializer("autorestart", when_used="json")
     def _dump_autorestart(self, v):
         if isinstance(v, bool):
@@ -140,3 +148,14 @@ class ProgramConfiguration(_BaseCfgModel):
         elif isinstance(v, str):
             return v.lower()
         return None
+
+    @field_validator("autorestart", mode="before")
+    @classmethod
+    def _load_autorestart(cls, v):
+        if isinstance(v, str):
+            # handle string -> bool
+            if v.lower() == "false":
+                return False
+            if v.lower() == "true":
+                return True
+        return v

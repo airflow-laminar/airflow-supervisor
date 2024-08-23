@@ -1,6 +1,5 @@
+from pydantic import Field, field_serializer, field_validator
 from typing import List
-
-from pydantic import Field, field_serializer
 
 from .base import _BaseCfgModel
 
@@ -17,3 +16,10 @@ class IncludeConfiguration(_BaseCfgModel):
         if v:
             return " ".join(v)
         return None
+
+    @field_validator("files", mode="before")
+    @classmethod
+    def _load_files(cls, v):
+        if isinstance(v, str):
+            return v.split(" ")
+        return v

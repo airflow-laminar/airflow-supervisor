@@ -1,13 +1,12 @@
 from logging import getLogger
 from pathlib import Path
 from time import sleep
-
-from typer import Typer, Option, Exit
+from typer import Exit, Option, Typer
 from typing_extensions import Annotated
 
-from .dag.setup import _SupervisorTaskStep
-from ..config import SupervisorAirflowConfiguration
 from ..client import SupervisorRemoteXMLRPCClient
+from ..config import SupervisorAirflowConfiguration
+from .dag.setup import _SupervisorTaskStep
 
 log = getLogger(__name__)
 

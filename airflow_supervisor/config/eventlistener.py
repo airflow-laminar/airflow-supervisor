@@ -1,6 +1,5 @@
-from typing import List, Optional
-
 from pydantic import Field, field_serializer, field_validator
+from typing import List, Optional
 
 from .base import EventType
 from .program import ProgramConfiguration
@@ -30,10 +29,19 @@ class EventListenerConfiguration(ProgramConfiguration):
     @field_validator("stdout_capture_maxbytes")
     @classmethod
     def _event_listener_cant_use_stdout_capture_maxbytes(cls, v: str) -> str:
-        raise ValueError("eventlistener cannot use stdout_capture_maxbytes")
+        if v:
+            raise ValueError("eventlistener cannot use stdout_capture_maxbytes")
+        return None
 
     @field_serializer("events", when_used="json")
     def _dump_events(self, v):
         if v:
             return ",".join(v)
         return None
+
+    @field_validator("events", mode="before")
+    @classmethod
+    def _load_events(cls, v):
+        if isinstance(v, str):
+            return v.split(",")
+        return v

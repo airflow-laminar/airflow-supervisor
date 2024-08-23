@@ -1,6 +1,5 @@
+from pydantic import Field, field_serializer, field_validator
 from typing import List, Optional
-
-from pydantic import Field, field_serializer
 
 from .base import _BaseCfgModel
 
@@ -20,3 +19,10 @@ class GroupConfiguration(_BaseCfgModel):
         if v:
             return ",".join(v)
         return None
+
+    @field_validator("programs", mode="before")
+    @classmethod
+    def _load_programs(cls, v):
+        if isinstance(v, str):
+            return v.split(",")
+        return v

@@ -1,9 +1,8 @@
 from datetime import datetime
 from enum import Enum
+from pydantic import BaseModel
 from typing import Dict, List
 from xmlrpc.client import Fault, ServerProxy
-
-from pydantic import BaseModel
 
 from ..config import SupervisorAirflowConfiguration
 

@@ -1,9 +1,8 @@
-from typing import Dict, List, Optional, Union
-
 from airflow.models.operator import Operator
 from airflow.operators.python import PythonOperator
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.ssh.operators.ssh import SSHOperator
+from typing import Dict, List, Optional, Union
 
 from airflow_supervisor.config import SupervisorConfiguration
 

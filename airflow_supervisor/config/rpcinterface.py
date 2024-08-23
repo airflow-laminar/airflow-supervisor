@@ -1,6 +1,5 @@
-from typing import Any, Dict, Optional
-
 from pydantic import Field
+from typing import Any, Dict, Optional
 
 from .base import _BaseCfgModel
 

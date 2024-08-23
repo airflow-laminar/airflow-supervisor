@@ -1,7 +1,6 @@
 from pathlib import Path
-from typing import Optional
-
 from pydantic import AnyUrl, Field, SecretStr, field_serializer
+from typing import Optional
 
 from .base import UnixUserName, _BaseCfgModel
 
