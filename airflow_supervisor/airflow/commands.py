@@ -7,9 +7,22 @@ from typing_extensions import Annotated
 
 from ..client import SupervisorRemoteXMLRPCClient
 from ..config import SupervisorAirflowConfiguration
-from .dag.setup import _SupervisorTaskStep
+from .setup import SupervisorTaskStep
 
 log = getLogger(__name__)
+
+__all__ = (
+    "write_supervisor_config",
+    "start_supervisor",
+    "start_programs",
+    "check_programs",
+    "stop_programs",
+    "restart_programs",
+    "stop_supervisor",
+    "kill_supervisor",
+    "remove_supervisor_config",
+    "main",
+)
 
 
 def _check_exists(cfg: SupervisorAirflowConfiguration) -> bool:
@@ -49,7 +62,11 @@ def _raise_or_exit(val: bool, exit: bool):
 
 
 def write_supervisor_config(cfg_json: str, _exit: Annotated[bool, Argument(hidden=True)] = True):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg_json)
+    if isinstance(cfg_json, str):
+        cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg_json)
+    else:
+        # NOTE: typer does not support union types
+        cfg_obj = cfg_json
     if not _check_same(cfg_obj):
         log.critical("Configs don't match")
     cfg_obj._write_self()
@@ -190,6 +207,8 @@ def kill_supervisor(
     ],
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
+    if not stop_programs(cfg, False):
+        log.warn("could not stop programs")
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
     cfg_obj.kill()
     still_running = _wait_or_while(until=lambda: not cfg_obj.running(), timeout=30)
@@ -221,7 +240,7 @@ def remove_supervisor_config(
     return _raise_or_exit(True, _exit)
 
 
-def _add_to_typer(app, command: _SupervisorTaskStep, foo):
+def _add_to_typer(app, command: SupervisorTaskStep, foo):
     """Helper function to ensure correct command names"""
     app.command(command)(foo)
 
