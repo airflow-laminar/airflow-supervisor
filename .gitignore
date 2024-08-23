@@ -143,5 +143,8 @@ _template/labextension
 
 # Supervisor
 supervisord.pid
+supervisor-2024*.cfg
+pydantic.json
+Untitled*.ipynb
 tmp
 

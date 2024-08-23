@@ -1,1 +1,1 @@
-from .xmlrpc import SupervisorRemoteXMLRPCClient
+from .xmlrpc import *

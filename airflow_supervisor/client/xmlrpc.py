@@ -6,10 +6,10 @@ from xmlrpc.client import Fault, ServerProxy
 
 from ..config import SupervisorAirflowConfiguration
 
-__all__ = ("SupervisorRemoteXMLRPCClient",)
+__all__ = ("SupervisorRemoteXMLRPCClient", "ProcessState", "SupervisorState", "SupervisorMethodResult", "ProcessInfo")
 
 
-class State(Enum):
+class ProcessState(Enum):
     STOPPED = 0
     STARTING = 10
     RUNNING = 20
@@ -66,7 +66,7 @@ class SupervisorMethodResult(Enum):
 class ProcessInfo(BaseModel):
     name: str
     group: str
-    state: State
+    state: ProcessState
     description: str
     start: datetime
     stop: datetime
@@ -77,6 +77,17 @@ class ProcessInfo(BaseModel):
     stdout_logfile: str
     stderr_logfile: str
     pid: int
+
+    def running(self):
+        return self.state in (ProcessState.STARTING, ProcessState.RUNNING, ProcessState.STOPPING)
+
+    def ok(self):
+        return self.state in (
+            ProcessState.STARTING,
+            ProcessState.RUNNING,
+            ProcessState.STOPPING,
+            ProcessState.STOPPED,
+        ) or (self.state == ProcessState.EXITED and self.exitstatus == 0)
 
 
 class SupervisorRemoteXMLRPCClient(object):
