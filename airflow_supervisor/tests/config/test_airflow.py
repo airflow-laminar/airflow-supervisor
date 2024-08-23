@@ -6,7 +6,10 @@ from airflow_supervisor import AirflowConfiguration, ProgramConfiguration, Super
 
 
 def test_airflow_inst():
-    with patch("airflow_supervisor.config.supervisor.gettempdir") as p1, patch("airflow_supervisor.config.supervisor.datetime") as p2:
+    with (
+        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
+        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+    ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)
@@ -23,7 +26,10 @@ def test_airflow_inst():
 
 
 def test_airflow_cfg_roundtrip_json():
-    with patch("airflow_supervisor.config.supervisor.gettempdir") as p1, patch("airflow_supervisor.config.supervisor.datetime") as p2:
+    with (
+        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
+        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+    ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)

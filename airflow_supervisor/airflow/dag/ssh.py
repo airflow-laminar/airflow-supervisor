@@ -57,6 +57,14 @@ class SupervisorRemote(SupervisorCommon):
     def get_step_operator(self, step: _SupervisorTaskStep) -> Operator:
         if step in ("configure-supervisor", "start-supervisor", "unconfigure-supervisor", "force-kill"):
             # These steps use the SSHOperator
-            return SSHOperator(**{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)})
+            return SSHOperator(
+                **{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
+            )
         # Other steps can go via PythonOperator and the XMLRPC API
-        return PythonOperator(**{"task_id": f"{self.dag_id}-{step}", **super().get_base_operator_kwargs(), **super().get_step_kwargs(step)})
+        return PythonOperator(
+            **{
+                "task_id": f"{self.dag_id}-{step}",
+                **super().get_base_operator_kwargs(),
+                **super().get_step_kwargs(step),
+            }
+        )

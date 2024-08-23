@@ -43,7 +43,9 @@ class AirflowConfiguration(_BaseCfgModel):
         default="*:9001",
         description="A TCP host:port value or (e.g. 127.0.0.1:9001) on which supervisor will listen for HTTP/XML-RPC requests. supervisorctl will use XML-RPC to communicate with supervisord over this port. To listen on all interfaces in the machine, use :9001 or *:9001. Please read the security warning above.",
     )
-    username: Optional[UnixUserName] = Field(default=None, description="The username required for authentication to the HTTP/Unix Server.")
+    username: Optional[UnixUserName] = Field(
+        default=None, description="The username required for authentication to the HTTP/Unix Server."
+    )
     password: Optional[SecretStr] = Field(
         default=None,
         description="he password required for authentication to the HTTP/Unix server. This can be a cleartext password, or can be specified as a SHA-1 hash if prefixed by the string {SHA}. For example, {SHA}82ab876d1387bfafe46cc1c8a2ef074eae50cb1d is the SHA-stored version of the password “thepassword”. Note that hashed password must be in hex format.",

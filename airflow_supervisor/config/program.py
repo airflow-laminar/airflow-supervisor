@@ -30,7 +30,9 @@ class ProgramConfiguration(_BaseCfgModel):
         default=None,
         description="The relative priority of the program in the start and shutdown ordering. Lower priorities indicate programs that start first and shut down last at startup and when aggregate commands are used in various clients (e.g. “start all”/”stop all”). Higher priorities indicate programs that start last and shut down first.",
     )
-    autostart: Optional[bool] = Field(default=None, description="If true, this program will start automatically when supervisord is started.")
+    autostart: Optional[bool] = Field(
+        default=None, description="If true, this program will start automatically when supervisord is started."
+    )
     startsecs: Optional[int] = Field(
         default=None,
         description="The total number of seconds which the program needs to stay running after a startup to consider the start successful (moving the process from the STARTING state to the RUNNING state). Set to 0 to indicate that the program needn’t stay running for any particular amount of time. Even if a process exits with an “expected” exit code (see exitcodes), the start will still be considered a failure if the process exits quicker than startsecs.",
@@ -91,7 +93,9 @@ class ProgramConfiguration(_BaseCfgModel):
         default=None,
         description="If true, PROCESS_LOG_STDOUT events will be emitted when the process writes to its stdout file descriptor. The events will only be emitted if the file descriptor is not in capture mode at the time the data is received (see Capture Mode).",
     )
-    stdout_syslog: Optional[bool] = Field(default=None, description="If true, stdout will be directed to syslog along with the process name.")
+    stdout_syslog: Optional[bool] = Field(
+        default=None, description="If true, stdout will be directed to syslog along with the process name."
+    )
     stderr_logfile: Optional[Path] = Field(
         default=None,
         description="Put process stderr output in this file unless redirect_stderr is true. Accepts the same value types as stdout_logfile and may contain the same Python string expressions. It is not possible for two processes to share a single log file (stderr_logfile) when rotation (stderr_logfile_maxbytes) is enabled. This will result in the file being corrupted. If stderr_logfile is set to a special file like /dev/stderr that is not seekable, log rotation must be disabled by setting stderr_logfile_maxbytes = 0.",
@@ -112,15 +116,20 @@ class ProgramConfiguration(_BaseCfgModel):
         default=None,
         description="If true, PROCESS_LOG_STDERR events will be emitted when the process writes to its stderr file descriptor. The events will only be emitted if the file descriptor is not in capture mode at the time the data is received (see Capture Mode).",
     )
-    stderr_syslog: Optional[bool] = Field(default=None, description="If true, stderr will be directed to syslog along with the process name.")
+    stderr_syslog: Optional[bool] = Field(
+        default=None, description="If true, stderr will be directed to syslog along with the process name."
+    )
     environment: Optional[Dict[str, str]] = Field(
         default=None,
         description='A list of key/value pairs in the form KEY="val",KEY2="val2" that will be placed in the child process’ environment. The environment string may contain Python string expressions that will be evaluated against a dictionary containing group_name, host_node_name, process_num, program_name, and here (the directory of the supervisord config file). Values containing non-alphanumeric characters should be quoted (e.g. KEY="val:123",KEY2="val,456"). Otherwise, quoting the values is optional but recommended. Note that the subprocess will inherit the environment variables of the shell used to start “supervisord” except for the ones overridden here. See Subprocess Environment.',
     )
     directory: Optional[Path] = Field(
-        default=None, description="A file path representing a directory to which supervisord should temporarily chdir before exec’ing the child."
+        default=None,
+        description="A file path representing a directory to which supervisord should temporarily chdir before exec’ing the child.",
     )
-    umask: Optional[OctalUmask] = Field(default=None, description="An octal number (e.g. 002, 022) representing the umask of the process.")
+    umask: Optional[OctalUmask] = Field(
+        default=None, description="An octal number (e.g. 002, 022) representing the umask of the process."
+    )
     serverurl: Optional[str] = Field(
         default=None,
         description="The URL passed in the environment to the subprocess process as SUPERVISOR_SERVER_URL (see supervisor.childutils) to allow the subprocess to easily communicate with the internal HTTP server. If provided, it should have the same syntax and structure as the [supervisorctl] section option of the same name. If this is set to AUTO, or is unset, supervisor will automatically construct a server URL, giving preference to a server that listens on UNIX domain sockets over one that listens on an internet socket.",

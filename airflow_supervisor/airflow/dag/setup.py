@@ -33,7 +33,9 @@ class Supervisor(DAG):
     def __init__(self, supervisor_cfg: SupervisorAirflowConfiguration, **kwargs):
         # store config
         self._supervisor_cfg = supervisor_cfg
-        self._supervisor_xmlrpc_client = kwargs.pop("supervisor_xmlrpc_client", SupervisorRemoteXMLRPCClient(self._supervisor_cfg))
+        self._supervisor_xmlrpc_client = kwargs.pop(
+            "supervisor_xmlrpc_client", SupervisorRemoteXMLRPCClient(self._supervisor_cfg)
+        )
 
         # setup role and tweak dag id
         if "dag_id" not in kwargs:
@@ -178,4 +180,6 @@ class Supervisor(DAG):
         return dict(python_callable=lambda *args, **kwargs: True)
 
     def get_step_operator(self, step: _SupervisorTaskStep) -> Operator:
-        return PythonOperator(**{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)})
+        return PythonOperator(
+            **{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
+        )

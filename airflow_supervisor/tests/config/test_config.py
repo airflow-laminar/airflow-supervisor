@@ -22,7 +22,10 @@ from airflow_supervisor import (
 def test_inst():
     with raises(ValidationError):
         SupervisorConfiguration()
-    with patch("airflow_supervisor.config.supervisor.gettempdir") as p1, patch("airflow_supervisor.config.supervisor.datetime") as p2:
+    with (
+        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
+        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+    ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)
@@ -32,7 +35,10 @@ def test_inst():
 
 
 def test_cfg_roundtrip_json():
-    with patch("airflow_supervisor.config.supervisor.gettempdir") as p1, patch("airflow_supervisor.config.supervisor.datetime") as p2:
+    with (
+        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
+        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+    ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)
@@ -41,7 +47,10 @@ def test_cfg_roundtrip_json():
 
 
 def test_cfg():
-    with patch("airflow_supervisor.config.supervisor.gettempdir") as p1, patch("airflow_supervisor.config.supervisor.datetime") as p2:
+    with (
+        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
+        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+    ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)
@@ -60,7 +69,10 @@ directory={dir}/test""".format(dir=str(pth / "supervisor-2000-01-01T00:00:00"))
 
 
 def test_cfg_all():
-    with patch("airflow_supervisor.config.supervisor.gettempdir") as p1, patch("airflow_supervisor.config.supervisor.datetime") as p2:
+    with (
+        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
+        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+    ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)
