@@ -87,19 +87,17 @@ class SupervisorConfiguration(BaseModel):
             else:
                 self.working_dir = tempdir / f"supervisor-{now}"
                 self.supervisord.directory = self.working_dir
-
-            # force pidfile to be in working dir if not otherwise set
-            if not self.supervisord.pidfile:
-                self.supervisord.pidfile = self.working_dir / "supervisord.pid"
-
-            # force logfile to be in working dir if not otherwise set
-            if not self.supervisord.logfile:
-                self.supervisord.logfile = self.working_dir / "supervisord.log"
-
             using_default_working_dir = True
-
         else:
             using_default_working_dir = False
+
+        # force pidfile to be in working dir if not otherwise set
+        if not self.supervisord.pidfile:
+            self.supervisord.pidfile = self.working_dir / "supervisord.pid"
+
+        # force logfile to be in working dir if not otherwise set
+        if not self.supervisord.logfile:
+            self.supervisord.logfile = self.working_dir / "supervisord.log"
 
         if self.config_path == "":
             if using_default_working_dir:

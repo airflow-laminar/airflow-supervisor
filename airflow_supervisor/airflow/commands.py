@@ -39,12 +39,18 @@ def _wait_or_while(until, timeout: int = 5) -> bool:
     return False
 
 
+def _raise_or_exit(val: bool, exit: bool):
+    if exit:
+        raise Exit(int(not val))
+    return val
+
+
 def write_supervisor_config(cfg_json: str, _exit: Annotated[bool, Argument(hidden=True)] = True):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg_json)
     if not _check_same(cfg_obj):
         log.critical("Configs don't match")
     cfg_obj._write_self()
-    return Exit(0) if _exit else True
+    return _raise_or_exit(True, _exit)
 
 
 def start_supervisor(
@@ -57,13 +63,13 @@ def start_supervisor(
     if not _check_same(cfg_obj):
         log.critical("Configs don't match")
     if _check_running(cfg_obj):
-        return Exit(0) if _exit else True
+        return _raise_or_exit(True, _exit)
     cfg_obj.start(daemon=True)
     running = _wait_or_while(until=lambda: cfg_obj.running(), timeout=30)
     if not running:
         log.critical("Still not running 30s after start command!")
-        return Exit(1) if _exit else False
-    return Exit(0) if _exit else True
+        return _raise_or_exit(False, _exit)
+    return _raise_or_exit(True, _exit)
 
 
 def start_programs(
@@ -77,21 +83,31 @@ def start_programs(
     # TODO
     ret = client.startAllProcesses()
     log.info(ret)
-    return Exit(0) if _exit else True
+    return _raise_or_exit(True, _exit)
 
 
 def check_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
     ],
+    check_running: bool = False,
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
     # TODO
     ret = client.getAllProcessInfo()
-    log.info(ret)
-    return Exit(0) if _exit else True
+    for r in ret:
+        log.info(r.model_dump_json())
+    if check_running:
+        meth = "running"
+    else:
+        meth = "ok"
+    if all(getattr(p, meth)() for p in ret):
+        log.info("all processes ok")
+        return _raise_or_exit(True, _exit)
+    log.info("processes not ok")
+    return _raise_or_exit(False, _exit)
 
 
 def restart_programs(
@@ -107,7 +123,7 @@ def restart_programs(
     log.info(ret1)
     ret2 = client.startAllProcesses()
     log.info(ret2)
-    return Exit(0) if _exit else True
+    return _raise_or_exit(True, _exit)
 
 
 def stop_supervisor(
@@ -121,8 +137,8 @@ def stop_supervisor(
     not_running = _wait_or_while(until=lambda: not cfg_obj.running(), timeout=30)
     if not not_running:
         log.critical("Still running 30s after stop command!")
-        return Exit(1) if _exit else False
-    return Exit(0) if _exit else True
+        return _raise_or_exit(False, _exit)
+    return _raise_or_exit(True, _exit)
 
 
 def kill_supervisor(
@@ -136,8 +152,8 @@ def kill_supervisor(
     still_running = _wait_or_while(until=lambda: not cfg_obj.running(), timeout=30)
     if still_running:
         log.critical("Still running 30s after kill command!")
-        return Exit(1) if _exit else False
-    return Exit(0) if _exit else True
+        return _raise_or_exit(False, _exit)
+    return _raise_or_exit(True, _exit)
 
 
 def remove_supervisor_config(
@@ -152,14 +168,14 @@ def remove_supervisor_config(
         still_running = kill_supervisor(cfg_obj, _exit=False)
 
     if still_running:
-        return Exit(1) if _exit else True
+        return _raise_or_exit(False, _exit)
 
     # TODO move to config
     sleep(5)
 
     # TODO make optional
     cfg_obj.rmdir()
-    return Exit(0) if _exit else True
+    return _raise_or_exit(True, _exit)
 
 
 def _add_to_typer(app, command: _SupervisorTaskStep, foo):
