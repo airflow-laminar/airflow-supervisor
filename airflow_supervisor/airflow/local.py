@@ -54,12 +54,18 @@ class Supervisor(DAG):
         skip_task = PythonOperator(task_id=f"{self.dag_id}-skip", python_callable=skip_)
         pass_task = PythonOperator(task_id=f"{self.dag_id}-pass", python_callable=pass_)
 
+        # TODO check if we're past the dag's end time
+        _branch_choices = {
+            "running": trigger_self_good.task_id,
+            "done": self.stop_programs.task_id,
+            "ok": trigger_self_good.task_id,
+            "": self.restart_programs.task_id,
+        }
+
         def _choose_branch(**kwargs):
             task_instance = kwargs["task_instance"]
             check_program_result = task_instance.xcom_pull(task_ids=[f"{self.dag_id}-check-programs"])
-            if check_program_result:
-                # TODO
-                ...
+            return _branch_choices.get(check_program_result, self.restart_programs.task_id)
 
         check_programs_decide = BranchPythonOperator(
             task_id=f"{self.dag_id}-check-programs-decide",
@@ -138,39 +144,49 @@ class Supervisor(DAG):
         if step == "configure-supervisor":
             from .commands import write_supervisor_config
 
-            return dict(python_callable=lambda: write_supervisor_config(self._supervisor_cfg))
+            return dict(python_callable=lambda: write_supervisor_config(self._supervisor_cfg, _exit=False))
         elif step == "start-supervisor":
             from .commands import start_supervisor
 
-            return dict(python_callable=lambda: start_supervisor(self._supervisor_cfg._pydantic_path))
+            return dict(python_callable=lambda: start_supervisor(self._supervisor_cfg._pydantic_path, _exit=False))
         elif step == "start-programs":
             from .commands import start_programs
 
-            return dict(python_callable=lambda: start_programs(self._supervisor_cfg))
+            return dict(python_callable=lambda: start_programs(self._supervisor_cfg, _exit=False))
         elif step == "stop-programs":
             from .commands import stop_programs
 
-            return dict(python_callable=lambda: stop_programs(self._supervisor_cfg))
+            return dict(python_callable=lambda: stop_programs(self._supervisor_cfg, _exit=False))
         elif step == "check-programs":
             from .commands import check_programs
 
-            return dict(python_callable=lambda: check_programs(self._supervisor_cfg))
+            def _check_programs():
+                # TODO formalize
+                if check_programs(self._supervisor_cfg, check_running=True, _exit=False):
+                    return "running"
+                if check_programs(self._supervisor_cfg, check_done=True, _exit=False):
+                    return "done"
+                if check_programs(self._supervisor_cfg, _exit=False):
+                    return "ok"
+                return ""
+
+            return dict(python_callable=_check_programs)
         elif step == "restart-programs":
             from .commands import restart_programs
 
-            return dict(python_callable=lambda: restart_programs(self._supervisor_cfg))
+            return dict(python_callable=lambda: restart_programs(self._supervisor_cfg, _exit=False))
         elif step == "stop-supervisor":
             from .commands import stop_supervisor
 
-            return dict(python_callable=lambda: stop_supervisor(self._supervisor_cfg))
+            return dict(python_callable=lambda: stop_supervisor(self._supervisor_cfg, _exit=False))
         elif step == "unconfigure-supervisor":
             from .commands import remove_supervisor_config
 
-            return dict(python_callable=lambda: remove_supervisor_config(self._supervisor_cfg))
+            return dict(python_callable=lambda: remove_supervisor_config(self._supervisor_cfg, _exit=False))
         elif step == "force-kill":
             from .commands import kill_supervisor
 
-            return dict(python_callable=lambda: kill_supervisor(self._supervisor_cfg))
+            return dict(python_callable=lambda: kill_supervisor(self._supervisor_cfg, _exit=False))
         raise NotImplementedError
 
     def get_step_operator(self, step: SupervisorTaskStep) -> Operator:

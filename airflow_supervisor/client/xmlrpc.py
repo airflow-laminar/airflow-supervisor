@@ -84,6 +84,12 @@ class ProcessInfo(BaseModel):
     def stopped(self):
         return self.state in (ProcessState.STOPPED, ProcessState.EXITED, ProcessState.FATAL)
 
+    def done(self, ok_exitstatuses=None):
+        ok_exitstatuses = ok_exitstatuses or (0,)
+        return self.state in (ProcessState.STOPPED,) or (
+            self.state == ProcessState.EXITED and self.exitstatus in ok_exitstatuses
+        )
+
     def ok(self, ok_exitstatuses=None):
         ok_exitstatuses = ok_exitstatuses or (0,)
         return self.state in (

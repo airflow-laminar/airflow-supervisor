@@ -76,7 +76,7 @@ def write_supervisor_config(cfg_json: str, _exit: Annotated[bool, Argument(hidde
 def start_supervisor(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
@@ -95,7 +95,7 @@ def start_supervisor(
 def start_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
@@ -126,10 +126,18 @@ def start_programs(
 def check_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     check_running: bool = False,
+    check_done: bool = False,
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
+    """Check if programs are in a good state.
+
+    Args:
+        cfg (Annotated[ Path, Option, optional): supervisor config
+        check_running (bool, optional): if true, only return true if they're running
+        check_done (bool, optional): if true, only return true if they're done (cleanly)
+    """
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
 
@@ -137,22 +145,32 @@ def check_programs(
     for r in ret:
         log.info(r.model_dump_json())
 
+    ok = False
     if check_running:
         if all(p.running() for p in ret):
-            log.info("all processes ok")
-            return _raise_or_exit(True, _exit)
+            log.info("all processes running")
+            ok = True
+        else:
+            log.warn("not all processes running")
+    elif check_done:
+        if all(p.done(ok_exitstatuses=cfg_obj.airflow.exitcodes) for p in ret):
+            log.info("all processes done")
+            ok = True
+        else:
+            log.info("not all processes done")
     else:
-        if all(p.ok(ok_exitstatuses=cfg_obj.airflow.exitcodes)() for p in ret):
+        if all(p.ok(ok_exitstatuses=cfg_obj.airflow.exitcodes) for p in ret):
             log.info("all processes ok")
-            return _raise_or_exit(True, _exit)
-    log.warn("not all processes ok")
-    return _raise_or_exit(False, _exit)
+            ok = True
+        else:
+            log.info("not all processes ok")
+    return _raise_or_exit(ok, _exit)
 
 
 def stop_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
@@ -174,12 +192,14 @@ def stop_programs(
 def restart_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
+    force: bool = False,
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    if not stop_programs(cfg, False):
-        log.warn("could not stop programs")
-        return _raise_or_exit(False, _exit)
+    if force:
+        if not stop_programs(cfg, False):
+            log.warn("could not stop programs")
+            return _raise_or_exit(False, _exit)
     if not start_programs(cfg, False):
         log.warn("could not start programs")
         return _raise_or_exit(False, _exit)
@@ -189,7 +209,7 @@ def restart_programs(
 def stop_supervisor(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
@@ -204,7 +224,7 @@ def stop_supervisor(
 def kill_supervisor(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     if not stop_programs(cfg, False):
@@ -221,7 +241,7 @@ def kill_supervisor(
 def remove_supervisor_config(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
