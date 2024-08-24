@@ -64,7 +64,7 @@ class SupervisorConfiguration(BaseModel):
     unix_http_server: Optional[UnixHttpServerConfiguration] = Field(default=None)
     inet_http_server: Optional[InetHttpServerConfiguration] = Field(default=None)
     supervisord: SupervisordConfiguration = Field(default=SupervisordConfiguration())
-    supervisorctl: Optional[SupervisorctlConfiguration] = Field(default=None)
+    supervisorctl: SupervisorctlConfiguration = Field(default=SupervisorctlConfiguration())
     include: Optional[IncludeConfiguration] = Field(default=None)
 
     program: Dict[str, ProgramConfiguration]

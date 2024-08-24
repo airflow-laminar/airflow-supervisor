@@ -62,6 +62,8 @@ logfile={dir}/supervisord.log
 pidfile={dir}/supervisord.pid
 directory={dir}
 
+[supervisorctl]
+
 [program:test]
 command=test
 directory={dir}/test""".format(dir=str(pth / "supervisor-2000-01-01T00:00:00"))

@@ -9,8 +9,7 @@ defaults:
 
 _target_: airflow_supervisor.SupervisorConfiguration
 unix_http_server:
-inet_http_server:
-supervisorctl:
+pinet_http_server:
 include:
 program:
 group:
