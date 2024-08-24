@@ -1,5 +1,6 @@
-from pydantic import Field, SecretStr, field_serializer, field_validator, model_validator
 from typing import List, Optional
+
+from pydantic import Field, SecretStr, field_serializer, field_validator, model_validator
 
 from .base import HostPort, Signal, SupervisorLocation, UnixUserName, _BaseCfgModel
 

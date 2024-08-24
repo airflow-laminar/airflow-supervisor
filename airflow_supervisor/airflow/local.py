@@ -1,10 +1,11 @@
+from typing import Dict
+
 from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.sensors.python import PythonSensor
-from typing import Dict
 
 from airflow_supervisor.client import SupervisorRemoteXMLRPCClient
 from airflow_supervisor.config import SupervisorAirflowConfiguration

@@ -1,8 +1,9 @@
 import socket
-from pytest import fixture
 from tempfile import NamedTemporaryFile
 from time import sleep
 from typing import Iterator
+
+from pytest import fixture
 
 from airflow_supervisor import AirflowConfiguration, ProgramConfiguration, SupervisorAirflowConfiguration
 

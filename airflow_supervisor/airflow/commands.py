@@ -1,8 +1,9 @@
 from logging import getLogger
 from pathlib import Path
 from time import sleep
-from typer import Argument, Exit, Option, Typer
 from typing import Callable, Optional, Union
+
+from typer import Argument, Exit, Option, Typer
 from typing_extensions import Annotated
 
 from ..client import SupervisorRemoteXMLRPCClient

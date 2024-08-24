@@ -1,5 +1,6 @@
-from pydantic import Field, field_serializer, field_validator
 from typing import List, Optional
+
+from pydantic import Field, field_serializer, field_validator
 
 from .base import _BaseCfgModel
 

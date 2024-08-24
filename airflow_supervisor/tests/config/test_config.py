@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
 from pathlib import Path
+from unittest.mock import patch
+
 from pydantic import ValidationError
 from pytest import raises
-from unittest.mock import patch
 
 from airflow_supervisor import (
     EventListenerConfiguration,
