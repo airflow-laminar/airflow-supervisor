@@ -270,6 +270,10 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
         self.inet_http_server.username = self.airflow.username
         self.inet_http_server.password = self.airflow.password
 
+        self.supervisorctl.serverurl = (
+            f"{self.airflow.protocol}://{self.airflow.host}:{self.airflow.port.split(':')[-1]}/"
+        )
+
         # rpcinterface
         if not self.rpcinterface:
             self.rpcinterface = {"supervisor": RpcInterfaceConfiguration()}
