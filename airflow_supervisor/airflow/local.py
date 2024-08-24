@@ -1,3 +1,4 @@
+from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.operators.python import BranchPythonOperator, PythonOperator
@@ -52,30 +53,35 @@ class Supervisor(DAG):
         )
         fail_task = PythonOperator(task_id=f"{self.dag_id}-fail", python_callable=fail_)
         skip_task = PythonOperator(task_id=f"{self.dag_id}-skip", python_callable=skip_)
-        pass_task = PythonOperator(task_id=f"{self.dag_id}-pass", python_callable=pass_)
+        pass_task = PythonOperator(task_id=f"{self.dag_id}-pass", python_callable=pass_, trigger_rule="one_success")
 
         # TODO check if we're past the dag's end time
         _branch_choices = {
-            "running": trigger_self_good.task_id,
+            # "running": trigger_self_good.task_id,
+            # "ok": trigger_self_good.task_id,
             "done": self.stop_programs.task_id,
+            "running": trigger_self_good.task_id,
             "ok": trigger_self_good.task_id,
-            "": self.restart_programs.task_id,
+            "fail": self.restart_programs.task_id,
         }
 
         def _choose_branch(dag_id=self.dag_id, branch_choices=_branch_choices.copy(), **kwargs):
             task_instance = kwargs["task_instance"]
             check_program_result = task_instance.xcom_pull(key="return_value", task_ids=f"{dag_id}-check-programs")
-            return branch_choices[check_program_result]
+            ret = branch_choices.get(check_program_result, None)
+            if ret is None:
+                raise AirflowSkipException
+            return ret
 
         check_programs_decide = BranchPythonOperator(
             task_id=f"{self.dag_id}-check-programs-decide",
             python_callable=_choose_branch,
             provide_context=True,
+            trigger_rule="all_done",
         )
 
         self.configure_supervisor >> self.start_supervisor >> self.start_programs >> self.check_programs
         self.check_programs >> check_programs_decide
-
         # fail, restart
         check_programs_decide >> self.restart_programs >> trigger_self_bad >> fail_task
         # pass, finish
@@ -144,11 +150,16 @@ class Supervisor(DAG):
         if step == "configure-supervisor":
             from .commands import write_supervisor_config
 
-            return dict(python_callable=lambda: write_supervisor_config(self._supervisor_cfg, _exit=False), do_xcom_push=True)
+            return dict(
+                python_callable=lambda: write_supervisor_config(self._supervisor_cfg, _exit=False), do_xcom_push=True
+            )
         elif step == "start-supervisor":
             from .commands import start_supervisor
 
-            return dict(python_callable=lambda: start_supervisor(self._supervisor_cfg._pydantic_path, _exit=False), do_xcom_push=True)
+            return dict(
+                python_callable=lambda: start_supervisor(self._supervisor_cfg._pydantic_path, _exit=False),
+                do_xcom_push=True,
+            )
         elif step == "start-programs":
             from .commands import start_programs
 
@@ -163,17 +174,22 @@ class Supervisor(DAG):
             def _check_programs(cfg=self._supervisor_cfg, **kwargs):
                 task_instance = kwargs["task_instance"]
                 # TODO formalize
-                if check_programs(cfg, check_running=True, _exit=False):
-                    task_instance.xcom_push(key="return_value", value="running")
-                    return "running"
                 if check_programs(cfg, check_done=True, _exit=False):
                     task_instance.xcom_push(key="return_value", value="done")
-                    return "done"
+
+                    # finish
+                    return True
+
+                if check_programs(cfg, check_running=True, _exit=False):
+                    task_instance.xcom_push(key="return_value", value="running")
+                    return False
+
                 if check_programs(cfg, _exit=False):
                     task_instance.xcom_push(key="return_value", value="ok")
-                    return "ok"
-                task_instance.xcom_push(key="return_value", value="")
-                return ""
+                    return False
+
+                task_instance.xcom_push(key="return_value", value="fail")
+                return True
 
             return dict(python_callable=_check_programs, do_xcom_push=True)
         elif step == "restart-programs":
@@ -187,7 +203,9 @@ class Supervisor(DAG):
         elif step == "unconfigure-supervisor":
             from .commands import remove_supervisor_config
 
-            return dict(python_callable=lambda: remove_supervisor_config(self._supervisor_cfg, _exit=False), do_xcom_push=True)
+            return dict(
+                python_callable=lambda: remove_supervisor_config(self._supervisor_cfg, _exit=False), do_xcom_push=True
+            )
         elif step == "force-kill":
             from .commands import kill_supervisor
 
