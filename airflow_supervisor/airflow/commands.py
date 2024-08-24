@@ -2,7 +2,7 @@ from logging import getLogger
 from pathlib import Path
 from time import sleep
 from typer import Argument, Exit, Option, Typer
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 from typing_extensions import Annotated
 
 from ..client import SupervisorRemoteXMLRPCClient
@@ -36,6 +36,8 @@ def _check_same(cfg: SupervisorAirflowConfiguration) -> bool:
     if _check_exists(cfg) and cfg.config_path.read_text().strip() == cfg.to_cfg().strip():
         # same file contents
         return True
+    elif not _check_exists(cfg):
+        return True
     return False
 
 
@@ -61,12 +63,19 @@ def _raise_or_exit(val: bool, exit: bool):
     return val
 
 
+def _load_or_pass(cfg: Union[str, SupervisorAirflowConfiguration]) -> SupervisorAirflowConfiguration:
+    if isinstance(cfg, Path):
+        cfg = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    if isinstance(cfg, str):
+        cfg = SupervisorAirflowConfiguration.model_validate_json(cfg)
+    if not isinstance(cfg, SupervisorAirflowConfiguration):
+        raise NotImplementedError
+    return cfg
+
+
 def write_supervisor_config(cfg_json: str, _exit: Annotated[bool, Argument(hidden=True)] = True):
-    if isinstance(cfg_json, str):
-        cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg_json)
-    else:
-        # NOTE: typer does not support union types
-        cfg_obj = cfg_json
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg_json)
     if not _check_same(cfg_obj):
         log.critical("Configs don't match")
     cfg_obj._write_self()
@@ -76,10 +85,11 @@ def write_supervisor_config(cfg_json: str, _exit: Annotated[bool, Argument(hidde
 def start_supervisor(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     if not _check_same(cfg_obj):
         log.critical("Configs don't match")
     if _check_running(cfg_obj):
@@ -95,10 +105,11 @@ def start_supervisor(
 def start_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
 
     ret = client.startAllProcesses()
@@ -126,36 +137,56 @@ def start_programs(
 def check_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     check_running: bool = False,
+    check_done: bool = False,
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    """Check if programs are in a good state.
+
+    Args:
+        cfg (Annotated[ Path, Option, optional): supervisor config
+        check_running (bool, optional): if true, only return true if they're running
+        check_done (bool, optional): if true, only return true if they're done (cleanly)
+    """
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
 
     ret = client.getAllProcessInfo()
     for r in ret:
         log.info(r.model_dump_json())
 
+    ok = False
     if check_running:
         if all(p.running() for p in ret):
-            log.info("all processes ok")
-            return _raise_or_exit(True, _exit)
+            log.info("all processes running")
+            ok = True
+        else:
+            log.warn("not all processes running")
+    elif check_done:
+        if all(p.done(ok_exitstatuses=cfg_obj.airflow.exitcodes) for p in ret):
+            log.info("all processes done")
+            ok = True
+        else:
+            log.info("not all processes done")
     else:
-        if all(p.ok(ok_exitstatuses=cfg_obj.airflow.exitcodes)() for p in ret):
+        if all(p.ok(ok_exitstatuses=cfg_obj.airflow.exitcodes) for p in ret):
             log.info("all processes ok")
-            return _raise_or_exit(True, _exit)
-    log.warn("not all processes ok")
-    return _raise_or_exit(False, _exit)
+            ok = True
+        else:
+            log.info("not all processes ok")
+    return _raise_or_exit(ok, _exit)
 
 
 def stop_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
 
     ret = client.stopAllProcesses()
@@ -174,12 +205,14 @@ def stop_programs(
 def restart_programs(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
+    force: bool = False,
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    if not stop_programs(cfg, False):
-        log.warn("could not stop programs")
-        return _raise_or_exit(False, _exit)
+    if force:
+        if not stop_programs(cfg, False):
+            log.warn("could not stop programs")
+            return _raise_or_exit(False, _exit)
     if not start_programs(cfg, False):
         log.warn("could not start programs")
         return _raise_or_exit(False, _exit)
@@ -189,10 +222,11 @@ def restart_programs(
 def stop_supervisor(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     cfg_obj.stop()
     not_running = _wait_or_while(until=lambda: not cfg_obj.running(), timeout=30)
     if not not_running:
@@ -204,12 +238,13 @@ def stop_supervisor(
 def kill_supervisor(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
     if not stop_programs(cfg, False):
         log.warn("could not stop programs")
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     cfg_obj.kill()
     still_running = _wait_or_while(until=lambda: not cfg_obj.running(), timeout=30)
     if still_running:
@@ -221,10 +256,11 @@ def kill_supervisor(
 def remove_supervisor_config(
     cfg: Annotated[
         Path, Option(exists=True, file_okay=True, dir_okay=False, writable=False, readable=True, resolve_path=True)
-    ],
+    ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     still_running = stop_supervisor(cfg_obj, _exit=False)
     if still_running:
         still_running = kill_supervisor(cfg_obj, _exit=False)

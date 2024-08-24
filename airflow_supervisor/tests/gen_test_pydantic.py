@@ -10,7 +10,7 @@ if __name__ == "__main__":
         path=path,
         program={
             "test": ProgramConfiguration(
-                command="bash -c 'sleep 1; exit 1'",
+                command="bash -c 'sleep 60; exit 1'",
             )
         },
     )
