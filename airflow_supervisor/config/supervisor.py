@@ -204,9 +204,9 @@ class SupervisorConfiguration(BaseModel):
         _log.info(f"Starting supervisord: {self.config_path}")
         if not self.running():
             if daemon is False:
-                Popen(["supervisord", "-n", "-c", str(self.config_path)])
+                Popen(f"supervisord -n -c {str(self.config_path)}", shell=True)
                 return
-            Popen(["supervisord", "-c", str(self.config_path)])
+            Popen(f"supervisord -c {str(self.config_path)}", close_fds=True, shell=True)
 
     def running(self):
         # grab the pidfile, find the process with the pid, and kill

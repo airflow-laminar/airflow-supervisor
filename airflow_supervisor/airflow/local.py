@@ -62,10 +62,10 @@ class Supervisor(DAG):
             "": self.restart_programs.task_id,
         }
 
-        def _choose_branch(**kwargs):
+        def _choose_branch(dag_id=self.dag_id, branch_choices=_branch_choices.copy(), **kwargs):
             task_instance = kwargs["task_instance"]
-            check_program_result = task_instance.xcom_pull(task_ids=[f"{self.dag_id}-check-programs"])
-            return _branch_choices.get(check_program_result, self.restart_programs.task_id)
+            check_program_result = task_instance.xcom_pull(key="return_value", task_ids=f"{dag_id}-check-programs")
+            return branch_choices[check_program_result]
 
         check_programs_decide = BranchPythonOperator(
             task_id=f"{self.dag_id}-check-programs-decide",
@@ -144,49 +144,54 @@ class Supervisor(DAG):
         if step == "configure-supervisor":
             from .commands import write_supervisor_config
 
-            return dict(python_callable=lambda: write_supervisor_config(self._supervisor_cfg, _exit=False))
+            return dict(python_callable=lambda: write_supervisor_config(self._supervisor_cfg, _exit=False), do_xcom_push=True)
         elif step == "start-supervisor":
             from .commands import start_supervisor
 
-            return dict(python_callable=lambda: start_supervisor(self._supervisor_cfg._pydantic_path, _exit=False))
+            return dict(python_callable=lambda: start_supervisor(self._supervisor_cfg._pydantic_path, _exit=False), do_xcom_push=True)
         elif step == "start-programs":
             from .commands import start_programs
 
-            return dict(python_callable=lambda: start_programs(self._supervisor_cfg, _exit=False))
+            return dict(python_callable=lambda: start_programs(self._supervisor_cfg, _exit=False), do_xcom_push=True)
         elif step == "stop-programs":
             from .commands import stop_programs
 
-            return dict(python_callable=lambda: stop_programs(self._supervisor_cfg, _exit=False))
+            return dict(python_callable=lambda: stop_programs(self._supervisor_cfg, _exit=False), do_xcom_push=True)
         elif step == "check-programs":
             from .commands import check_programs
 
-            def _check_programs():
+            def _check_programs(cfg=self._supervisor_cfg, **kwargs):
+                task_instance = kwargs["task_instance"]
                 # TODO formalize
-                if check_programs(self._supervisor_cfg, check_running=True, _exit=False):
+                if check_programs(cfg, check_running=True, _exit=False):
+                    task_instance.xcom_push(key="return_value", value="running")
                     return "running"
-                if check_programs(self._supervisor_cfg, check_done=True, _exit=False):
+                if check_programs(cfg, check_done=True, _exit=False):
+                    task_instance.xcom_push(key="return_value", value="done")
                     return "done"
-                if check_programs(self._supervisor_cfg, _exit=False):
+                if check_programs(cfg, _exit=False):
+                    task_instance.xcom_push(key="return_value", value="ok")
                     return "ok"
+                task_instance.xcom_push(key="return_value", value="")
                 return ""
 
-            return dict(python_callable=_check_programs)
+            return dict(python_callable=_check_programs, do_xcom_push=True)
         elif step == "restart-programs":
             from .commands import restart_programs
 
-            return dict(python_callable=lambda: restart_programs(self._supervisor_cfg, _exit=False))
+            return dict(python_callable=lambda: restart_programs(self._supervisor_cfg, _exit=False), do_xcom_push=True)
         elif step == "stop-supervisor":
             from .commands import stop_supervisor
 
-            return dict(python_callable=lambda: stop_supervisor(self._supervisor_cfg, _exit=False))
+            return dict(python_callable=lambda: stop_supervisor(self._supervisor_cfg, _exit=False), do_xcom_push=True)
         elif step == "unconfigure-supervisor":
             from .commands import remove_supervisor_config
 
-            return dict(python_callable=lambda: remove_supervisor_config(self._supervisor_cfg, _exit=False))
+            return dict(python_callable=lambda: remove_supervisor_config(self._supervisor_cfg, _exit=False), do_xcom_push=True)
         elif step == "force-kill":
             from .commands import kill_supervisor
 
-            return dict(python_callable=lambda: kill_supervisor(self._supervisor_cfg, _exit=False))
+            return dict(python_callable=lambda: kill_supervisor(self._supervisor_cfg, _exit=False), do_xcom_push=True)
         raise NotImplementedError
 
     def get_step_operator(self, step: SupervisorTaskStep) -> Operator:

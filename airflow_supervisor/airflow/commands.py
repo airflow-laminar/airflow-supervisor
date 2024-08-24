@@ -2,7 +2,7 @@ from logging import getLogger
 from pathlib import Path
 from time import sleep
 from typer import Argument, Exit, Option, Typer
-from typing import Callable, Optional
+from typing import Callable, Optional, Union
 from typing_extensions import Annotated
 
 from ..client import SupervisorRemoteXMLRPCClient
@@ -63,12 +63,19 @@ def _raise_or_exit(val: bool, exit: bool):
     return val
 
 
+def _load_or_pass(cfg: Union[str, SupervisorAirflowConfiguration]) -> SupervisorAirflowConfiguration:
+    if isinstance(cfg, Path):
+        cfg = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    if isinstance(cfg, str):
+        cfg = SupervisorAirflowConfiguration.model_validate_json(cfg)
+    if not isinstance(cfg, SupervisorAirflowConfiguration):
+        raise NotImplementedError
+    return cfg
+
+
 def write_supervisor_config(cfg_json: str, _exit: Annotated[bool, Argument(hidden=True)] = True):
-    if isinstance(cfg_json, str):
-        cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg_json)
-    else:
-        # NOTE: typer does not support union types
-        cfg_obj = cfg_json
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg_json)
     if not _check_same(cfg_obj):
         log.critical("Configs don't match")
     cfg_obj._write_self()
@@ -81,7 +88,8 @@ def start_supervisor(
     ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     if not _check_same(cfg_obj):
         log.critical("Configs don't match")
     if _check_running(cfg_obj):
@@ -100,7 +108,8 @@ def start_programs(
     ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
 
     ret = client.startAllProcesses()
@@ -140,7 +149,8 @@ def check_programs(
         check_running (bool, optional): if true, only return true if they're running
         check_done (bool, optional): if true, only return true if they're done (cleanly)
     """
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
 
     ret = client.getAllProcessInfo()
@@ -175,7 +185,8 @@ def stop_programs(
     ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     client = SupervisorRemoteXMLRPCClient(cfg=cfg_obj)
 
     ret = client.stopAllProcesses()
@@ -214,7 +225,8 @@ def stop_supervisor(
     ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     cfg_obj.stop()
     not_running = _wait_or_while(until=lambda: not cfg_obj.running(), timeout=30)
     if not not_running:
@@ -231,7 +243,8 @@ def kill_supervisor(
 ):
     if not stop_programs(cfg, False):
         log.warn("could not stop programs")
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     cfg_obj.kill()
     still_running = _wait_or_while(until=lambda: not cfg_obj.running(), timeout=30)
     if still_running:
@@ -246,7 +259,8 @@ def remove_supervisor_config(
     ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    cfg_obj = SupervisorAirflowConfiguration.model_validate_json(cfg.read_text())
+    # NOTE: typer does not support union types
+    cfg_obj = _load_or_pass(cfg)
     still_running = stop_supervisor(cfg_obj, _exit=False)
     if still_running:
         still_running = kill_supervisor(cfg_obj, _exit=False)
