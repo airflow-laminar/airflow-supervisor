@@ -219,7 +219,7 @@ class Supervisor(DAG):
                     "task_id": f"{self.dag_id}-{step}",
                     "poke_interval": self._supervisor_cfg.check_interval.total_seconds(),
                     "timeout": self._supervisor_cfg.check_timeout.total_seconds(),
-                    "mode": "reschedule",
+                    "mode": "poke",
                     **self.get_base_operator_kwargs(),
                     **self.get_step_kwargs(step),
                 }
