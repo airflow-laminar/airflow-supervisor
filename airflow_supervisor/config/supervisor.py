@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
 from logging import getLogger
@@ -80,7 +80,6 @@ class SupervisorConfiguration(BaseModel):
 
     @model_validator(mode="after")
     def _setup_config_and_working_dir(self):
-        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
         tempdir = Path(gettempdir()).resolve()
 
         if self.working_dir == "":
@@ -88,11 +87,8 @@ class SupervisorConfiguration(BaseModel):
                 # use this as the dir
                 self.working_dir = self.supervisord.directory
             else:
-                self.working_dir = tempdir / f"supervisor-{now}"
+                self.working_dir = tempdir / "supervisor"
                 self.supervisord.directory = self.working_dir
-            using_default_working_dir = True
-        else:
-            using_default_working_dir = False
 
         # force pidfile to be in working dir if not otherwise set
         if not self.supervisord.pidfile:
@@ -103,10 +99,7 @@ class SupervisorConfiguration(BaseModel):
             self.supervisord.logfile = self.working_dir / "supervisord.log"
 
         if self.config_path == "":
-            if using_default_working_dir:
-                self.config_path = self.working_dir / "supervisor.cfg"
-            else:
-                self.config_path = self.working_dir / f"supervisor-{now}.cfg"
+            self.config_path = self.working_dir / "supervisor.cfg"
 
         for name, program_config in self.program.items():
             if program_config.directory is None:
