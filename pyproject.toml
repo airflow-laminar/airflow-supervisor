@@ -134,6 +134,7 @@ default-section = "third-party"
 known-first-party = ["airflow_supervisor"]
 section-order = [
     "future",
+    "standard-library",
     "third-party",
     "first-party",
     "local-folder",

@@ -1,9 +1,10 @@
 # https://github.com/jrdnh
 # Pydantic-compatible wrapper for dateutil.relativedelta.relativedelta
+from typing import Annotated, Any, Optional
+
 from dateutil.relativedelta import relativedelta, weekday
 from pydantic import BaseModel, Field, model_serializer, model_validator
 from pydantic_core import core_schema
-from typing import Annotated, Any, Optional
 
 
 class WeekdayAnnotations(BaseModel):

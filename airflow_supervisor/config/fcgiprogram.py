@@ -1,5 +1,6 @@
-from pydantic import Field
 from typing import Optional
+
+from pydantic import Field
 
 from .base import Octal, UnixUserNameOrGroup
 from .program import ProgramConfiguration

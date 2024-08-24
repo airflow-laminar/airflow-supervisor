@@ -1,5 +1,6 @@
-from pydantic import Field, SecretStr, field_serializer
 from typing import Optional
+
+from pydantic import Field, SecretStr, field_serializer
 
 from .base import HostPort, UnixUserName, _BaseCfgModel
 

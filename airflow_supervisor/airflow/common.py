@@ -1,5 +1,6 @@
-from airflow.exceptions import AirflowFailException, AirflowSkipException
 from typing import Literal
+
+from airflow.exceptions import AirflowFailException, AirflowSkipException
 
 SupervisorTaskStep = Literal[
     "configure-supervisor",
