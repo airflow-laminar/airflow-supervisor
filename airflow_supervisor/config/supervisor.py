@@ -2,6 +2,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from hydra import compose, initialize_config_dir
 from hydra.utils import instantiate
+from logging import getLogger
 from pathlib import Path
 from pydantic import BaseModel, Field, PrivateAttr, model_validator
 from shutil import rmtree
@@ -30,6 +31,8 @@ __all__ = (
     "load_config",
     "load_airflow_config",
 )
+
+_log = getLogger(__name__)
 
 
 class SupervisorConfiguration(BaseModel):
@@ -190,17 +193,22 @@ class SupervisorConfiguration(BaseModel):
             return config
 
     def write(self):
+        _log.info(f"Making working dir: {self.working_dir}")
         self.working_dir.mkdir(parents=True, exist_ok=True)
-        for program_config in self.program.values():
+        for program_name, program_config in self.program.items():
             if program_config.directory:
+                _log.info(f"Making program dir ({program_name}): {program_config.directory}")
                 program_config.directory.mkdir(exist_ok=True)
+        _log.info(f"Writing config file: {self.config_path}")
         self.config_path.write_text(self.to_cfg())
 
     def rmdir(self):
         if not self.running():
+            _log.info(f"Removing working dir: {self.working_dir}")
             rmtree(self.working_dir)
 
     def start(self, daemon: bool = False):
+        _log.info(f"Starting supervisord: {self.config_path}")
         if not self.running():
             if daemon is False:
                 Popen(["supervisord", "-n", "-c", str(self.config_path)])
@@ -209,6 +217,7 @@ class SupervisorConfiguration(BaseModel):
 
     def running(self):
         # grab the pidfile, find the process with the pid, and kill
+        _log.info(f"Checking supervisord: {self.supervisord.pidfile}")
         if not self.supervisord.pidfile.exists():
             return False
         try:
@@ -220,11 +229,13 @@ class SupervisorConfiguration(BaseModel):
     def stop(self):
         if self.running():
             # grab the pidfile, find the process with the pid, and kill with SIGTERM
+            _log.info(f"Stopping supervisord: {self.supervisord.pidfile}")
             os.kill(int(self.supervisord.pidfile.read_text()), SIGTERM)
 
     def kill(self):
         if self.running():
             # grab the pidfile, find the process with the pid, and kill with SIGKILL
+            _log.info(f"Killing supervisord: {self.supervisord.pidfile}")
             os.kill(int(self.supervisord.pidfile.read_text()), SIGKILL)
 
 
@@ -244,7 +255,8 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
     def _write_self(self):
         # TODO make config driven
         self.write()
-        (Path(self.working_dir) / self._pydantic_path).write_text(self.model_dump_json())
+        _log.info(f"Writing model json: {self._pydantic_path}")
+        Path(self._pydantic_path).write_text(self.model_dump_json())
 
     @model_validator(mode="after")
     def _setup_airflow_defaults(self):
