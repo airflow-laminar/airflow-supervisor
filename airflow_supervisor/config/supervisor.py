@@ -64,7 +64,7 @@ class SupervisorConfiguration(BaseModel):
     unix_http_server: Optional[UnixHttpServerConfiguration] = Field(default=None)
     inet_http_server: Optional[InetHttpServerConfiguration] = Field(default=None)
     supervisord: SupervisordConfiguration = Field(default=SupervisordConfiguration())
-    supervisorctl: Optional[SupervisorctlConfiguration] = Field(default=None)
+    supervisorctl: SupervisorctlConfiguration = Field(default=SupervisorctlConfiguration())
     include: Optional[IncludeConfiguration] = Field(default=None)
 
     program: Dict[str, ProgramConfiguration]
@@ -269,6 +269,10 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
         self.inet_http_server.port = self.airflow.port
         self.inet_http_server.username = self.airflow.username
         self.inet_http_server.password = self.airflow.password
+
+        self.supervisorctl.serverurl = (
+            f"{self.airflow.protocol}://{self.airflow.host}:{self.airflow.port.split(':')[-1]}/"
+        )
 
         # rpcinterface
         if not self.rpcinterface:

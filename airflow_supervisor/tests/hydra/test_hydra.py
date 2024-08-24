@@ -27,6 +27,8 @@ logfile={dir}/supervisord.log
 pidfile={dir}/supervisord.pid
 directory={dir}
 
+[supervisorctl]
+
 [program:sleep]
 command=sleep 1000
 directory={dir}/sleep
