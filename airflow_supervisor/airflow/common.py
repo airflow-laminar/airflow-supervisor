@@ -1,6 +1,6 @@
 from typing import Literal
 
-from airflow.exceptions import AirflowFailException, AirflowSkipException
+from airflow.exceptions import AirflowSkipException
 
 SupervisorTaskStep = Literal[
     "configure-supervisor",
@@ -19,17 +19,7 @@ def skip_():
     raise AirflowSkipException
 
 
-def fail_():
-    raise AirflowFailException
-
-
-def pass_():
-    pass
-
-
 __all__ = (
     "SupervisorTaskStep",
-    "pass_",
-    "fail_",
     "skip_",
 )

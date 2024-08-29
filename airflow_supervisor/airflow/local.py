@@ -1,16 +1,14 @@
 from typing import Dict
 
-from airflow.exceptions import AirflowSkipException
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
-from airflow.operators.python import BranchPythonOperator, PythonOperator
-from airflow.operators.trigger_dagrun import TriggerDagRunOperator
-from airflow.sensors.python import PythonSensor
+from airflow.operators.python import PythonOperator
+from airflow_ha import Action, CheckResult, HighAvailabilityOperator, Result
 
 from airflow_supervisor.client import SupervisorRemoteXMLRPCClient
 from airflow_supervisor.config import SupervisorAirflowConfiguration
 
-from .common import SupervisorTaskStep, fail_, pass_, skip_
+from .common import SupervisorTaskStep, skip_
 
 __all__ = ("Supervisor",)
 
@@ -43,57 +41,16 @@ class Supervisor(DAG):
         # initialize tasks
         self.initialize_tasks()
 
-        # configure graph
-        trigger_self_good = TriggerDagRunOperator(
-            task_id=f"{self.dag_id}-trigger-loop",
-            trigger_dag_id=self.dag_id,
-        )
-        trigger_self_bad = TriggerDagRunOperator(
-            task_id=f"{self.dag_id}-trigger-redo",
-            trigger_dag_id=self.dag_id,
-        )
-        fail_task = PythonOperator(task_id=f"{self.dag_id}-fail", python_callable=fail_)
-        skip_task = PythonOperator(task_id=f"{self.dag_id}-skip", python_callable=skip_)
-        pass_task = PythonOperator(task_id=f"{self.dag_id}-pass", python_callable=pass_, trigger_rule="one_success")
-
-        # TODO check if we're past the dag's end time
-        _branch_choices = {
-            # "running": trigger_self_good.task_id,
-            # "ok": trigger_self_good.task_id,
-            "done": self.stop_programs.task_id,
-            "running": trigger_self_good.task_id,
-            "ok": trigger_self_good.task_id,
-            "fail": self.restart_programs.task_id,
-        }
-
-        def _choose_branch(dag_id=self.dag_id, branch_choices=_branch_choices.copy(), **kwargs):
-            task_instance = kwargs["task_instance"]
-            check_program_result = task_instance.xcom_pull(key="return_value", task_ids=f"{dag_id}-check-programs")
-            ret = branch_choices.get(check_program_result, None)
-            if ret is None:
-                raise AirflowSkipException
-            return ret
-
-        check_programs_decide = BranchPythonOperator(
-            task_id=f"{self.dag_id}-check-programs-decide",
-            python_callable=_choose_branch,
-            provide_context=True,
-            trigger_rule="all_done",
-        )
-
         self.configure_supervisor >> self.start_supervisor >> self.start_programs >> self.check_programs
-        self.check_programs >> check_programs_decide
         # fail, restart
-        check_programs_decide >> self.restart_programs >> trigger_self_bad >> fail_task
+        self.check_programs.retrigger_fail >> self.restart_programs
         # pass, finish
-        check_programs_decide >> self.stop_programs >> self.stop_supervisor >> self.unconfigure_supervisor >> pass_task
-        # loop
-        check_programs_decide >> trigger_self_good >> pass_task
+        self.check_programs.stop_pass >> self.stop_programs >> self.stop_supervisor >> self.unconfigure_supervisor
 
         # TODO make helper dag
         self._force_kill = self.get_step_operator("force-kill")
         # Default non running
-        skip_task >> self._force_kill
+        PythonOperator(task_id="skip", python_callable=skip_) >> self._force_kill
 
     def initialize_tasks(self):
         # tasks
@@ -121,7 +78,7 @@ class Supervisor(DAG):
         return self._start_programs
 
     @property
-    def check_programs(self) -> Operator:
+    def check_programs(self) -> HighAvailabilityOperator:
         return self._check_programs
 
     @property
@@ -172,25 +129,16 @@ class Supervisor(DAG):
         elif step == "check-programs":
             from .commands import check_programs
 
-            def _check_programs(cfg=self._supervisor_cfg, **kwargs):
-                task_instance = kwargs["task_instance"]
+            def _check_programs(supervisor_cfg=self._supervisor_cfg, **kwargs) -> CheckResult:
                 # TODO formalize
-                if check_programs(cfg, check_done=True, _exit=False):
-                    task_instance.xcom_push(key="return_value", value="done")
-
+                if check_programs(supervisor_cfg, check_done=True, _exit=False):
                     # finish
-                    return True
-
-                if check_programs(cfg, check_running=True, _exit=False):
-                    task_instance.xcom_push(key="return_value", value="running")
-                    return False
-
-                if check_programs(cfg, _exit=False):
-                    task_instance.xcom_push(key="return_value", value="ok")
-                    return False
-
-                task_instance.xcom_push(key="return_value", value="fail")
-                return True
+                    return Result.PASS, Action.STOP
+                if check_programs(supervisor_cfg, check_running=True, _exit=False):
+                    return Result.PASS, Action.CONTINUE
+                if check_programs(supervisor_cfg, _exit=False):
+                    return Result.PASS, Action.CONTINUE
+                return Result.FAIL, Action.RETRIGGER
 
             return dict(python_callable=_check_programs, do_xcom_push=True)
         elif step == "restart-programs":
@@ -215,7 +163,7 @@ class Supervisor(DAG):
 
     def get_step_operator(self, step: SupervisorTaskStep) -> Operator:
         if step == "check-programs":
-            return PythonSensor(
+            return HighAvailabilityOperator(
                 **{
                     "task_id": f"{self.dag_id}-{step}",
                     "poke_interval": self._supervisor_cfg.check_interval.total_seconds(),

@@ -25,6 +25,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "airflow-ha",
     "apache-airflow>=2,<3",
     "colorlog",
     "hydra-core",
