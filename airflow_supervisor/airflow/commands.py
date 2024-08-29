@@ -242,8 +242,13 @@ def kill_supervisor(
     ] = Path("pydantic.json"),
     _exit: Annotated[bool, Argument(hidden=True)] = True,
 ):
-    if not stop_programs(cfg, False):
-        log.warn("could not stop programs")
+    try:
+        if not stop_programs(cfg, False):
+            log.warn("could not stop programs")
+    except ConnectionRefusedError:
+        # supervisor already down, continue
+        ...
+
     # NOTE: typer does not support union types
     cfg_obj = _load_or_pass(cfg)
     cfg_obj.kill()
