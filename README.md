@@ -32,6 +32,10 @@ We expose DAGs composed of a variety of tasks and sensors, which are exposed as 
 
 This setup provides maximal configureability with a minimal requirements on the machine (for example, no requirements on an existing `supervisord` daemon via e.g. `systemd`). It also lets you hook your own tasks into any step of the process. For example, if we detect a process has died in step (5), you could configure your own task to take some custom action before/instead of the default restart of step 6.
 
+Here is a nice overview of the DAG, with annotations for code paths and the actions taken by Supervisor:
+
+<img src="https://raw.githubusercontent.com/airflow-laminar/airflow-supervisor/main/docs/src/overview.png" />
+
 More docs and code examples coming soon!
 
 ## How To: Use as a supervisord configuration frontend
