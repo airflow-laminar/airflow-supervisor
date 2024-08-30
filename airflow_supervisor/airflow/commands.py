@@ -129,7 +129,7 @@ def start_programs(
     if not all_ok:
         for r in client.getAllProcessInfo():
             log.info(r.model_dump_json())
-        log.warn("not all processes started")
+        log.warning("not all processes started")
         return _raise_or_exit(False, _exit)
     log.info("all processes started")
     return _raise_or_exit(True, _exit)
@@ -164,7 +164,7 @@ def check_programs(
             log.info("all processes running")
             ok = True
         else:
-            log.warn("not all processes running")
+            log.warning("not all processes running")
     elif check_done:
         if all(p.done(ok_exitstatuses=cfg_obj.airflow.exitcodes) for p in ret):
             log.info("all processes done")
@@ -197,7 +197,7 @@ def stop_programs(
     if not all_stopped:
         for r in client.getAllProcessInfo():
             log.info(r.model_dump_json())
-        log.warn("not all processes stopped")
+        log.warning("not all processes stopped")
         return _raise_or_exit(False, _exit)
     log.info("all processes stopped")
     return _raise_or_exit(True, _exit)
@@ -212,10 +212,10 @@ def restart_programs(
 ):
     if force:
         if not stop_programs(cfg, False):
-            log.warn("could not stop programs")
+            log.warning("could not stop programs")
             return _raise_or_exit(False, _exit)
     if not start_programs(cfg, False):
-        log.warn("could not start programs")
+        log.warning("could not start programs")
         return _raise_or_exit(False, _exit)
     return _raise_or_exit(True, _exit)
 
@@ -244,7 +244,7 @@ def kill_supervisor(
 ):
     try:
         if not stop_programs(cfg, False):
-            log.warn("could not stop programs")
+            log.warning("could not stop programs")
     except ConnectionRefusedError:
         # supervisor already down, continue
         ...
