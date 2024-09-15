@@ -34,7 +34,7 @@ This setup provides maximal configureability with a minimal requirements on the 
 
 Here is a nice overview of the DAG, with annotations for code paths and the actions taken by Supervisor:
 
-<img src="https://raw.githubusercontent.com/airflow-laminar/airflow-supervisor/main/docs/src/overview.png" />
+<img src="https://raw.githubusercontent.com/airflow-laminar/airflow-supervisor/main/docs/img/overview.png" />
 
 More docs and code examples coming soon!
 
