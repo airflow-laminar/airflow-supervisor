@@ -38,6 +38,53 @@ Here is a nice overview of the DAG, with annotations for code paths and the acti
 
 More docs and code examples coming soon!
 
+### Example Dag:
+
+```python
+from airflow import DAG
+from datetime import timedelta, datetime
+from airflow_supervisor import (
+    Supervisor,
+    SupervisorAirflowConfiguration,
+    ProgramConfiguration,
+    AirflowConfiguration,
+)
+
+
+# Create supervisor configuration
+cfg = SupervisorAirflowConfiguration(
+    airflow=AirflowConfiguration(port="*:9091"),
+    working_dir="/data/airflow/supervisor",
+    config_path="/data/airflow/supervisor/supervisor.conf",
+    program={
+        "test": ProgramConfiguration(
+            command="bash -c 'sleep 14400; exit 1'",
+        )
+    },
+)
+
+# Create DAG as normal
+with DAG(
+    dag_id="test-supervisor",
+    schedule=timedelta(days=1),
+    start_date=datetime(2024, 1, 1),
+    catchup=False,
+) as dag:
+
+    # Link supervisor config to dag
+    supervisor = Supervisor(dag=dag, cfg=cfg)
+```
+
+## Example DAG: [`airflow-config`](https://github.com/airflow-laminar/airflow-config)
+
+```yaml
+
+```
+
+```python
+
+```
+
 ## How To: Use as a supervisord configuration frontend
 
 This library can be used outside airflow as a generic supervisord configuration framework, with the static typing benefits that entails. For an example, look at the [hydra configuration test](./airflow_supervisor/tests/hydra/test_hydra.py). This example generates a supervisor configuration file by composing independent hydra configs.

@@ -1,6 +1,7 @@
 from shlex import quote
 from typing import Dict, List, Optional, Union
 
+from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.ssh.operators.ssh import SSHOperator
@@ -17,7 +18,8 @@ class SupervisorSSH(Supervisor):
     # Mimic SSH Operator: https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/_api/airflow/providers/ssh/operators/ssh/index.html
     def __init__(
         self,
-        supervisor_cfg: SupervisorAirflowConfiguration,
+        dag: DAG,
+        cfg: SupervisorAirflowConfiguration,
         command_prefix: str = "",
         command_noescape: str = "",
         ssh_hook: Optional[SSHHook] = None,
@@ -52,7 +54,7 @@ class SupervisorSSH(Supervisor):
             self._ssh_operator_kwargs["banner_timeout"] = banner_timeout
         if skip_on_exit_code:
             self._ssh_operator_kwargs["skip_on_exit_code"] = skip_on_exit_code
-        super().__init__(supervisor_cfg=supervisor_cfg, **kwargs)
+        super().__init__(dag=dag, cfg=cfg, **kwargs)
 
     def get_base_operator_kwargs(self) -> Dict:
         return dict(dag=self, **self._ssh_operator_kwargs)
