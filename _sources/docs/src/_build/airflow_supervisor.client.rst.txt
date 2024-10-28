@@ -1,0 +1,6 @@
+﻿airflow\_supervisor.client
+==========================
+
+.. automodule:: airflow_supervisor.client
+
+   
