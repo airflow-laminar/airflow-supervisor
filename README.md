@@ -77,12 +77,45 @@ with DAG(
 
 ## Example DAG: [`airflow-config`](https://github.com/airflow-laminar/airflow-config)
 
-```yaml
 
+```yaml
+# @package _global_
+_target_: airflow_config.Configuration
+default_args:
+  _target_: airflow_config.DefaultArgs
+  retries: 0
+  depends_on_past: false
+all_dags:
+  _target_: airflow_config.DagArgs
+  start_date: "2024-01-01"
+  catchup: false
+extensions:
+  supervisor:
+    _target_: airflow_supervisor.SupervisorAirflowConfiguration
+    airflow:
+      _target_: airflow_supervisor.AirflowConfiguration
+      port: "*:9091"
+    working_dir: "/data/airflow/supervisor"
+    config_path: "/data/airflow/supervisor/supervisor.conf"
+    program:
+      test:
+        _target_: airflow_supervisor.ProgramConfiguration
+        command: "bash -c 'sleep 14400; exit 1'"
 ```
 
 ```python
+from datetime import timedelta
+from airflow_config import load_config, DAG
+from airflow_supervisor import Supervisor
 
+config = load_config(config_name="airflow")
+
+with DAG(
+    dag_id="test-supervisor",
+    schedule=timedelta(days=1),
+    config=config,
+) as dag:
+    supervisor = Supervisor(dag=dag, cfg=config.extensions["supervisor"])
 ```
 
 ## How To: Use as a supervisord configuration frontend
