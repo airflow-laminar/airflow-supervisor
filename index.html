@@ -253,7 +253,7 @@
         <article role="main" id="furo-main-content">
           <div class="toctree-wrapper compound">
 </div>
-<section id="airflow-supervisor">
+<section class="tex2jax_ignore mathjax_ignore" id="airflow-supervisor">
 <h1>airflow-supervisor<a class="headerlink" href="#airflow-supervisor" title="Link to this heading">¶</a></h1>
 <p><a class="reference external" href="https://airflow.apache.org">Apache Airflow</a> utilities for running long-running or always-on jobs with <a class="reference external" href="http://supervisord.org">supervisord</a></p>
 <p><a class="reference external" href="https://github.com/timkpaine/airflow-supervisor/actions?query=workflow%3A%22Build+Status%22"><img alt="Build Status" src="https://github.com/timkpaine/airflow-supervisor/actions/workflows/build.yml/badge.svg" /></a>
@@ -286,7 +286,7 @@
 </ol>
 <p>This setup provides maximal configureability with a minimal requirements on the machine (for example, no requirements on an existing <code class="docutils literal notranslate"><span class="pre">supervisord</span></code> daemon via e.g. <code class="docutils literal notranslate"><span class="pre">systemd</span></code>). It also lets you hook your own tasks into any step of the process. For example, if we detect a process has died in step (5), you could configure your own task to take some custom action before/instead of the default restart of step 6.</p>
 <p>Here is a nice overview of the DAG, with annotations for code paths and the actions taken by Supervisor:</p>
-<img src="https://raw.githubusercontent.com/airflow-laminar/airflow-supervisor/main/docs/img/overview.png" />
+<img alt="https://raw.githubusercontent.com/airflow-laminar/airflow-supervisor/main/docs/img/overview.png" src="https://raw.githubusercontent.com/airflow-laminar/airflow-supervisor/main/docs/img/overview.png" />
 <p>More docs and code examples coming soon!</p>
 <section id="example-dag">
 <h3>Example Dag:<a class="headerlink" href="#example-dag" title="Link to this heading">¶</a></h3>
