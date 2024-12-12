@@ -91,7 +91,11 @@ _airflow_supervisor_command {step} --cfg {self._supervisor_cfg._pydantic_path}
             "force-kill",
         ):
             return SSHOperator(
-                **{"task_id": f"{self.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
+                **{
+                    "task_id": f"{self.dag.dag_id}-{step}",
+                    **self.get_base_operator_kwargs(),
+                    **self.get_step_kwargs(step),
+                }
             )
         else:
             # can be done via XMLRPC API
