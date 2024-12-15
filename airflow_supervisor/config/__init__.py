@@ -7,7 +7,13 @@ from .include import IncludeConfiguration
 from .inet_http_server import InetHttpServerConfiguration
 from .program import ProgramConfiguration
 from .rpcinterface import RpcInterfaceConfiguration
-from .supervisor import SupervisorAirflowConfiguration, SupervisorConfiguration, load_airflow_config, load_config
+from .supervisor import (
+    SupervisorAirflowConfiguration,
+    SupervisorConfiguration,
+    SupervisorSSHAirflowConfiguration,
+    load_airflow_config,
+    load_config,
+)
 from .supervisorctl import SupervisorctlConfiguration
 from .supervisord import SupervisordConfiguration
 from .unix_http_server import UnixHttpServerConfiguration
