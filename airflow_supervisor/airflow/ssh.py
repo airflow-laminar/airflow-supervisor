@@ -1,12 +1,11 @@
 from shlex import quote
-from typing import Dict, List, Optional, Union
+from typing import Dict
 
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
-from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow.providers.ssh.operators.ssh import SSHOperator
 
-from airflow_supervisor.config import SupervisorAirflowConfiguration
+from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
 
 from .common import SupervisorTaskStep
 from .local import Supervisor
@@ -19,41 +18,32 @@ class SupervisorSSH(Supervisor):
     def __init__(
         self,
         dag: DAG,
-        cfg: SupervisorAirflowConfiguration,
-        command_prefix: str = "",
-        command_noescape: str = "",
-        ssh_hook: Optional[SSHHook] = None,
-        ssh_conn_id: Optional[str] = None,
-        remote_host: Optional[str] = None,
-        conn_timeout: Optional[int] = None,
-        cmd_timeout: Optional[int] = None,
-        environment: Optional[dict] = None,
-        get_pty: Optional[bool] = None,
-        banner_timeout: Optional[float] = None,
-        skip_on_exit_code: Optional[Union[int, List[int]]] = None,
+        cfg: SupervisorSSHAirflowConfiguration,
         **kwargs,
     ):
-        self._command_prefix = command_prefix
-        self._command_noescape = command_noescape
+        for attr in ("command_prefix", "command_noescape"):
+            if attr in kwargs:
+                setattr(self, f"_{attr}", kwargs.pop(attr))
+            elif cfg and getattr(cfg, attr):
+                setattr(self, f"_{attr}", getattr(cfg, attr))
+
         self._ssh_operator_kwargs = {}
-        if ssh_hook:
-            self._ssh_operator_kwargs["ssh_hook"] = ssh_hook
-        if ssh_conn_id:
-            self._ssh_operator_kwargs["ssh_conn_id"] = ssh_conn_id
-        if remote_host:
-            self._ssh_operator_kwargs["remote_host"] = remote_host
-        if conn_timeout:
-            self._ssh_operator_kwargs["conn_timeout"] = conn_timeout
-        if cmd_timeout:
-            self._ssh_operator_kwargs["cmd_timeout"] = cmd_timeout
-        if environment:
-            self._ssh_operator_kwargs["environment"] = environment
-        if get_pty:
-            self._ssh_operator_kwargs["get_pty"] = get_pty
-        if banner_timeout:
-            self._ssh_operator_kwargs["banner_timeout"] = banner_timeout
-        if skip_on_exit_code:
-            self._ssh_operator_kwargs["skip_on_exit_code"] = skip_on_exit_code
+        for attr in (
+            "ssh_hook",
+            "ssh_conn_id",
+            "remote_host",
+            "conn_timeout",
+            "cmd_timeout",
+            "environment",
+            "get_pty",
+            "banner_timeout",
+            "skip_on_exit_code",
+        ):
+            if attr in kwargs:
+                self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
+            elif cfg and getattr(cfg, attr):
+                self._ssh_operator_kwargs[attr] = getattr(cfg, attr)
+
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
     def get_base_operator_kwargs(self) -> Dict:
