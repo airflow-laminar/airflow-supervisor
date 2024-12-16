@@ -82,7 +82,7 @@ _airflow_supervisor_command {step} --cfg {self._supervisor_cfg._pydantic_path}
         ):
             return SSHOperator(
                 **{
-                    "task_id": f"{self.dag.dag_id}-{step}",
+                    "task_id": f"{self._dag.dag_id}-{step}",
                     **self.get_base_operator_kwargs(),
                     **self.get_step_kwargs(step),
                 }
