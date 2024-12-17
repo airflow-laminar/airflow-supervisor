@@ -31,8 +31,8 @@ def test_inst():
         p1.return_value = str(pth)
         p2.now.return_value = datetime(2000, 1, 1, 0, 0, 0, 1, tzinfo=UTC)
         c = SupervisorConfiguration(program={"test": ProgramConfiguration(command="test")})
-        assert str(c.working_dir) == str(pth / "supervisor-2000-01-01T00:00:00")
-        assert str(c.config_path) == str(pth / "supervisor-2000-01-01T00:00:00" / "supervisor.cfg")
+        assert str(c.working_dir) == str(pth / "supervisor-2000-01-01T00-00-00")
+        assert str(c.config_path) == str(pth / "supervisor-2000-01-01T00-00-00" / "supervisor.cfg")
 
 
 def test_cfg_roundtrip_json():
@@ -67,7 +67,7 @@ directory={dir}
 
 [program:test]
 command=test
-directory={dir}/test""".format(dir=str(pth / "supervisor-2000-01-01T00:00:00"))
+directory={dir}/test""".format(dir=str(pth / "supervisor-2000-01-01T00-00-00"))
         )
 
 
@@ -139,5 +139,5 @@ socket=test
 command=echo 'test'
 
 [rpcinterface:testrpcinterface]
-supervisor.rpcinterface_factory=a.test.module""".format(dir=str(pth / "supervisor-2000-01-01T00:00:00"))
+supervisor.rpcinterface_factory=a.test.module""".format(dir=str(pth / "supervisor-2000-01-01T00-00-00"))
         )

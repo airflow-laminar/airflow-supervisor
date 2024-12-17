@@ -39,6 +39,6 @@ directory={dir}/echo
 
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory=supervisor.rpcinterface:make_main_rpcinterface""".format(
-                dir=str(pth / "supervisor-2000-01-01T00:00:00")
+                dir=str(pth / "supervisor-2000-01-01T00-00-00")
             )
         )

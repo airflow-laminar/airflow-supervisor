@@ -65,7 +65,7 @@ class AirflowConfiguration(_BaseCfgModel):
     #########
     local_or_remote: Optional[SupervisorLocation] = Field(
         default="local",
-        description="Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicats via inet http server",
+        description="Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicates via inet http server",
     )
     host: str = Field(
         default="localhost",

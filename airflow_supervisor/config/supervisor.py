@@ -82,7 +82,7 @@ class SupervisorConfiguration(BaseModel):
 
     @model_validator(mode="after")
     def _setup_config_and_working_dir(self):
-        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%S")
         tempdir = Path(gettempdir()).resolve()
 
         if self.working_dir == "":
@@ -303,14 +303,13 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
 
 class SupervisorSSHAirflowConfiguration(SupervisorAirflowConfiguration):
     command_prefix: Optional[str] = Field(default="")
-    command_noescape: Optional[str] = Field(default="")
 
     # SSH Kwargs
     ssh_hook: Optional[object] = Field(default=None)
     ssh_conn_id: Optional[str] = Field(default=None)
     remote_host: Optional[str] = Field(default=None)
     conn_timeout: Optional[int] = Field(default=None)
-    cmd_timeout: Optional[int] = Field(default=None)
+    cmd_timeout: Optional[int] = Field(default=3600)
     environment: Optional[dict] = Field(default=None)
     get_pty: Optional[bool] = Field(default=None)
     banner_timeout: Optional[float] = Field(default=None)

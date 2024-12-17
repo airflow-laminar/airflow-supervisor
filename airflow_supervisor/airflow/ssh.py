@@ -21,7 +21,7 @@ class SupervisorSSH(Supervisor):
         cfg: SupervisorSSHAirflowConfiguration,
         **kwargs,
     ):
-        for attr in ("command_prefix", "command_noescape"):
+        for attr in ("command_prefix",):
             if attr in kwargs:
                 setattr(self, f"_{attr}", kwargs.pop(attr))
             elif cfg and getattr(cfg, attr):
@@ -48,28 +48,25 @@ class SupervisorSSH(Supervisor):
 
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
-    def get_base_operator_kwargs(self) -> Dict:
-        return dict(dag=self, **self._ssh_operator_kwargs)
-
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
         if step == "configure-supervisor":
             # TODO
-            return dict(
-                command=f"""
-{self._command_noescape}
-{quote(self._command_prefix)}
-_airflow_supervisor_command {step} {self._supervisor_cfg.model_dump_json()}
-"""
-            )
+            return {
+                **self._ssh_operator_kwargs,
+                "command": f"""
+{self._command_prefix}
+_airflow_supervisor_command {step} '{self._supervisor_cfg.model_dump_json()}'
+""",
+            }
         elif step in ("start-supervisor", "stop-supervisor", "unconfigure-supervisor", "force-kill"):
             # must be done via SSH
-            return dict(
-                command=f"""
-{self._command_noescape}
-{quote(self._command_prefix)}
-_airflow_supervisor_command {step} --cfg {self._supervisor_cfg._pydantic_path}
-"""
-            )
+            return {
+                **self._ssh_operator_kwargs,
+                "command": f"""
+{self._command_prefix}
+_airflow_supervisor_command {step} --cfg {quote(str(self._supervisor_cfg._pydantic_path))}
+""",
+            }
         else:
             # can be done via XMLRPC API
             return super().get_step_kwargs(step=step)
