@@ -26,6 +26,8 @@ class SupervisorSSH(Supervisor):
                 setattr(self, f"_{attr}", kwargs.pop(attr))
             elif cfg and getattr(cfg, attr):
                 setattr(self, f"_{attr}", getattr(cfg, attr))
+            else:
+                setattr(self, f"_{attr}", "")
 
         self._ssh_operator_kwargs = {}
         for attr in (
