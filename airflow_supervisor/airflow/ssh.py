@@ -55,7 +55,7 @@ class SupervisorSSH(Supervisor):
                 **self._ssh_operator_kwargs,
                 "command": f"""
 {self._command_prefix}
-_airflow_supervisor_command {step} '{self._supervisor_cfg.model_dump_json()}'
+_airflow_supervisor_command {step} '{self._cfg.model_dump_json()}'
 """,
             }
         elif step in ("start-supervisor", "stop-supervisor", "unconfigure-supervisor", "force-kill"):
@@ -64,7 +64,7 @@ _airflow_supervisor_command {step} '{self._supervisor_cfg.model_dump_json()}'
                 **self._ssh_operator_kwargs,
                 "command": f"""
 {self._command_prefix}
-_airflow_supervisor_command {step} --cfg {quote(str(self._supervisor_cfg._pydantic_path))}
+_airflow_supervisor_command {step} --cfg {quote(str(self._cfg._pydantic_path))}
 """,
             }
         else:
