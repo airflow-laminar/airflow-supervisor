@@ -21,8 +21,8 @@ def test_airflow_inst():
                 )
             },
         )
-        assert str(c.working_dir) == str(pth / "supervisor-2000-01-01T00:00:00")
-        assert str(c.config_path) == str(pth / "supervisor-2000-01-01T00:00:00" / "supervisor.cfg")
+        assert str(c.working_dir) == str(pth / "supervisor-2000-01-01T00-00-00")
+        assert str(c.config_path) == str(pth / "supervisor-2000-01-01T00-00-00" / "supervisor.cfg")
 
 
 def test_airflow_cfg_roundtrip_json():
