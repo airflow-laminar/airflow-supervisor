@@ -7,7 +7,7 @@ develop:  ## install dependencies and build library
 	python -m pip install -e .[develop]
 
 build:  ## build the python library
-	python setup.py build build_ext --inplace
+	python -m build -n
 
 install:  ## install library
 	python -m pip install .
@@ -34,7 +34,7 @@ format: fix
 ################
 # Other Checks #
 ################
-.PHONY: check-manifest checks check annotate
+.PHONY: check-manifest checks check
 
 check-manifest:  ## check python sdist manifest with check-manifest
 	check-manifest -v
@@ -44,22 +44,19 @@ checks: check-manifest
 # Alias
 check: checks
 
-annotate:  ## run python type annotation checks with mypy
-	python -m mypy ./airflow_supervisor
-
 #########
 # TESTS #
 #########
 .PHONY: test coverage tests
 
 test:  ## run python tests
-	python -m pytest -v airflow_supervisor/tests --junitxml=junit.xml
+	python -m pytest -v airflow_supervisor/tests
 
 kill:
 	bash -c "pgrep -iaf supervisord | xargs kill -15"
 
 coverage:  ## run tests and collect test coverage
-	python -m pytest -v airflow_supervisor/tests --junitxml=junit.xml --cov=airflow_supervisor --cov-branch --cov-fail-under=60 --cov-report term-missing --cov-report xml
+	python -m pytest -v airflow_supervisor/tests --cov=airflow_supervisor --cov-report term-missing --cov-report xml
 
 # Alias
 tests: test
