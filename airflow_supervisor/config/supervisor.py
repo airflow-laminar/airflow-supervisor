@@ -282,7 +282,7 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
         self.rpcinterface["supervisor"].rpcinterface_factory = self.airflow.rpcinterface_factory
 
         # supervisord
-        self.supervisord.nodaemon = True
+        self.supervisord.nodaemon = False
         self.supervisord.identifier = "supervisor"
 
         # programs
