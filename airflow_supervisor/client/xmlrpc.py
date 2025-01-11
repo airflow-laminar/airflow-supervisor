@@ -1,6 +1,6 @@
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 from xmlrpc.client import Fault, ServerProxy
 
 from pydantic import BaseModel
@@ -116,16 +116,15 @@ class SupervisorRemoteXMLRPCClient(object):
         self._port = int(cfg.airflow.port.split(":")[-1])
         self._protocol = cfg.airflow.protocol
         self._rpcpath = "/" + cfg.airflow.rpcpath if not cfg.airflow.rpcpath.startswith("/") else cfg.airflow.rpcpath
-
-        if cfg.airflow.port == 80:
-            # force http
-            self._rpcurl = f"http://{self._host}{self._rpcpath}"
-        elif cfg.airflow.port == 443:
-            # force https
-            self._rpcurl = f"https://{self._host}{self._rpcpath}"
-        else:
-            self._rpcurl = f"{self._protocol}://{self._host}:{self._port}{self._rpcpath}"
+        self._rpcurl = self._build_rpcurl(username=cfg.airflow.username, password=cfg.airflow.password)
         self._client = ServerProxy(self._rpcurl)
+
+    def _build_rpcurl(self, username: Optional[str], password: Optional[str]) -> str:
+        # Forces http or https based on port, otherwise resolves to given protocol
+        protocol = {80: "http", 443: "https"}.get(self._port, self._protocol)
+        port = "" if self._port in {80, 443} else f":{self._port}"
+        authentication = f"{username}:{password.get_secret_value()}@" if username and password else ""
+        return f"{protocol}://{authentication}{self._host}{port}{self._rpcpath}"
 
     #######################
     # supervisord methods #
