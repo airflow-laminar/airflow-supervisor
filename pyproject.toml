@@ -8,12 +8,12 @@ authors = [{name = "the airflow-supervisor authors", email = "t.paine154@gmail.c
 description = "Supervisor operators and configuration for long-running tasks"
 readme = "README.md"
 license = { text = "Apache-2.0" }
-version = "0.3.6"
+version = "1.0.0"
 requires-python = ">=3.9"
 keywords = []
 
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
@@ -64,7 +64,7 @@ Repository = "https://github.com/airflow-laminar/airflow-supervisor"
 Homepage = "https://github.com/airflow-laminar/airflow-supervisor"
 
 [tool.bumpversion]
-current_version = "0.3.6"
+current_version = "1.0.0"
 commit = true
 tag = false
 
