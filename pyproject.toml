@@ -25,8 +25,9 @@ classifiers = [
 ]
 
 dependencies = [
-    "airflow-ha",
-    "apache-airflow>=2,<3",
+    # NOTE: these are required in the airflow environment
+    # "airflow-ha",
+    # "apache-airflow>=2,<3",
     "colorlog",
     "hydra-core",
     "jinja2",
@@ -37,6 +38,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+all = [
+    "airflow-ha",
+    "apache-airflow>=2,<3",
+]
 develop = [
     "build",
     "bump-my-version",
@@ -50,6 +55,8 @@ develop = [
     # Config
     "airflow-config>=0.1.2",
     # NOTE: this is not a runtime dep as supervisord need not be installed locally
+    "airflow-ha",
+    "apache-airflow>=2,<3",
     "supervisor",
 ]
 config = [
