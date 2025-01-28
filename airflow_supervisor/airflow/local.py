@@ -1,25 +1,25 @@
-from typing import Dict
-
-from airflow.models.dag import DAG
-from airflow.models.operator import Operator
-from airflow.operators.python import PythonOperator
-from airflow_ha import Action, CheckResult, HighAvailabilityOperator, Result
+from typing import TYPE_CHECKING, Dict
 
 from airflow_supervisor.client import SupervisorRemoteXMLRPCClient
 from airflow_supervisor.config import SupervisorAirflowConfiguration
 
 from .common import SupervisorTaskStep, skip_
 
+if TYPE_CHECKING:
+    from airflow.models.dag import DAG
+    from airflow.models.operator import Operator
+    from airflow_ha import HighAvailabilityOperator
+
 __all__ = ("Supervisor",)
 
 
 class Supervisor(object):
-    _dag: DAG
+    _dag: "DAG"
     _cfg: SupervisorAirflowConfiguration
-    _kill_dag: DAG
+    _kill_dag: "DAG"
     _xmlrpc_client: SupervisorRemoteXMLRPCClient
 
-    def __init__(self, dag: DAG, cfg: SupervisorAirflowConfiguration, **kwargs):
+    def __init__(self, dag: "DAG", cfg: SupervisorAirflowConfiguration, **kwargs):
         # store config
         self._cfg = cfg
 
@@ -43,6 +43,8 @@ class Supervisor(object):
         # TODO make helper dag
         self._force_kill = self.get_step_operator("force-kill")
         # Default non running
+        from airflow.operators.python import PythonOperator
+
         PythonOperator(task_id="skip", python_callable=skip_) >> self._force_kill
 
     def setup_dag(self):
@@ -66,35 +68,35 @@ class Supervisor(object):
         self._check_programs = self.get_step_operator("check-programs")
 
     @property
-    def configure_supervisor(self) -> Operator:
+    def configure_supervisor(self) -> "Operator":
         return self._configure_supervisor
 
     @property
-    def start_supervisor(self) -> Operator:
+    def start_supervisor(self) -> "Operator":
         return self._start_supervisor
 
     @property
-    def start_programs(self) -> Operator:
+    def start_programs(self) -> "Operator":
         return self._start_programs
 
     @property
-    def check_programs(self) -> HighAvailabilityOperator:
+    def check_programs(self) -> "HighAvailabilityOperator":
         return self._check_programs
 
     @property
-    def stop_programs(self) -> Operator:
+    def stop_programs(self) -> "Operator":
         return self._stop_programs
 
     @property
-    def restart_programs(self) -> Operator:
+    def restart_programs(self) -> "Operator":
         return self._restart_programs
 
     @property
-    def stop_supervisor(self) -> Operator:
+    def stop_supervisor(self) -> "Operator":
         return self._stop_supervisor
 
     @property
-    def unconfigure_supervisor(self) -> Operator:
+    def unconfigure_supervisor(self) -> "Operator":
         return self._unconfigure_supervisor
 
     @property
@@ -125,6 +127,8 @@ class Supervisor(object):
 
             return dict(python_callable=lambda: stop_programs(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "check-programs":
+            from airflow_ha import Action, CheckResult, Result
+
             from .commands import check_programs
 
             def _check_programs(supervisor_cfg=self._cfg, **kwargs) -> CheckResult:
@@ -157,7 +161,10 @@ class Supervisor(object):
             return dict(python_callable=lambda: kill_supervisor(self._cfg, _exit=False), do_xcom_push=True)
         raise NotImplementedError
 
-    def get_step_operator(self, step: SupervisorTaskStep) -> Operator:
+    def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
+        from airflow.operators.python import PythonOperator
+        from airflow_ha import HighAvailabilityOperator
+
         if step == "check-programs":
             return HighAvailabilityOperator(
                 **{
