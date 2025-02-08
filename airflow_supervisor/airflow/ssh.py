@@ -52,7 +52,7 @@ class SupervisorSSH(Supervisor):
 
         # Integrate with airflow-balancer, use host if provided
         if host:
-            self._ssh_operator_kwargs["remote_host"] = host.hostname
+            self._ssh_operator_kwargs["remote_host"] = host.name
             self._ssh_operator_kwargs["ssh_hook"] = host.hook()
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
