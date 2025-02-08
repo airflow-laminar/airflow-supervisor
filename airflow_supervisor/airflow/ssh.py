@@ -1,5 +1,5 @@
 from shlex import quote
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
@@ -10,6 +10,9 @@ from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
 from .common import SupervisorTaskStep
 from .local import Supervisor
 
+if TYPE_CHECKING:
+    from airflow_balancer import Host
+
 __all__ = ("SupervisorSSH",)
 
 
@@ -19,6 +22,7 @@ class SupervisorSSH(Supervisor):
         self,
         dag: DAG,
         cfg: SupervisorSSHAirflowConfiguration,
+        host: "Host" = None,
         **kwargs,
     ):
         for attr in ("command_prefix",):
@@ -46,6 +50,10 @@ class SupervisorSSH(Supervisor):
             elif cfg and getattr(cfg, attr):
                 self._ssh_operator_kwargs[attr] = getattr(cfg, attr)
 
+        # Integrate with airflow-balancer, use host if provided
+        if host:
+            self._ssh_operator_kwargs["remote_host"] = host.hostname
+            self._ssh_operator_kwargs["ssh_hook"] = host.hook()
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:

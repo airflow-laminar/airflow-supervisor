@@ -1,5 +1,5 @@
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time, timedelta, timezone
 from logging import getLogger
 from pathlib import Path
 from shutil import rmtree
@@ -245,11 +245,21 @@ class SupervisorAirflowConfiguration(SupervisorConfiguration):
     airflow: AirflowConfiguration = Field(
         default_factory=AirflowConfiguration, description="Required configurations for Airflow integration"
     )
+
+    # Passthrough to PythonSensor in airflow-ha
     check_interval: timedelta = Field(
         default=timedelta(seconds=5), description="Interval between supervisor program status checks"
     )
     check_timeout: timedelta = Field(
         default=timedelta(hours=8), description="Timeout to wait for supervisor program status checks"
+    )
+
+    # HighAvailabilityOperator custom args
+    runtime: Optional[timedelta] = Field(default=None, description="Max runtime of Supervisor job")
+    endtime: Optional[time] = Field(default=None, description="End time of Supervisor job")
+    maxretrigger: Optional[int] = Field(
+        default=None,
+        description="Max number of retriggers of Supervisor job (e.g. max number of checks separated by `check_interval`)",
     )
 
     _pydantic_path: Path = PrivateAttr(default="pydantic.json")

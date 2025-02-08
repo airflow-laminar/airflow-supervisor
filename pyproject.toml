@@ -52,10 +52,12 @@ develop = [
     "ruff",
     "twine",
     "wheel",
-    # Config
+    # airflow-config integration
     "airflow-config>=0.1.2",
+    # airflow-balancer integration
+    "airflow-balancer>=0.3.0",
     # NOTE: this is not a runtime dep as supervisord need not be installed locally
-    "airflow-ha",
+    "airflow-ha>=1.1.0",
     "apache-airflow>=2,<3",
     "supervisor",
 ]
