@@ -114,3 +114,7 @@ with DAG(
 
 > [!NOTE]
 > This library is built on [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic), which provides configuration elements for all supervisor structures, as well as self-contained tools for interacting with supervisor instances.
+
+
+> [!NOTE]
+> This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).
