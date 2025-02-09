@@ -2,6 +2,8 @@ from typing import Dict
 
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
+from airflow.operators.python import PythonOperator
+from airflow_common_operators import fail, skip
 from airflow_ha import Action, CheckResult, HighAvailabilityOperator, Result
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
 from supervisor_pydantic.convenience import (
@@ -18,8 +20,6 @@ from supervisor_pydantic.convenience import (
 )
 
 from airflow_supervisor.config import SupervisorAirflowConfiguration
-
-from .common import skip_
 
 __all__ = ("Supervisor",)
 
@@ -46,17 +46,28 @@ class Supervisor(object):
         self.initialize_tasks()
 
         self.configure_supervisor >> self.start_supervisor >> self.start_programs >> self.check_programs
+
         # fail, restart
         self.check_programs.retrigger_fail >> self.restart_programs
+
         # pass, finish
         self.check_programs.stop_pass >> self.stop_programs >> self.stop_supervisor >> self.unconfigure_supervisor
 
         # TODO make helper dag
         self._force_kill = self.get_step_operator("force-kill")
-        # Default non running
-        from airflow.operators.python import PythonOperator
 
-        PythonOperator(task_id="skip", python_callable=skip_) >> self._force_kill
+        # Default non running
+        PythonOperator(task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip) >> self._force_kill
+
+        # Deal with any configuration or cleanup problems
+        any_config_fail = PythonOperator(
+            task_id=f"{self._dag.dag_id}-check-config-failed", python_callable=fail, trigger_rule="one_failed"
+        )
+        self.configure_supervisor >> any_config_fail
+        self.start_supervisor >> any_config_fail
+        self.start_programs >> any_config_fail
+        self.stop_programs >> any_config_fail
+        self.unconfigure_supervisor >> any_config_fail
 
     def setup_dag(self):
         # override dag kwargs that dont make sense
@@ -151,12 +162,9 @@ class Supervisor(object):
             return dict(python_callable=lambda: remove_supervisor_config(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "force-kill":
             return dict(python_callable=lambda: kill_supervisor(self._cfg, _exit=False), do_xcom_push=True)
-        raise NotImplementedError
+        raise NotImplementedError(f"Unknown step: {step}")
 
     def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
-        from airflow.operators.python import PythonOperator
-        from airflow_ha import HighAvailabilityOperator
-
         if step == "check-programs":
             return HighAvailabilityOperator(
                 **{

@@ -45,6 +45,7 @@ class SupervisorSSH(Supervisor):
         ):
             if attr in kwargs:
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
+                setattr(self._cfg, attr, self._ssh_operator_kwargs[attr])
             elif cfg and getattr(cfg, attr):
                 self._ssh_operator_kwargs[attr] = getattr(cfg, attr)
 
@@ -52,6 +53,10 @@ class SupervisorSSH(Supervisor):
         if host:
             self._ssh_operator_kwargs["remote_host"] = host.name
             self._ssh_operator_kwargs["ssh_hook"] = host.hook()
+
+            # Ensure host matches the configuration
+            cfg.convenience.host = host.name
+            cfg._setup_convenience_defaults()
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
@@ -61,7 +66,7 @@ class SupervisorSSH(Supervisor):
                 **self._ssh_operator_kwargs,
                 "command": f"""
 {self._command_prefix}
-_airflow_supervisor_command {step} '{self._cfg.model_dump_json()}'
+_supervisor_convenience {step} '{self._cfg.model_dump_json()}'
 """,
             }
         elif step in ("start-supervisor", "stop-supervisor", "unconfigure-supervisor", "force-kill"):
@@ -70,7 +75,7 @@ _airflow_supervisor_command {step} '{self._cfg.model_dump_json()}'
                 **self._ssh_operator_kwargs,
                 "command": f"""
 {self._command_prefix}
-_airflow_supervisor_command {step} --cfg {quote(str(self._cfg._pydantic_path))}
+_supervisor_convenience {step} --cfg {quote(str(self._cfg._pydantic_path))}
 """,
             }
         else:

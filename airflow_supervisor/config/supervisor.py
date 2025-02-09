@@ -42,6 +42,15 @@ class SupervisorSSHAirflowConfiguration(SupervisorAirflowConfiguration):
             assert isinstance(v, SSHHook)
         return v
 
+    @field_validator("ssh_hook")
+    @classmethod
+    def _validate_ssh_hook(cls, v):
+        if v:
+            from airflow.providers.ssh.hooks.ssh import SSHHook
+
+            assert isinstance(v, SSHHook)
+        return v
+
 
 load_airflow_config = SupervisorAirflowConfiguration.load
 load_airflow_ssh_config = SupervisorSSHAirflowConfiguration.load
