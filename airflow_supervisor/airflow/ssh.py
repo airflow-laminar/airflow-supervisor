@@ -1,17 +1,15 @@
 from shlex import quote
-from typing import TYPE_CHECKING, Dict
+from typing import Dict
 
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.providers.ssh.operators.ssh import SSHOperator
+from airflow_balancer import Host
+from supervisor_pydantic.convenience import SupervisorTaskStep
 
 from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
 
-from .common import SupervisorTaskStep
 from .local import Supervisor
-
-if TYPE_CHECKING:
-    from airflow_balancer import Host
 
 __all__ = ("SupervisorSSH",)
 
