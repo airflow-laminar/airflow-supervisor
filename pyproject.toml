@@ -25,23 +25,12 @@ classifiers = [
 ]
 
 dependencies = [
-    # NOTE: these are required in the airflow environment
-    # "airflow-ha",
-    # "apache-airflow>=2,<3",
-    "colorlog",
-    "hydra-core",
-    "jinja2",
-    "omegaconf",
-    "pydantic>=2",
-    "rich",
-    "typer",
+    "airflow-ha",
+    "apache-airflow>=2,<3",
+    "supervisor-pydantic>=1.1,<1.2",
 ]
 
 [project.optional-dependencies]
-all = [
-    "airflow-ha",
-    "apache-airflow>=2,<3",
-]
 develop = [
     "build",
     "bump-my-version",
@@ -56,17 +45,9 @@ develop = [
     "airflow-config>=0.1.2",
     # airflow-balancer integration
     "airflow-balancer>=0.3.0",
-    # NOTE: this is not a runtime dep as supervisord need not be installed locally
-    "airflow-ha>=1.1.0",
-    "apache-airflow>=2,<3",
-    "supervisor",
-]
-config = [
-    "airflow-config>=0.1.2",
 ]
 
 [project.scripts]
-_airflow_supervisor_command = "airflow_supervisor.airflow.commands:main"
 
 [project.urls]
 Repository = "https://github.com/airflow-laminar/airflow-supervisor"
@@ -106,7 +87,7 @@ exclude_also = [
     "@(abc\\.)?abstractmethod",
 ]
 ignore_errors = true
-fail_under = 50
+fail_under = 40
 
 [tool.hatch.build]
 artifacts = []

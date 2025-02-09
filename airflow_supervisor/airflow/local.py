@@ -1,14 +1,25 @@
-from typing import TYPE_CHECKING, Dict
+from typing import Dict
 
-from airflow_supervisor.client import SupervisorRemoteXMLRPCClient
+from airflow.models.dag import DAG
+from airflow.models.operator import Operator
+from airflow_ha import Action, CheckResult, HighAvailabilityOperator, Result
+from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
+from supervisor_pydantic.convenience import (
+    SupervisorTaskStep,
+    check_programs,
+    kill_supervisor,
+    remove_supervisor_config,
+    restart_programs,
+    start_programs,
+    start_supervisor,
+    stop_programs,
+    stop_supervisor,
+    write_supervisor_config,
+)
+
 from airflow_supervisor.config import SupervisorAirflowConfiguration
 
-from .common import SupervisorTaskStep, skip_
-
-if TYPE_CHECKING:
-    from airflow.models.dag import DAG
-    from airflow.models.operator import Operator
-    from airflow_ha import HighAvailabilityOperator
+from .common import skip_
 
 __all__ = ("Supervisor",)
 
@@ -108,28 +119,17 @@ class Supervisor(object):
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
         if step == "configure-supervisor":
-            from .commands import write_supervisor_config
-
             return dict(python_callable=lambda: write_supervisor_config(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "start-supervisor":
-            from .commands import start_supervisor
-
             return dict(
                 python_callable=lambda: start_supervisor(self._cfg._pydantic_path, _exit=False),
                 do_xcom_push=True,
             )
         elif step == "start-programs":
-            from .commands import start_programs
-
             return dict(python_callable=lambda: start_programs(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "stop-programs":
-            from .commands import stop_programs
-
             return dict(python_callable=lambda: stop_programs(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "check-programs":
-            from airflow_ha import Action, CheckResult, Result
-
-            from .commands import check_programs
 
             def _check_programs(supervisor_cfg=self._cfg, **kwargs) -> CheckResult:
                 # TODO formalize
@@ -144,20 +144,12 @@ class Supervisor(object):
 
             return dict(python_callable=_check_programs, do_xcom_push=True)
         elif step == "restart-programs":
-            from .commands import restart_programs
-
             return dict(python_callable=lambda: restart_programs(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "stop-supervisor":
-            from .commands import stop_supervisor
-
             return dict(python_callable=lambda: stop_supervisor(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "unconfigure-supervisor":
-            from .commands import remove_supervisor_config
-
             return dict(python_callable=lambda: remove_supervisor_config(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "force-kill":
-            from .commands import kill_supervisor
-
             return dict(python_callable=lambda: kill_supervisor(self._cfg, _exit=False), do_xcom_push=True)
         raise NotImplementedError
 

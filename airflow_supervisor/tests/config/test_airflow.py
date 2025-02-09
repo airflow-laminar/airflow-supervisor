@@ -7,8 +7,8 @@ from airflow_supervisor import AirflowConfiguration, ProgramConfiguration, Super
 
 def test_airflow_inst():
     with (
-        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
-        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+        patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
+        patch("supervisor_pydantic.config.supervisor.datetime") as p2,
     ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
@@ -27,8 +27,8 @@ def test_airflow_inst():
 
 def test_airflow_cfg_roundtrip_json():
     with (
-        patch("airflow_supervisor.config.supervisor.gettempdir") as p1,
-        patch("airflow_supervisor.config.supervisor.datetime") as p2,
+        patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
+        patch("supervisor_pydantic.config.supervisor.datetime") as p2,
     ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
