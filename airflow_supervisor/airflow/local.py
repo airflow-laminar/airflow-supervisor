@@ -162,13 +162,13 @@ class Supervisor(object):
                 **{
                     # Sensor Args
                     "task_id": f"{self._dag.dag_id}-{step}",
-                    "poke_interval": self._cfg.check_interval.total_seconds(),
-                    "timeout": self._cfg.check_timeout.total_seconds(),
+                    "poke_interval": self._cfg.airflow.check_interval.total_seconds(),
+                    "timeout": self._cfg.airflow.check_timeout.total_seconds(),
                     "mode": "poke",
                     # HighAvailabilityOperator Args
-                    "runtime": self._cfg.runtime,
-                    "endtime": self._cfg.endtime,
-                    "maxretrigger": self._cfg.maxretrigger,
+                    "runtime": self._cfg.airflow.runtime,
+                    "endtime": self._cfg.airflow.endtime,
+                    "maxretrigger": self._cfg.airflow.maxretrigger,
                     # Pass through
                     **self.get_base_operator_kwargs(),
                     **self.get_step_kwargs(step),
