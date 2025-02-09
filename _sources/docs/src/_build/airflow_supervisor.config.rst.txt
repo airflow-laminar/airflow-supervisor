@@ -1,6 +1,0 @@
-﻿airflow\_supervisor.config
-==========================
-
-.. automodule:: airflow_supervisor.config
-
-   

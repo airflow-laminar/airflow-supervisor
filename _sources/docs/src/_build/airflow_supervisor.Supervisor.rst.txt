@@ -1,0 +1,41 @@
+﻿airflow\_supervisor.Supervisor
+==============================
+
+.. currentmodule:: airflow_supervisor
+
+.. autoclass:: Supervisor
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Supervisor.__init__
+      ~Supervisor.get_base_operator_kwargs
+      ~Supervisor.get_step_kwargs
+      ~Supervisor.get_step_operator
+      ~Supervisor.initialize_tasks
+      ~Supervisor.setup_dag
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Supervisor.check_programs
+      ~Supervisor.configure_supervisor
+      ~Supervisor.restart_programs
+      ~Supervisor.start_programs
+      ~Supervisor.start_supervisor
+      ~Supervisor.stop_programs
+      ~Supervisor.stop_supervisor
+      ~Supervisor.supervisor_client
+      ~Supervisor.unconfigure_supervisor
+   
+   

@@ -1,6 +1,0 @@
-﻿airflow\_supervisor.airflow
-===========================
-
-.. automodule:: airflow_supervisor.airflow
-
-   

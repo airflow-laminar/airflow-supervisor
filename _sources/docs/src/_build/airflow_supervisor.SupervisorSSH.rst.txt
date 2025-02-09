@@ -1,0 +1,41 @@
+﻿airflow\_supervisor.SupervisorSSH
+=================================
+
+.. currentmodule:: airflow_supervisor
+
+.. autoclass:: SupervisorSSH
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SupervisorSSH.__init__
+      ~SupervisorSSH.get_base_operator_kwargs
+      ~SupervisorSSH.get_step_kwargs
+      ~SupervisorSSH.get_step_operator
+      ~SupervisorSSH.initialize_tasks
+      ~SupervisorSSH.setup_dag
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~SupervisorSSH.check_programs
+      ~SupervisorSSH.configure_supervisor
+      ~SupervisorSSH.restart_programs
+      ~SupervisorSSH.start_programs
+      ~SupervisorSSH.start_supervisor
+      ~SupervisorSSH.stop_programs
+      ~SupervisorSSH.stop_supervisor
+      ~SupervisorSSH.supervisor_client
+      ~SupervisorSSH.unconfigure_supervisor
+   
+   

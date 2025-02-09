@@ -2,11 +2,10 @@
 <html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="prev" title="airflow_supervisor.client" href="airflow_supervisor.client.html" />
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
     <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
-        <title>airflow_supervisor.config - airflow-supervisor v1.2.0</title>
+        <title>airflow_supervisor.config.airflow - airflow-supervisor v1.2.0</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -204,11 +203,13 @@
   <input type="hidden" name="area" value="default">
 </form>
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
-  <ul class="current">
-<li class="toctree-l1 current has-children"><a class="reference internal" href="../API.html">API Reference</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.airflow.html">airflow_supervisor.airflow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.client.html">airflow_supervisor.client</a></li>
-<li class="toctree-l2 current current-page"><a class="current reference internal" href="#">airflow_supervisor.config</a></li>
+  <ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../docs/src/API.html">API Reference</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of API Reference</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSH.html">airflow_supervisor.SupervisorSSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html">airflow_supervisor.SupervisorAirflowConfiguration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html">airflow_supervisor.SupervisorSSHAirflowConfiguration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.AirflowConfiguration.html">airflow_supervisor.AirflowConfiguration</a></li>
 </ul>
 </li>
 </ul>
@@ -230,13 +231,7 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          <div class="view-this-page">
-  <a class="muted-link" href="../../../_sources/docs/src/_build/airflow_supervisor.config.rst.txt" title="View this page">
-    <svg><use href="#svg-eye"></use></svg>
-    <span class="visually-hidden">View this page</span>
-  </a>
-</div>
-<div class="theme-toggle-container theme-toggle-content">
+          <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
               <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
@@ -251,27 +246,45 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <section id="module-airflow_supervisor.config">
-<span id="airflow-supervisor-config"></span><h1>airflow_supervisor.config<a class="headerlink" href="#module-airflow_supervisor.config" title="Link to this heading">¶</a></h1>
-</section>
+          <h1>Source code for airflow_supervisor.config.airflow</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">time</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvenienceConfiguration</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;AirflowConfiguration&quot;</span><span class="p">,)</span>
+
+
+<div class="viewcode-block" id="AirflowConfiguration">
+<a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.AirflowConfiguration.html#airflow_supervisor.AirflowConfiguration">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AirflowConfiguration</span><span class="p">(</span><span class="n">ConvenienceConfiguration</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Settings that MUST be set when running in airflow&quot;&quot;&quot;</span>
+
+    <span class="c1"># Passthrough to PythonSensor in airflow-ha</span>
+    <span class="n">check_interval</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Interval between supervisor program status checks&quot;</span>
+    <span class="p">)</span>
+    <span class="n">check_timeout</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout to wait for supervisor program status checks&quot;</span>
+    <span class="p">)</span>
+
+    <span class="c1"># HighAvailabilityOperator custom args</span>
+    <span class="n">runtime</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">timedelta</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Max runtime of Supervisor job&quot;</span><span class="p">)</span>
+    <span class="n">endtime</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">time</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;End time of Supervisor job&quot;</span><span class="p">)</span>
+    <span class="n">maxretrigger</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Max number of retriggers of Supervisor job (e.g. max number of checks separated by `check_interval`)&quot;</span><span class="p">,</span>
+    <span class="p">)</span></div>
+
+</pre></div>
         </article>
       </div>
       <footer>
         
         <div class="related-pages">
           
-          <a class="prev-page" href="airflow_supervisor.client.html">
-              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
-              <div class="page-info">
-                <div class="context">
-                  <span>Previous</span>
-                </div>
-                
-                <div class="title">airflow_supervisor.client</div>
-                
-              </div>
-            </a>
+          
         </div>
         <div class="bottom-of-page">
           <div class="left-details">
@@ -303,6 +316,43 @@
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>
     <script src="../../../_static/design-tabs.js?v=f930bc37"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+const load = async () => {
+    await mermaid.run();
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    if(mermaids_to_add_zoom > 0) {
+        var svgs = d3.selectAll(".mermaid svg");
+        if(all_mermaids.length !== mermaids_processed.length) {
+            // try again in a sec, wait for mermaids to load
+            setTimeout(load, 200);
+            return;
+        } else if(svgs.size() !== mermaids_to_add_zoom) {
+            // try again in a sec, wait for mermaids to load
+            setTimeout(load, 200);
+            return;
+        } else {
+            svgs.each(function() {
+                var svg = d3.select(this);
+                svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                var inner = svg.select("g");
+                var zoom = d3.zoom().on("zoom", function(event) {
+                    inner.attr("transform", event.transform);
+                });
+                svg.call(zoom);
+            });
+        }
+    }
+};
+
+window.addEventListener("load", load);
+</script>
     <script src="../../../_static/js/custom.js?v=956e5d78"></script>
     </body>
 </html>
