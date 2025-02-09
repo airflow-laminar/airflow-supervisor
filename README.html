@@ -260,14 +260,14 @@
 <a class="reference external" href="https://pypi.python.org/pypi/airflow-supervisor"><img alt="PyPI" src="https://img.shields.io/pypi/v/airflow-supervisor.svg" /></a></p>
 <section id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
-<p>This library provides a configuration-driven way of generating <a class="reference external" href="http://supervisord.org">supervisor</a> configurations and airflow <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html">operators</a>/<a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html">sensors</a> for long-running or always-on jobs. Configuration is managed by <a class="reference external" href="https://pydantic.dev">Pydantic</a>, <a class="reference external" href="https://hydra.cc">Hydra</a>, and <a class="reference external" href="https://omegaconf.readthedocs.io/">OmegaConf</a>.</p>
+<p>This library provides a configuration-driven way of generating <a class="reference external" href="http://supervisord.org">supervisor</a> configurations and airflow <a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html">operators</a>/<a class="reference external" href="https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html">sensors</a> for long-running or always-on jobs. Configuration is managed by <a class="reference external" href="https://pydantic.dev">Pydantic</a>, <a class="reference external" href="https://hydra.cc">Hydra</a>, and <a class="reference external" href="https://omegaconf.readthedocs.io/">OmegaConf</a> via the <a class="reference external" href="https://github.com/airflow-laminar/supervisor-pydantic">supervisor-pydantic</a> library.</p>
 </section>
 <section id="how-to-use-in-airflow">
 <h2>How To: Use in Airflow<a class="headerlink" href="#how-to-use-in-airflow" title="Link to this heading">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">airflow-supervisor</span></code> can be installed in your airflow server environment and imported in your dag files. It provides two convenient top level DAG subclasses:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">SupervisorLocal</span></code>: creates a DAG representing a local supervisor instance running on the airflow worker node (underlying task will use <code class="docutils literal notranslate"><span class="pre">PythonOperator</span></code> and <code class="docutils literal notranslate"><span class="pre">BashOperator</span></code> to communicate between airflow and supervisor)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">SupervisorRemote</span></code>: creates a DAG representing a remote supervisor instance running on another machine (underlying tasks will use <code class="docutils literal notranslate"><span class="pre">SSHOperator</span></code> to communicate between airflow and supervisor)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Supervisor</span></code>: creates a DAG representing a local supervisor instance running on the airflow worker node (underlying task will use <code class="docutils literal notranslate"><span class="pre">PythonOperator</span></code> and <code class="docutils literal notranslate"><span class="pre">BashOperator</span></code> to communicate between airflow and supervisor)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SupervisorSSH</span></code>: creates a DAG representing a remote supervisor instance running on another machine (underlying tasks will use <code class="docutils literal notranslate"><span class="pre">SSHOperator</span></code> to communicate between airflow and supervisor)</p></li>
 </ul>
 <p>We expose DAGs composed of a variety of tasks and sensors, which are exposed as a discrete pipeline of steps:</p>
 <ol class="arabic simple">
@@ -290,17 +290,11 @@
 <h3>Example Dag:<a class="headerlink" href="#example-dag" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Supervisor</span><span class="p">,</span>
-    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
-    <span class="n">ProgramConfiguration</span><span class="p">,</span>
-    <span class="n">AirflowConfiguration</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span> <span class="n">Supervisor</span><span class="p">,</span> <span class="n">ProgramConfiguration</span>
 
 
 <span class="c1"># Create supervisor configuration</span>
 <span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
-    <span class="n">airflow</span><span class="o">=</span><span class="n">AirflowConfiguration</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="s2">&quot;*:9091&quot;</span><span class="p">),</span>
     <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/airflow/supervisor&quot;</span><span class="p">,</span>
     <span class="n">config_path</span><span class="o">=</span><span class="s2">&quot;/data/airflow/supervisor/supervisor.conf&quot;</span><span class="p">,</span>
     <span class="n">program</span><span class="o">=</span><span class="p">{</span>
@@ -364,10 +358,10 @@
     <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="s2">&quot;supervisor&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
-</section>
-<section id="how-to-use-as-a-supervisord-configuration-frontend">
-<h2>How To: Use as a supervisord configuration frontend<a class="headerlink" href="#how-to-use-as-a-supervisord-configuration-frontend" title="Link to this heading">¶</a></h2>
-<p>This library can be used outside airflow as a generic supervisord configuration framework, with the static typing benefits that entails. For an example, look at the <a class="reference download internal" download="" href="_downloads/4ee16d3236381c91a180104ac3c7abf2/test_hydra.py"><span class="xref download myst">hydra configuration test</span></a>. This example generates a supervisor configuration file by composing independent hydra configs.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This library is built on <a class="reference external" href="https://github.com/airflow-laminar/supervisor-pydantic">supervisor-pydantic</a>, which provides configuration elements for all supervisor structures, as well as self-contained tools for interacting with supervisor instances.</p>
+</div>
 </section>
 </section>
 
@@ -415,7 +409,6 @@
 </ul>
 </li>
 <li><a class="reference internal" href="#example-dag-airflow-config">Example DAG: <code class="docutils literal notranslate"><span class="pre">airflow-config</span></code></a></li>
-<li><a class="reference internal" href="#how-to-use-as-a-supervisord-configuration-frontend">How To: Use as a supervisord configuration frontend</a></li>
 </ul>
 </li>
 </ul>
