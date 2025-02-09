@@ -9,14 +9,14 @@
 
 ## Overview
 
-This library provides a configuration-driven way of generating [supervisor](http://supervisord.org) configurations and airflow [operators](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html)/[sensors](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html) for long-running or always-on jobs. Configuration is managed by [Pydantic](https://pydantic.dev), [Hydra](https://hydra.cc), and [OmegaConf](https://omegaconf.readthedocs.io/).
+This library provides a configuration-driven way of generating [supervisor](http://supervisord.org) configurations and airflow [operators](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html)/[sensors](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html) for long-running or always-on jobs. Configuration is managed by [Pydantic](https://pydantic.dev), [Hydra](https://hydra.cc), and [OmegaConf](https://omegaconf.readthedocs.io/) via the [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic) library.
 
 ## How To: Use in Airflow
 
 `airflow-supervisor` can be installed in your airflow server environment and imported in your dag files. It provides two convenient top level DAG subclasses:
 
-- `SupervisorLocal`: creates a DAG representing a local supervisor instance running on the airflow worker node (underlying task will use `PythonOperator` and `BashOperator` to communicate between airflow and supervisor)
-- `SupervisorRemote`: creates a DAG representing a remote supervisor instance running on another machine (underlying tasks will use `SSHOperator` to communicate between airflow and supervisor)
+- `Supervisor`: creates a DAG representing a local supervisor instance running on the airflow worker node (underlying task will use `PythonOperator` and `BashOperator` to communicate between airflow and supervisor)
+- `SupervisorSSH`: creates a DAG representing a remote supervisor instance running on another machine (underlying tasks will use `SSHOperator` to communicate between airflow and supervisor)
 
 We expose DAGs composed of a variety of tasks and sensors, which are exposed as a discrete pipeline of steps:
 1. Setup `supervisord` configuration
@@ -43,17 +43,11 @@ More docs and code examples coming soon!
 ```python
 from airflow import DAG
 from datetime import timedelta, datetime
-from airflow_supervisor import (
-    Supervisor,
-    SupervisorAirflowConfiguration,
-    ProgramConfiguration,
-    AirflowConfiguration,
-)
+from airflow_supervisor import SupervisorAirflowConfiguration, Supervisor, ProgramConfiguration
 
 
 # Create supervisor configuration
 cfg = SupervisorAirflowConfiguration(
-    airflow=AirflowConfiguration(port="*:9091"),
     working_dir="/data/airflow/supervisor",
     config_path="/data/airflow/supervisor/supervisor.conf",
     program={
@@ -118,6 +112,5 @@ with DAG(
     supervisor = Supervisor(dag=dag, cfg=config.extensions["supervisor"])
 ```
 
-## How To: Use as a supervisord configuration frontend
-
-This library can be used outside airflow as a generic supervisord configuration framework, with the static typing benefits that entails. For an example, look at the [hydra configuration test](./airflow_supervisor/tests/hydra/test_hydra.py). This example generates a supervisor configuration file by composing independent hydra configs.
+> [!NOTE]
+> This library is built on [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic), which provides configuration elements for all supervisor structures, as well as self-contained tools for interacting with supervisor instances.
