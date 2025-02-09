@@ -56,7 +56,7 @@ Homepage = "https://github.com/airflow-laminar/airflow-supervisor"
 [tool.bumpversion]
 current_version = "1.2.0"
 commit = true
-tag = false
+tag = true
 
 [[tool.bumpversion.files]]
 filename = "airflow_supervisor/__init__.py"
