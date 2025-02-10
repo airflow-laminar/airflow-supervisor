@@ -2,12 +2,12 @@ from datetime import time, timedelta
 from typing import Optional
 
 from pydantic import Field
-from supervisor_pydantic import ConvenienceConfiguration
+from supervisor_pydantic.config.base import _BaseCfgModel
 
 __all__ = ("AirflowConfiguration",)
 
 
-class AirflowConfiguration(ConvenienceConfiguration):
+class AirflowConfiguration(_BaseCfgModel):
     """Settings that MUST be set when running in airflow"""
 
     # Passthrough to PythonSensor in airflow-ha
