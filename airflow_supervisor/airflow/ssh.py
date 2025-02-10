@@ -45,7 +45,7 @@ class SupervisorSSH(Supervisor):
         ):
             if attr in kwargs:
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
-                setattr(self._cfg, attr, self._ssh_operator_kwargs[attr])
+                setattr(cfg, attr, self._ssh_operator_kwargs[attr])
             elif cfg and getattr(cfg, attr):
                 self._ssh_operator_kwargs[attr] = getattr(cfg, attr)
 
