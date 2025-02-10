@@ -251,14 +251,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ConvenienceConfiguration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic.config.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">_BaseCfgModel</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;AirflowConfiguration&quot;</span><span class="p">,)</span>
 
 
 <div class="viewcode-block" id="AirflowConfiguration">
 <a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.AirflowConfiguration.html#airflow_supervisor.AirflowConfiguration">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">AirflowConfiguration</span><span class="p">(</span><span class="n">ConvenienceConfiguration</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">AirflowConfiguration</span><span class="p">(</span><span class="n">_BaseCfgModel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Settings that MUST be set when running in airflow&quot;&quot;&quot;</span>
 
     <span class="c1"># Passthrough to PythonSensor in airflow-ha</span>

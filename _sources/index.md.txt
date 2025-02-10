@@ -100,7 +100,7 @@ extensions:
   supervisor:
     _target_: airflow_supervisor.SupervisorAirflowConfiguration
     airflow:
-      _target_: airflow_supervisor.AirflowConfiguration
+      _target_: airflow_supervisor.ConvenienceConfiguration
       port: "*:9091"
     working_dir: "/data/airflow/supervisor"
     config_path: "/data/airflow/supervisor/supervisor.conf"
