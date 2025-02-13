@@ -81,10 +81,19 @@ class Supervisor(object):
         self._configure_supervisor = self.get_step_operator(step="configure-supervisor")
         self._start_supervisor = self.get_step_operator(step="start-supervisor")
         self._start_programs = self.get_step_operator("start-programs")
-        self._stop_programs = self.get_step_operator("stop-programs")
+        if self._cfg.stop_on_exit:
+            self._stop_programs = self.get_step_operator("stop-programs")
+            if self._cfg.cleanup:
+                self._unconfigure_supervisor = self.get_step_operator("unconfigure-supervisor")
+            else:
+                self._unconfigure_supervisor = PythonOperator(
+                    task_id=f"{self._dag.dag_id}-unconfigure-supervisor", python_callable=skip
+                )
+        else:
+            self._stop_programs = PythonOperator(task_id=f"{self._dag.dag_id}-stop-programs", python_callable=skip)
+
         self._restart_programs = self.get_step_operator("restart-programs")
         self._stop_supervisor = self.get_step_operator("stop-supervisor")
-        self._unconfigure_supervisor = self.get_step_operator("unconfigure-supervisor")
 
         # TODO check programs should be sensor
         self._check_programs = self.get_step_operator("check-programs")
