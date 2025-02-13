@@ -18,6 +18,11 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
         default_factory=AirflowConfiguration, description="Required options for airflow integration"
     )
 
+    stop_on_exit: bool = Field(default=True, description="Stop supervisor on dag completion")
+    cleanup: bool = Field(
+        default=True, description="Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True"
+    )
+
 
 class SupervisorSSHAirflowConfiguration(SupervisorAirflowConfiguration):
     command_prefix: Optional[str] = Field(default="")
