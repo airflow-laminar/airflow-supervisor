@@ -431,6 +431,18 @@
 <span class="w">      </span><span class="nt">&quot;airflow&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">         </span><span class="nt">&quot;$ref&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;#/$defs/AirflowConfiguration&quot;</span><span class="p">,</span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Required options for airflow integration&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;stop_on_exit&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Stop supervisor on dag completion&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Stop On Exit&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;cleanup&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Cleanup&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean&quot;</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">   </span><span class="p">},</span>
 <span class="w">   </span><span class="nt">&quot;$defs&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
@@ -2608,6 +2620,8 @@
 <dt class="field-odd">Fields<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">airflow</span> <span class="pre">(airflow_supervisor.config.airflow.AirflowConfiguration)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cleanup</span> <span class="pre">(bool)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_on_exit</span> <span class="pre">(bool)</span></code></p></li>
 </ul>
 </dd>
 </dl>
@@ -2615,6 +2629,18 @@
 <dt class="sig sig-object py" id="airflow_supervisor.SupervisorAirflowConfiguration.airflow">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">airflow</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="airflow_supervisor.AirflowConfiguration.html#airflow_supervisor.AirflowConfiguration" title="airflow_supervisor.config.airflow.AirflowConfiguration"><span class="pre">AirflowConfiguration</span></a></em><em class="property"> <span class="pre">[Optional]</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.airflow" title="Link to this definition">¶</a></dt>
 <dd><p>Required options for airflow integration</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="airflow_supervisor.SupervisorAirflowConfiguration.stop_on_exit">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stop_on_exit</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.stop_on_exit" title="Link to this definition">¶</a></dt>
+<dd><p>Stop supervisor on dag completion</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="airflow_supervisor.SupervisorAirflowConfiguration.cleanup">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cleanup</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.cleanup" title="Link to this definition">¶</a></dt>
+<dd><p>Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2686,6 +2712,8 @@ method.</p>
 <li><a class="reference internal" href="#">airflow_supervisor.SupervisorAirflowConfiguration</a><ul>
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code></a><ul>
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.airflow"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.airflow</span></code></a></li>
+<li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.stop_on_exit"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.stop_on_exit</span></code></a></li>
+<li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.cleanup"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.cleanup</span></code></a></li>
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.model_post_init"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.model_post_init()</span></code></a></li>
 </ul>
 </li>

@@ -267,6 +267,11 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">SupervisorAirflowConfiguration</span><span class="p">(</span><span class="n">SupervisorConvenienceConfiguration</span><span class="p">):</span>
     <span class="n">airflow</span><span class="p">:</span> <span class="n">AirflowConfiguration</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default_factory</span><span class="o">=</span><span class="n">AirflowConfiguration</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Required options for airflow integration&quot;</span>
+    <span class="p">)</span>
+
+    <span class="n">stop_on_exit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Stop supervisor on dag completion&quot;</span><span class="p">)</span>
+    <span class="n">cleanup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True&quot;</span>
     <span class="p">)</span></div>
 
 
