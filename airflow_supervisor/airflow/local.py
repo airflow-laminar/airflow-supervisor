@@ -77,6 +77,9 @@ class Supervisor(object):
         self._dag.max_active_runs = 1
 
     def initialize_tasks(self):
+        # NOTE: initialize this first as it is relied upon by startup steps
+        self._check_programs = self.get_step_operator("check-programs")
+
         # tasks
         self._configure_supervisor = self.get_step_operator(step="configure-supervisor")
         self._start_supervisor = self.get_step_operator(step="start-supervisor")
@@ -94,9 +97,6 @@ class Supervisor(object):
 
         self._restart_programs = self.get_step_operator("restart-programs")
         self._stop_supervisor = self.get_step_operator("stop-supervisor")
-
-        # TODO check programs should be sensor
-        self._check_programs = self.get_step_operator("check-programs")
 
     @property
     def configure_supervisor(self) -> "Operator":
@@ -139,14 +139,28 @@ class Supervisor(object):
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
         if step == "configure-supervisor":
-            return dict(python_callable=lambda: write_supervisor_config(self._cfg, _exit=False), do_xcom_push=True)
+            return dict(
+                python_callable=lambda: (
+                    self.check_programs.check_end_conditions() is None
+                    and write_supervisor_config(self._cfg, _exit=False)
+                ),
+                do_xcom_push=True,
+            )
         elif step == "start-supervisor":
             return dict(
-                python_callable=lambda: start_supervisor(self._cfg._pydantic_path, _exit=False),
+                python_callable=lambda: (
+                    self.check_programs.check_end_conditions() is None
+                    and start_supervisor(self._cfg._pydantic_path, _exit=False)
+                ),
                 do_xcom_push=True,
             )
         elif step == "start-programs":
-            return dict(python_callable=lambda: start_programs(self._cfg, _exit=False), do_xcom_push=True)
+            return dict(
+                python_callable=lambda: (
+                    self.check_programs.check_end_conditions() is None and start_programs(self._cfg, _exit=False)
+                ),
+                do_xcom_push=True,
+            )
         elif step == "stop-programs":
             return dict(python_callable=lambda: stop_programs(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "check-programs":
