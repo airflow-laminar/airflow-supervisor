@@ -331,6 +331,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="o">.</span><span class="n">max_active_runs</span> <span class="o">=</span> <span class="mi">1</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">initialize_tasks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># NOTE: initialize this first as it is relied upon by startup steps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_programs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_operator</span><span class="p">(</span><span class="s2">&quot;check-programs&quot;</span><span class="p">)</span>
+
         <span class="c1"># tasks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_configure_supervisor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_operator</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;configure-supervisor&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_supervisor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_operator</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;start-supervisor&quot;</span><span class="p">)</span>
@@ -348,9 +351,6 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_restart_programs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_operator</span><span class="p">(</span><span class="s2">&quot;restart-programs&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_stop_supervisor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_operator</span><span class="p">(</span><span class="s2">&quot;stop-supervisor&quot;</span><span class="p">)</span>
-
-        <span class="c1"># TODO check programs should be sensor</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_programs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_operator</span><span class="p">(</span><span class="s2">&quot;check-programs&quot;</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">configure_supervisor</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
@@ -393,14 +393,28 @@
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_step_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">SupervisorTaskStep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;configure-supervisor&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">write_supervisor_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">do_xcom_push</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">check_programs</span><span class="o">.</span><span class="n">check_end_conditions</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="n">write_supervisor_config</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">do_xcom_push</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;start-supervisor&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
-                <span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">start_supervisor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+                <span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">check_programs</span><span class="o">.</span><span class="n">check_end_conditions</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span>
+                    <span class="ow">and</span> <span class="n">start_supervisor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="p">),</span>
                 <span class="n">do_xcom_push</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;start-programs&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">start_programs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">do_xcom_push</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span>
+                <span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">check_programs</span><span class="o">.</span><span class="n">check_end_conditions</span><span class="p">()</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">start_programs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                <span class="p">),</span>
+                <span class="n">do_xcom_push</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
         <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;stop-programs&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">stop_programs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span> <span class="n">do_xcom_push</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;check-programs&quot;</span><span class="p">:</span>
