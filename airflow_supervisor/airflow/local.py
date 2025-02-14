@@ -140,24 +140,25 @@ class Supervisor(object):
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
         if step == "configure-supervisor":
             return dict(
-                python_callable=lambda: (
-                    self.check_programs.check_end_conditions() is None
+                python_callable=lambda **kwargs: (
+                    self.check_programs.check_end_conditions(**kwargs) is None
                     and write_supervisor_config(self._cfg, _exit=False)
                 ),
                 do_xcom_push=True,
             )
         elif step == "start-supervisor":
             return dict(
-                python_callable=lambda: (
-                    self.check_programs.check_end_conditions() is None
+                python_callable=lambda **kwargs: (
+                    self.check_programs.check_end_conditions(**kwargs) is None
                     and start_supervisor(self._cfg._pydantic_path, _exit=False)
                 ),
                 do_xcom_push=True,
             )
         elif step == "start-programs":
             return dict(
-                python_callable=lambda: (
-                    self.check_programs.check_end_conditions() is None and start_programs(self._cfg, _exit=False)
+                python_callable=lambda **kwargs: (
+                    self.check_programs.check_end_conditions(**kwargs) is None
+                    and start_programs(self._cfg, _exit=False)
                 ),
                 do_xcom_push=True,
             )
