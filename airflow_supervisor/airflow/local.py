@@ -94,6 +94,9 @@ class Supervisor(object):
                 )
         else:
             self._stop_programs = PythonOperator(task_id=f"{self._dag.dag_id}-stop-programs", python_callable=skip)
+            self._unconfigure_supervisor = PythonOperator(
+                task_id=f"{self._dag.dag_id}-unconfigure-supervisor", python_callable=skip
+            )
 
         self._restart_programs = self.get_step_operator("restart-programs")
         self._stop_supervisor = self.get_step_operator("stop-supervisor")
