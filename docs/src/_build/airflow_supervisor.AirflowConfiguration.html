@@ -320,6 +320,17 @@
 <span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Max number of retriggers of Supervisor job (e.g. max number of checks separated by `check_interval`)&quot;</span><span class="p">,</span>
 <span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Maxretrigger&quot;</span>
+<span class="w">      </span><span class="p">},</span>
+<span class="w">      </span><span class="nt">&quot;reference_date&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">         </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;data_interval_end&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Reference date for the job. NOTE: Airflow schedules after end of date interval, so `data_interval_end` is the default&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;enum&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">            </span><span class="s2">&quot;start_date&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;logical_date&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;data_interval_end&quot;</span>
+<span class="w">         </span><span class="p">],</span>
+<span class="w">         </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Reference Date&quot;</span><span class="p">,</span>
+<span class="w">         </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
 <span class="w">      </span><span class="p">}</span>
 <span class="w">   </span><span class="p">}</span>
 <span class="p">}</span>
@@ -332,6 +343,7 @@
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_timeout</span> <span class="pre">(datetime.timedelta)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">endtime</span> <span class="pre">(datetime.time</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">maxretrigger</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
+<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reference_date</span> <span class="pre">(Literal['start_date',</span> <span class="pre">'logical_date',</span> <span class="pre">'data_interval_end'])</span></code></p></li>
 <li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtime</span> <span class="pre">(datetime.timedelta</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
 </ul>
 </dd>
@@ -364,6 +376,12 @@
 <dt class="sig sig-object py" id="airflow_supervisor.AirflowConfiguration.maxretrigger">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">maxretrigger</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#airflow_supervisor.AirflowConfiguration.maxretrigger" title="Link to this definition">¶</a></dt>
 <dd><p>Max number of retriggers of Supervisor job (e.g. max number of checks separated by <cite>check_interval</cite>)</p>
+</dd></dl>
+
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="airflow_supervisor.AirflowConfiguration.reference_date">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_date</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'start_date'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'logical_date'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'data_interval_end'</span></span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'data_interval_end'</span></em><a class="headerlink" href="#airflow_supervisor.AirflowConfiguration.reference_date" title="Link to this definition">¶</a></dt>
+<dd><p>Reference date for the job. NOTE: Airflow schedules after end of date interval, so <cite>data_interval_end</cite> is the default</p>
 </dd></dl>
 
 </dd></dl>
@@ -424,6 +442,7 @@
 <li><a class="reference internal" href="#airflow_supervisor.AirflowConfiguration.runtime"><code class="docutils literal notranslate"><span class="pre">AirflowConfiguration.runtime</span></code></a></li>
 <li><a class="reference internal" href="#airflow_supervisor.AirflowConfiguration.endtime"><code class="docutils literal notranslate"><span class="pre">AirflowConfiguration.endtime</span></code></a></li>
 <li><a class="reference internal" href="#airflow_supervisor.AirflowConfiguration.maxretrigger"><code class="docutils literal notranslate"><span class="pre">AirflowConfiguration.maxretrigger</span></code></a></li>
+<li><a class="reference internal" href="#airflow_supervisor.AirflowConfiguration.reference_date"><code class="docutils literal notranslate"><span class="pre">AirflowConfiguration.reference_date</span></code></a></li>
 </ul>
 </li>
 </ul>
