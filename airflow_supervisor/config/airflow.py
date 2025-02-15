@@ -1,5 +1,5 @@
 from datetime import time, timedelta
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import Field
 from supervisor_pydantic.config.base import _BaseCfgModel
@@ -24,4 +24,9 @@ class AirflowConfiguration(_BaseCfgModel):
     maxretrigger: Optional[int] = Field(
         default=None,
         description="Max number of retriggers of Supervisor job (e.g. max number of checks separated by `check_interval`)",
+    )
+
+    reference_date: Literal["start_date", "logical_date", "data_interval_end"] = Field(
+        default="data_interval_end",
+        description="Reference date for the job. NOTE: Airflow schedules after end of date interval, so `data_interval_end` is the default",
     )

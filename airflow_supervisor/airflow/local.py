@@ -204,6 +204,7 @@ class Supervisor(object):
                     "runtime": self._cfg.airflow.runtime,
                     "endtime": self._cfg.airflow.endtime,
                     "maxretrigger": self._cfg.airflow.maxretrigger,
+                    "reference_date": self._cfg.airflow.reference_date,
                     # Pass through
                     **self.get_base_operator_kwargs(),
                     **self.get_step_kwargs(step),
