@@ -25,12 +25,12 @@ __all__ = ("Supervisor",)
 
 
 class Supervisor(object):
-    _dag: "DAG"
+    _dag: DAG
     _cfg: SupervisorAirflowConfiguration
-    _kill_dag: "DAG"
+    _kill_dag: DAG
     _xmlrpc_client: SupervisorRemoteXMLRPCClient
 
-    def __init__(self, dag: "DAG", cfg: SupervisorAirflowConfiguration, **kwargs):
+    def __init__(self, dag: DAG, cfg: SupervisorAirflowConfiguration, **kwargs):
         # store config
         self._cfg = cfg
 
