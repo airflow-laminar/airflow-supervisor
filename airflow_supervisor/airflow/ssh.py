@@ -4,7 +4,7 @@ from typing import Dict
 from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.providers.ssh.operators.ssh import SSHOperator
-from airflow_balancer import Host
+from airflow_balancer import Host, Port
 from supervisor_pydantic.convenience import SupervisorTaskStep
 
 from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
@@ -21,6 +21,7 @@ class SupervisorSSH(Supervisor):
         dag: DAG,
         cfg: SupervisorSSHAirflowConfiguration,
         host: "Host" = None,
+        port: "Port" = None,
         **kwargs,
     ):
         for attr in ("command_prefix",):
@@ -56,7 +57,15 @@ class SupervisorSSH(Supervisor):
 
             # Ensure host matches the configuration
             cfg.convenience.host = host.name
+
+        if port:
+            # Ensure port matches the configuration
+            cfg.convenience.port = f"*:{port.port}"
+
+        if host or port:
+            # revalidate
             cfg._setup_convenience_defaults()
+
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
