@@ -44,7 +44,7 @@ develop = [
     # airflow-config integration
     "airflow-config>=0.1.2",
     # airflow-balancer integration
-    "airflow-balancer>=0.3.0",
+    "airflow-balancer>=0.3.1",
 ]
 
 [project.scripts]
