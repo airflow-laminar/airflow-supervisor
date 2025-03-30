@@ -1,3 +1,4 @@
+from logging import getLogger
 from shlex import quote
 from typing import Dict
 
@@ -13,6 +14,8 @@ from .local import Supervisor
 
 __all__ = ("SupervisorSSH",)
 
+_log = getLogger(__name__)
+
 
 class SupervisorSSH(Supervisor):
     # Mimic SSH Operator: https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/_api/airflow/providers/ssh/operators/ssh/index.html
@@ -26,10 +29,13 @@ class SupervisorSSH(Supervisor):
     ):
         for attr in ("command_prefix",):
             if attr in kwargs:
+                _log.info(f"Setting {attr} to {kwargs.get(attr)}")
                 setattr(self, f"_{attr}", kwargs.pop(attr))
             elif cfg and getattr(cfg, attr):
+                _log.info(f"Setting {attr} to {getattr(cfg, attr)}")
                 setattr(self, f"_{attr}", getattr(cfg, attr))
             else:
+                _log.info(f"Setting {attr} to empty string")
                 setattr(self, f"_{attr}", "")
 
         self._ssh_operator_kwargs = {}
@@ -45,13 +51,16 @@ class SupervisorSSH(Supervisor):
             "skip_on_exit_code",
         ):
             if attr in kwargs:
+                _log.info(f"Setting {attr} to {kwargs.get(attr)}")
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
                 setattr(cfg, attr, self._ssh_operator_kwargs[attr])
             elif cfg and getattr(cfg, attr):
+                _log.info(f"Setting {attr} to {getattr(cfg, attr)}")
                 self._ssh_operator_kwargs[attr] = getattr(cfg, attr)
 
         # Integrate with airflow-balancer, use host if provided
         if host:
+            _log.info(f"Setting host to {host.name}")
             self._ssh_operator_kwargs["remote_host"] = host.name
             self._ssh_operator_kwargs["ssh_hook"] = host.hook()
 
@@ -59,11 +68,13 @@ class SupervisorSSH(Supervisor):
             cfg.convenience.host = host.name
 
         if port:
+            _log.info(f"Setting port to {port.port}")
             # Ensure port matches the configuration
             cfg.convenience.port = f"*:{port.port}"
 
         if host or port:
             # revalidate
+            _log.info("Revalidating configuration")
             cfg._setup_convenience_defaults()
 
         super().__init__(dag=dag, cfg=cfg, **kwargs)
