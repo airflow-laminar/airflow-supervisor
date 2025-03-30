@@ -150,9 +150,36 @@ class Supervisor(object):
                 do_xcom_push=True,
             )
         elif step == "start-supervisor":
+            if self._cfg.restart_on_retrigger:
+                return dict(
+                    python_callable=lambda **kwargs: (
+                        self.check_programs.check_end_conditions(**kwargs) is None
+                        and start_supervisor(
+                            self._cfg._pydantic_path,
+                            # Always restart programs
+                            restart=True,
+                            _exit=False,
+                        )
+                    ),
+                    do_xcom_push=True,
+                )
+            if self._cfg.restart_on_initial:
+                return dict(
+                    python_callable=lambda **kwargs: (
+                        self.check_programs.check_end_conditions(**kwargs) is None
+                        and start_supervisor(
+                            self._cfg._pydantic_path,
+                            # Restart programs if initial run
+                            restart=self.check_programs.is_initial_run(**kwargs),
+                            _exit=False,
+                        )
+                    ),
+                    do_xcom_push=True,
+                )
             return dict(
                 python_callable=lambda **kwargs: (
                     self.check_programs.check_end_conditions(**kwargs) is None
+                    # Don't restart programs
                     and start_supervisor(self._cfg._pydantic_path, _exit=False)
                 ),
                 do_xcom_push=True,
