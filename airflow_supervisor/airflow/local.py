@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import Dict
 
 from airflow.models.dag import DAG
@@ -22,6 +23,8 @@ from supervisor_pydantic.convenience import (
 from airflow_supervisor.config import SupervisorAirflowConfiguration
 
 __all__ = ("Supervisor",)
+
+_log = getLogger(__name__)
 
 
 class Supervisor(object):
@@ -85,14 +88,19 @@ class Supervisor(object):
         self._start_supervisor = self.get_step_operator(step="start-supervisor")
         self._start_programs = self.get_step_operator("start-programs")
         if self._cfg.stop_on_exit:
+            _log.info("Stopping programs on exit")
             self._stop_programs = self.get_step_operator("stop-programs")
             if self._cfg.cleanup:
+                _log.info("Cleaning up supervisor config on exit")
                 self._unconfigure_supervisor = self.get_step_operator("unconfigure-supervisor")
             else:
+                _log.info("Skipping cleanup of supervisor config on exit")
                 self._unconfigure_supervisor = PythonOperator(
                     task_id=f"{self._dag.dag_id}-unconfigure-supervisor", python_callable=skip
                 )
         else:
+            _log.info("Not stopping programs on exit")
+            _log.info("Skipping cleanup of supervisor config on exit")
             self._stop_programs = PythonOperator(task_id=f"{self._dag.dag_id}-stop-programs", python_callable=skip)
             self._unconfigure_supervisor = PythonOperator(
                 task_id=f"{self._dag.dag_id}-unconfigure-supervisor", python_callable=skip
@@ -150,11 +158,20 @@ class Supervisor(object):
                 do_xcom_push=True,
             )
         elif step == "start-supervisor":
+            return dict(
+                python_callable=lambda **kwargs: (
+                    self.check_programs.check_end_conditions(**kwargs) is None
+                    and start_supervisor(self._cfg._pydantic_path, _exit=False)
+                ),
+                do_xcom_push=True,
+            )
+        elif step == "start-programs":
             if self._cfg.restart_on_retrigger:
+                _log.info("Restarting programs on retrigger")
                 return dict(
                     python_callable=lambda **kwargs: (
                         self.check_programs.check_end_conditions(**kwargs) is None
-                        and start_supervisor(
+                        and start_programs(
                             self._cfg._pydantic_path,
                             # Always restart programs
                             restart=True,
@@ -164,10 +181,11 @@ class Supervisor(object):
                     do_xcom_push=True,
                 )
             if self._cfg.restart_on_initial:
+                _log.info("Restarting programs on initial run")
                 return dict(
                     python_callable=lambda **kwargs: (
                         self.check_programs.check_end_conditions(**kwargs) is None
-                        and start_supervisor(
+                        and start_programs(
                             self._cfg._pydantic_path,
                             # Restart programs if initial run
                             restart=self.check_programs.is_initial_run(**kwargs),
@@ -176,19 +194,12 @@ class Supervisor(object):
                     ),
                     do_xcom_push=True,
                 )
+            _log.info("Starting programs as normal on initial run")
             return dict(
                 python_callable=lambda **kwargs: (
                     self.check_programs.check_end_conditions(**kwargs) is None
                     # Don't restart programs
-                    and start_supervisor(self._cfg._pydantic_path, _exit=False)
-                ),
-                do_xcom_push=True,
-            )
-        elif step == "start-programs":
-            return dict(
-                python_callable=lambda **kwargs: (
-                    self.check_programs.check_end_conditions(**kwargs) is None
-                    and start_programs(self._cfg, _exit=False)
+                    and start_programs(self._cfg._pydantic_path, _exit=False)
                 ),
                 do_xcom_push=True,
             )
@@ -220,23 +231,23 @@ class Supervisor(object):
 
     def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
         if step == "check-programs":
-            return HighAvailabilityOperator(
-                **{
-                    # Sensor Args
-                    "task_id": f"{self._dag.dag_id}-{step}",
-                    "poke_interval": self._cfg.airflow.check_interval.total_seconds(),
-                    "timeout": self._cfg.airflow.check_timeout.total_seconds(),
-                    "mode": "poke",
-                    # HighAvailabilityOperator Args
-                    "runtime": self._cfg.airflow.runtime,
-                    "endtime": self._cfg.airflow.endtime,
-                    "maxretrigger": self._cfg.airflow.maxretrigger,
-                    "reference_date": self._cfg.airflow.reference_date,
-                    # Pass through
-                    **self.get_base_operator_kwargs(),
-                    **self.get_step_kwargs(step),
-                }
-            )
+            ha_operator_args = {
+                # Sensor Args
+                "task_id": f"{self._dag.dag_id}-{step}",
+                "poke_interval": self._cfg.airflow.check_interval.total_seconds(),
+                "timeout": self._cfg.airflow.check_timeout.total_seconds(),
+                "mode": "poke",
+                # HighAvailabilityOperator Args
+                "runtime": self._cfg.airflow.runtime,
+                "endtime": self._cfg.airflow.endtime,
+                "maxretrigger": self._cfg.airflow.maxretrigger,
+                "reference_date": self._cfg.airflow.reference_date,
+                # Pass through
+                **self.get_base_operator_kwargs(),
+                **self.get_step_kwargs(step),
+            }
+            _log.info(f"Creating HighAvailabilityOperator for {step} with args: {ha_operator_args}")
+            return HighAvailabilityOperator(**ha_operator_args)
         return PythonOperator(
             **{"task_id": f"{self._dag.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
         )
