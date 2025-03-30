@@ -231,23 +231,23 @@ class Supervisor(object):
 
     def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
         if step == "check-programs":
-            return HighAvailabilityOperator(
-                **{
-                    # Sensor Args
-                    "task_id": f"{self._dag.dag_id}-{step}",
-                    "poke_interval": self._cfg.airflow.check_interval.total_seconds(),
-                    "timeout": self._cfg.airflow.check_timeout.total_seconds(),
-                    "mode": "poke",
-                    # HighAvailabilityOperator Args
-                    "runtime": self._cfg.airflow.runtime,
-                    "endtime": self._cfg.airflow.endtime,
-                    "maxretrigger": self._cfg.airflow.maxretrigger,
-                    "reference_date": self._cfg.airflow.reference_date,
-                    # Pass through
-                    **self.get_base_operator_kwargs(),
-                    **self.get_step_kwargs(step),
-                }
-            )
+            ha_operator_args = {
+                # Sensor Args
+                "task_id": f"{self._dag.dag_id}-{step}",
+                "poke_interval": self._cfg.airflow.check_interval.total_seconds(),
+                "timeout": self._cfg.airflow.check_timeout.total_seconds(),
+                "mode": "poke",
+                # HighAvailabilityOperator Args
+                "runtime": self._cfg.airflow.runtime,
+                "endtime": self._cfg.airflow.endtime,
+                "maxretrigger": self._cfg.airflow.maxretrigger,
+                "reference_date": self._cfg.airflow.reference_date,
+                # Pass through
+                **self.get_base_operator_kwargs(),
+                **self.get_step_kwargs(step),
+            }
+            _log.info(f"Creating HighAvailabilityOperator for {step} with args: {ha_operator_args}")
+            return HighAvailabilityOperator(**ha_operator_args)
         return PythonOperator(
             **{"task_id": f"{self._dag.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
         )
