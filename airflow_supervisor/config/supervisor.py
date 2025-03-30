@@ -18,9 +18,21 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
         default_factory=AirflowConfiguration, description="Required options for airflow integration"
     )
 
-    stop_on_exit: bool = Field(default=True, description="Stop supervisor on dag completion")
-    cleanup: bool = Field(
+    # Should the programs be stopped when the DAG finishes?
+    stop_on_exit: Optional[bool] = Field(default=True, description="Stop supervisor on dag completion")
+    # Should the supervisor folder be removed on dag completion?
+    cleanup: Optional[bool] = Field(
         default=True, description="Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True"
+    )
+    # For Jobs that do not shutdown, e.g. stop_on_exit=False, one might want to configure them to
+    # restart when the DAG is rescheduled by airflow or retriggered by airflow-ha
+    restart_on_initial: Optional[bool] = Field(
+        default=False,
+        description="Restart the job when the DAG is run directly via airflow (NOT retriggered). This is useful for jobs that do not shutdown",
+    )
+    restart_on_retrigger: Optional[bool] = Field(
+        default=False,
+        description="Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown",
     )
 
 
