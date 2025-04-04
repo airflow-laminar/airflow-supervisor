@@ -63,6 +63,7 @@ class SupervisorSSH(Supervisor):
             _log.info(f"Setting host to {host.name}")
             self._ssh_operator_kwargs["remote_host"] = host.name
             self._ssh_operator_kwargs["ssh_hook"] = host.hook()
+            cfg.ssh_hook = self._ssh_operator_kwargs["ssh_hook"]
 
             # Ensure host matches the configuration
             cfg.convenience.host = host.name
