@@ -172,7 +172,7 @@ class Supervisor(object):
                     python_callable=lambda **kwargs: (
                         self.check_programs.check_end_conditions(**kwargs) is None
                         and start_programs(
-                            self._cfg._pydantic_path,
+                            self._cfg,
                             # Always restart programs
                             restart=True,
                             _exit=False,
@@ -186,7 +186,7 @@ class Supervisor(object):
                     python_callable=lambda **kwargs: (
                         self.check_programs.check_end_conditions(**kwargs) is None
                         and start_programs(
-                            self._cfg._pydantic_path,
+                            self._cfg,
                             # Restart programs if initial run
                             restart=self.check_programs.is_initial_run(**kwargs),
                             _exit=False,
@@ -199,7 +199,7 @@ class Supervisor(object):
                 python_callable=lambda **kwargs: (
                     self.check_programs.check_end_conditions(**kwargs) is None
                     # Don't restart programs
-                    and start_programs(self._cfg._pydantic_path, _exit=False)
+                    and start_programs(self._cfg, _exit=False)
                 ),
                 do_xcom_push=True,
             )
