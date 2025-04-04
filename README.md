@@ -112,6 +112,59 @@ with DAG(
     supervisor = Supervisor(dag=dag, cfg=config.extensions["supervisor"])
 ```
 
+## Configuration
+See [supervisor-pydantic](http://airflow-laminar.github.io/supervisor-pydantic/) for reference.
+
+- `SupervisorAirflowConfiguration`: Wrapper around `supervisor_pydantic.SupervisorConvenienceConfiguration`, with added airflow-specific configuration
+- `SupervisorSSHAirflowConfiguration`: Wrapper around `SupervisorAirflowConfiguration`, with added parameters for airflow's `SSHOperator`
+- `AirflowConfiguration`: Airflow-specific configuration for how the DAG and Operators should behave, including `airflow_ha.HighAvailabilityOperator` and `PythonSensor`
+
+```mermaid
+classDiagram
+    SupervisorConvenienceConfiguration <|-- SupervisorAirflowConfiguration
+    SupervisorAirflowConfiguration <|-- SupervisorSSHAirflowConfiguration
+
+    class SupervisorConvenienceConfiguration {
+      supervisor_pydantic.SupervisorConvenienceConfiguration
+    }
+    SupervisorAirflowConfiguration *-- AirflowConfiguration
+
+    class SupervisorAirflowConfiguration{
+        airflow: AirflowConfiguration
+
+        stop_on_exit: bool
+        cleanup: bool
+        restart_on_initial: bool
+        restart_on_retrigger: bool
+    }
+    class SupervisorSSHAirflowConfiguration {
+      command_prefix: str
+
+      # Airflow SSHOperator Arguments
+      ssh_hook: object
+      ssh_conn_id: str
+      remote_host: str
+      conn_timeout: int
+      cmd_timeout: int
+      environment: dict
+      get_pty: bool
+      banner_timeout: float
+      skip_on_exit_code: List~int~
+    }
+    class AirflowConfiguration {
+      # PythonSensor arguments
+      check_interval: timedelta
+      check_timeout: timedelta
+
+      # HighAvailabilityOperator custom args
+      runtime: timedelta
+      endtime: time
+      maxretrigger: int
+      reference_date: str
+    }
+```
+
+
 > [!NOTE]
 > This library is built on [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic), which provides configuration elements for all supervisor structures, as well as self-contained tools for interacting with supervisor instances.
 

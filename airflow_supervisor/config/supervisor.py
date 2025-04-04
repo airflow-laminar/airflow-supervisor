@@ -62,7 +62,7 @@ class SupervisorSSHAirflowConfiguration(SupervisorAirflowConfiguration):
     @field_serializer("ssh_hook")
     def _serialize_hook(self, ssh_hook: object):
         if ssh_hook is not None:
-            return f"SSHHook(hostname={ssh_hook.hostname}, ssh_conn_id={ssh_hook.ssh_conn_id})"
+            return "<SSHHook>"
         return None
 
 
