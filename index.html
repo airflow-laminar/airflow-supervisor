@@ -362,7 +362,59 @@
     <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="s2">&quot;supervisor&quot;</span><span class="p">])</span>
 </pre></div>
 </div>
-<div class="admonition note">
+</section>
+<section id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
+<p>See <a class="reference external" href="http://airflow-laminar.github.io/supervisor-pydantic/">supervisor-pydantic</a> for reference.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code>: Wrapper around <code class="docutils literal notranslate"><span class="pre">supervisor_pydantic.SupervisorConvenienceConfiguration</span></code>, with added airflow-specific configuration</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code>: Wrapper around <code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code>, with added parameters for airflow’s <code class="docutils literal notranslate"><span class="pre">SSHOperator</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">AirflowConfiguration</span></code>: Airflow-specific configuration for how the DAG and Operators should behave, including <code class="docutils literal notranslate"><span class="pre">airflow_ha.HighAvailabilityOperator</span></code> and <code class="docutils literal notranslate"><span class="pre">PythonSensor</span></code></p></li>
+</ul>
+<pre  class="mermaid">
+        classDiagram
+    SupervisorConvenienceConfiguration &lt;|-- SupervisorAirflowConfiguration
+    SupervisorAirflowConfiguration &lt;|-- SupervisorSSHAirflowConfiguration
+
+    class SupervisorConvenienceConfiguration {
+      supervisor_pydantic.SupervisorConvenienceConfiguration
+    }
+    SupervisorAirflowConfiguration *-- AirflowConfiguration
+
+    class SupervisorAirflowConfiguration{
+        airflow: AirflowConfiguration
+
+        stop_on_exit: bool
+        cleanup: bool
+        restart_on_initial: bool
+        restart_on_retrigger: bool
+    }
+    class SupervisorSSHAirflowConfiguration {
+      command_prefix: str
+
+      # Airflow SSHOperator Arguments
+      ssh_hook: object
+      ssh_conn_id: str
+      remote_host: str
+      conn_timeout: int
+      cmd_timeout: int
+      environment: dict
+      get_pty: bool
+      banner_timeout: float
+      skip_on_exit_code: List~int~
+    }
+    class AirflowConfiguration {
+      # PythonSensor arguments
+      check_interval: timedelta
+      check_timeout: timedelta
+
+      # HighAvailabilityOperator custom args
+      runtime: timedelta
+      endtime: time
+      maxretrigger: int
+      reference_date: str
+    }
+    </pre><div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This library is built on <a class="reference external" href="https://github.com/airflow-laminar/supervisor-pydantic">supervisor-pydantic</a>, which provides configuration elements for all supervisor structures, as well as self-contained tools for interacting with supervisor instances.</p>
 </div>
@@ -419,6 +471,43 @@
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>
     <script src="_static/design-tabs.js?v=f930bc37"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+const load = async () => {
+    await mermaid.run();
+    const all_mermaids = document.querySelectorAll(".mermaid");
+    const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+    const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
+    if(mermaids_to_add_zoom > 0) {
+        var svgs = d3.selectAll(".mermaid svg");
+        if(all_mermaids.length !== mermaids_processed.length) {
+            // try again in a sec, wait for mermaids to load
+            setTimeout(load, 200);
+            return;
+        } else if(svgs.size() !== mermaids_to_add_zoom) {
+            // try again in a sec, wait for mermaids to load
+            setTimeout(load, 200);
+            return;
+        } else {
+            svgs.each(function() {
+                var svg = d3.select(this);
+                svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                var inner = svg.select("g");
+                var zoom = d3.zoom().on("zoom", function(event) {
+                    inner.attr("transform", event.transform);
+                });
+                svg.call(zoom);
+            });
+        }
+    }
+};
+
+window.addEventListener("load", load);
+</script>
     <script src="_static/js/custom.js?v=956e5d78"></script>
     </body>
 </html>
