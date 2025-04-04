@@ -426,7 +426,7 @@
                     <span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">check_programs</span><span class="o">.</span><span class="n">check_end_conditions</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
                         <span class="ow">and</span> <span class="n">start_programs</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span>
                             <span class="c1"># Always restart programs</span>
                             <span class="n">restart</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                             <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -440,7 +440,7 @@
                     <span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="p">(</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">check_programs</span><span class="o">.</span><span class="n">check_end_conditions</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
                         <span class="ow">and</span> <span class="n">start_programs</span><span class="p">(</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">,</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span>
                             <span class="c1"># Restart programs if initial run</span>
                             <span class="n">restart</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">check_programs</span><span class="o">.</span><span class="n">is_initial_run</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">),</span>
                             <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -453,7 +453,7 @@
                 <span class="n">python_callable</span><span class="o">=</span><span class="k">lambda</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">check_programs</span><span class="o">.</span><span class="n">check_end_conditions</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
                     <span class="c1"># Don&#39;t restart programs</span>
-                    <span class="ow">and</span> <span class="n">start_programs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="ow">and</span> <span class="n">start_programs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">,</span> <span class="n">_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
                 <span class="p">),</span>
                 <span class="n">do_xcom_push</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
