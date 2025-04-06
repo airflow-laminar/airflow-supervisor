@@ -40,6 +40,7 @@ develop = [
     "pytest-cov",
     "ruff",
     "twine",
+    "uv",
     "wheel",
     # airflow-config integration
     "airflow-config>=0.1.2",
