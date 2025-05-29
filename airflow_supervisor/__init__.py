@@ -3,4 +3,4 @@ from supervisor_pydantic import *
 from .airflow import *
 from .config import *
 
-__version__ = "1.6.4"
+__version__ = "1.7.0"
