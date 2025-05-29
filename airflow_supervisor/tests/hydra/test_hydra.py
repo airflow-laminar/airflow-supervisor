@@ -37,6 +37,8 @@ autorestart=false
 exitcodes=0
 stopsignal=TERM
 stopwaitsecs=30
+stopasgroup=true
+killasgroup=true
 directory={dir}/sleep
 
 [program:echo]
@@ -47,6 +49,8 @@ autorestart=false
 exitcodes=0
 stopsignal=TERM
 stopwaitsecs=30
+stopasgroup=true
+killasgroup=true
 directory={dir}/echo
 
 [rpcinterface:supervisor]
