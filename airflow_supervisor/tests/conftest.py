@@ -4,6 +4,7 @@ from time import sleep
 from typing import Iterator
 
 from airflow.providers.ssh.hooks.ssh import SSHHook
+from airflow_pydantic import SSHOperatorArgs
 from pytest import fixture
 
 from airflow_supervisor import (
@@ -60,10 +61,10 @@ def supervisor_airflow_ssh_configuration(open_port: int) -> Iterator[SupervisorS
                     command="bash -c 'sleep 1; exit 1'",
                 )
             },
-            ssh_hook=SSHHook(
-                remote_host="localhost",
-                conn_timeout=10,
-                cmd_timeout=60,
+            ssh_operator_args=SSHOperatorArgs(
+                ssh_hook=SSHHook(
+                    remote_host="localhost",
+                ),
             ),
             command_prefix="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
         )

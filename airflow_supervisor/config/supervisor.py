@@ -1,6 +1,7 @@
-from typing import List, Optional, Union
+from typing import Optional
 
-from pydantic import Field, field_serializer, field_validator
+from airflow_pydantic import SSHOperatorArgs
+from pydantic import Field
 from supervisor_pydantic import SupervisorConvenienceConfiguration
 
 from .airflow import AirflowConfiguration
@@ -39,31 +40,9 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
 class SupervisorSSHAirflowConfiguration(SupervisorAirflowConfiguration):
     command_prefix: Optional[str] = Field(default="")
 
-    # SSH Kwargs
-    ssh_hook: Optional[object] = Field(default=None)
-    ssh_conn_id: Optional[str] = Field(default=None)
-    remote_host: Optional[str] = Field(default=None)
-    conn_timeout: Optional[int] = Field(default=None)
-    cmd_timeout: Optional[int] = Field(default=3600)
-    environment: Optional[dict] = Field(default=None)
-    get_pty: Optional[bool] = Field(default=None)
-    banner_timeout: Optional[float] = Field(default=None)
-    skip_on_exit_code: Optional[Union[int, List[int]]] = Field(default=None)
-
-    @field_validator("ssh_hook")
-    @classmethod
-    def _validate_ssh_hook(cls, v):
-        if v:
-            from airflow.providers.ssh.hooks.ssh import SSHHook
-
-            assert isinstance(v, SSHHook)
-        return v
-
-    @field_serializer("ssh_hook")
-    def _serialize_hook(self, ssh_hook: object):
-        if ssh_hook is not None:
-            return "<SSHHook>"
-        return None
+    ssh_operator_args: SSHOperatorArgs = Field(
+        description="SSH Operator arguments to use for remote execution.",
+    )
 
 
 load_airflow_config = SupervisorAirflowConfiguration.load
