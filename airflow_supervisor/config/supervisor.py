@@ -9,6 +9,7 @@ from .airflow import AirflowConfiguration
 __all__ = (
     "SupervisorAirflowConfiguration",
     "SupervisorSSHAirflowConfiguration",
+    "SSHOperatorArgs",
     "load_airflow_config",
     "load_airflow_ssh_config",
 )
