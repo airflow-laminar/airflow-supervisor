@@ -294,7 +294,8 @@
 <span class="k">class</span><span class="w"> </span><span class="nc">SupervisorSSHAirflowConfiguration</span><span class="p">(</span><span class="n">SupervisorAirflowConfiguration</span><span class="p">):</span>
     <span class="n">command_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">ssh_operator_args</span><span class="p">:</span> <span class="n">SSHOperatorArgs</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+    <span class="n">ssh_operator_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SSHOperatorArgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default_factory</span><span class="o">=</span><span class="n">SSHOperatorArgs</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;SSH Operator arguments to use for remote execution.&quot;</span><span class="p">,</span>
     <span class="p">)</span></div>
 
