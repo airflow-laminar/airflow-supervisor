@@ -313,11 +313,19 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_force_kill</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_step_operator</span><span class="p">(</span><span class="s2">&quot;force-kill&quot;</span><span class="p">)</span>
 
         <span class="c1"># Default non running</span>
-        <span class="n">PythonOperator</span><span class="p">(</span><span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="o">.</span><span class="n">dag_id</span><span class="si">}</span><span class="s2">-force-kill-dag&quot;</span><span class="p">,</span> <span class="n">python_callable</span><span class="o">=</span><span class="n">skip</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_kill</span>
+        <span class="p">(</span>
+            <span class="n">PythonOperator</span><span class="p">(</span>
+                <span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="o">.</span><span class="n">dag_id</span><span class="si">}</span><span class="s2">-force-kill-dag&quot;</span><span class="p">,</span> <span class="n">python_callable</span><span class="o">=</span><span class="n">skip</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">airflow</span><span class="o">.</span><span class="n">pool</span>
+            <span class="p">)</span>
+            <span class="o">&gt;&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">_force_kill</span>
+        <span class="p">)</span>
 
         <span class="c1"># Deal with any configuration or cleanup problems</span>
         <span class="n">any_config_fail</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
-            <span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="o">.</span><span class="n">dag_id</span><span class="si">}</span><span class="s2">-check-config-failed&quot;</span><span class="p">,</span> <span class="n">python_callable</span><span class="o">=</span><span class="n">fail</span><span class="p">,</span> <span class="n">trigger_rule</span><span class="o">=</span><span class="s2">&quot;one_failed&quot;</span>
+            <span class="n">task_id</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="o">.</span><span class="n">dag_id</span><span class="si">}</span><span class="s2">-check-config-failed&quot;</span><span class="p">,</span>
+            <span class="n">python_callable</span><span class="o">=</span><span class="n">fail</span><span class="p">,</span>
+            <span class="n">trigger_rule</span><span class="o">=</span><span class="s2">&quot;one_failed&quot;</span><span class="p">,</span>
+            <span class="n">pool</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">airflow</span><span class="o">.</span><span class="n">pool</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span> <span class="o">&gt;&gt;</span> <span class="n">any_config_fail</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">start_supervisor</span> <span class="o">&gt;&gt;</span> <span class="n">any_config_fail</span>
@@ -400,7 +408,7 @@
         <span class="k">return</span> <span class="n">SupervisorRemoteXMLRPCClient</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_base_operator_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="p">,</span> <span class="n">pool</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_cfg</span><span class="o">.</span><span class="n">airflow</span><span class="o">.</span><span class="n">pool</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">get_step_kwargs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">SupervisorTaskStep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">step</span> <span class="o">==</span> <span class="s2">&quot;configure-supervisor&quot;</span><span class="p">:</span>
