@@ -40,7 +40,8 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
 class SupervisorSSHAirflowConfiguration(SupervisorAirflowConfiguration):
     command_prefix: Optional[str] = Field(default="")
 
-    ssh_operator_args: SSHOperatorArgs = Field(
+    ssh_operator_args: Optional[SSHOperatorArgs] = Field(
+        default_factory=SSHOperatorArgs,
         description="SSH Operator arguments to use for remote execution.",
     )
 
