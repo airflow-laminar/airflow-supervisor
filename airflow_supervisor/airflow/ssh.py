@@ -56,6 +56,11 @@ class SupervisorSSH(Supervisor):
             # Ensure host matches the configuration
             cfg.convenience.host = host.name
 
+            # Extract pool if available
+            if host.pool and not cfg.airflow.pool:
+                _log.info(f"Setting airflow pool to {host.pool}")
+                cfg.airflow.pool = host.pool
+
         if port:
             _log.info(f"Setting port to {port.port}")
             # Ensure port matches the configuration
