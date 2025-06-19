@@ -60,11 +60,19 @@ class Supervisor(object):
         self._force_kill = self.get_step_operator("force-kill")
 
         # Default non running
-        PythonOperator(task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip) >> self._force_kill
+        (
+            PythonOperator(
+                task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, pool=self._cfg.airflow.pool
+            )
+            >> self._force_kill
+        )
 
         # Deal with any configuration or cleanup problems
         any_config_fail = PythonOperator(
-            task_id=f"{self._dag.dag_id}-check-config-failed", python_callable=fail, trigger_rule="one_failed"
+            task_id=f"{self._dag.dag_id}-check-config-failed",
+            python_callable=fail,
+            trigger_rule="one_failed",
+            pool=self._cfg.airflow.pool,
         )
         self.configure_supervisor >> any_config_fail
         self.start_supervisor >> any_config_fail
@@ -146,7 +154,7 @@ class Supervisor(object):
         return SupervisorRemoteXMLRPCClient(self._cfg)
 
     def get_base_operator_kwargs(self) -> Dict:
-        return dict(dag=self._dag)
+        return dict(dag=self._dag, pool=self._cfg.airflow.pool)
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
         if step == "configure-supervisor":
