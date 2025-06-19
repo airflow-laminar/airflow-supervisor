@@ -3,9 +3,15 @@ from tempfile import NamedTemporaryFile
 from time import sleep
 from typing import Iterator
 
+from airflow.providers.ssh.hooks.ssh import SSHHook
 from pytest import fixture
 
-from airflow_supervisor import AirflowConfiguration, ProgramConfiguration, SupervisorAirflowConfiguration
+from airflow_supervisor import (
+    AirflowConfiguration,
+    ProgramConfiguration,
+    SupervisorAirflowConfiguration,
+    SupervisorSSHAirflowConfiguration,
+)
 
 
 @fixture(scope="module")
@@ -39,6 +45,27 @@ def supervisor_airflow_configuration(open_port: int) -> Iterator[SupervisorAirfl
                     command="bash -c 'sleep 1; exit 1'",
                 )
             },
+        )
+        yield cfg
+
+
+@fixture(scope="module")
+def supervisor_airflow_ssh_configuration(open_port: int) -> Iterator[SupervisorSSHAirflowConfiguration]:
+    with NamedTemporaryFile("w", suffix=".cfg") as tf:
+        cfg = SupervisorSSHAirflowConfiguration(
+            airflow=AirflowConfiguration(port=f"*:{open_port}"),
+            path=tf.name,
+            program={
+                "test": ProgramConfiguration(
+                    command="bash -c 'sleep 1; exit 1'",
+                )
+            },
+            ssh_hook=SSHHook(
+                remote_host="localhost",
+                conn_timeout=10,
+                cmd_timeout=60,
+            ),
+            command_prefix="ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
         )
         yield cfg
 
