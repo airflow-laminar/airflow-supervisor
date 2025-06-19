@@ -255,6 +255,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow.providers.ssh.operators.ssh</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_balancer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Host</span><span class="p">,</span> <span class="n">Port</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperatorArgs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic.convenience</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorTaskStep</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorSSHAirflowConfiguration</span>
@@ -291,32 +292,19 @@
                 <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2"> to empty string&quot;</span><span class="p">)</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;_</span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="s2">&quot;ssh_hook&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ssh_conn_id&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;remote_host&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;conn_timeout&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;cmd_timeout&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;environment&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;get_pty&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;banner_timeout&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;skip_on_exit_code&quot;</span><span class="p">,</span>
-        <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">ssh_operator_args</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">cfg</span><span class="o">.</span><span class="n">ssh_operator_args</span><span class="o">.</span><span class="n">__pydantic_fields__</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
                 <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
                 <span class="nb">setattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="n">attr</span><span class="p">])</span>
-            <span class="k">elif</span> <span class="n">cfg</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
-                <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span><span class="w"> </span><span class="n">attr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="n">attr</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
 
         <span class="c1"># Integrate with airflow-balancer, use host if provided</span>
         <span class="k">if</span> <span class="n">host</span><span class="p">:</span>
             <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting host to </span><span class="si">{</span><span class="n">host</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="s2">&quot;remote_host&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">name</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="s2">&quot;ssh_hook&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">hook</span><span class="p">()</span>
-            <span class="n">cfg</span><span class="o">.</span><span class="n">ssh_hook</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="s2">&quot;ssh_hook&quot;</span><span class="p">]</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">ssh_operator_args</span> <span class="o">=</span> <span class="n">SSHOperatorArgs</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">)</span>
 
             <span class="c1"># Ensure host matches the configuration</span>
             <span class="n">cfg</span><span class="o">.</span><span class="n">convenience</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">name</span>

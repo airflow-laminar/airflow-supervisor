@@ -154,15 +154,7 @@ classDiagram
       command_prefix: str
 
       # Airflow SSHOperator Arguments
-      ssh_hook: object
-      ssh_conn_id: str
-      remote_host: str
-      conn_timeout: int
-      cmd_timeout: int
-      environment: dict
-      get_pty: bool
-      banner_timeout: float
-      skip_on_exit_code: List~int~
+      ssh_operator_args: SSHOperatorArgs
     }
     class AirflowConfiguration {
       # PythonSensor arguments
