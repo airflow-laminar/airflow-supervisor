@@ -6,6 +6,7 @@ from airflow.models.dag import DAG
 from airflow.models.operator import Operator
 from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow_balancer import Host, Port
+from airflow_pydantic import SSHOperatorArgs
 from supervisor_pydantic.convenience import SupervisorTaskStep
 
 from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
@@ -38,32 +39,19 @@ class SupervisorSSH(Supervisor):
                 _log.info(f"Setting {attr} to empty string")
                 setattr(self, f"_{attr}", "")
 
-        self._ssh_operator_kwargs = {}
-        for attr in (
-            "ssh_hook",
-            "ssh_conn_id",
-            "remote_host",
-            "conn_timeout",
-            "cmd_timeout",
-            "environment",
-            "get_pty",
-            "banner_timeout",
-            "skip_on_exit_code",
-        ):
+        self._ssh_operator_kwargs = cfg.ssh_operator_args.model_dump(exclude_none=True)
+        for attr in cfg.ssh_operator_args.__pydantic_fields__.keys():
             if attr in kwargs:
                 _log.info(f"Setting {attr} to {kwargs.get(attr)}")
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
                 setattr(cfg, attr, self._ssh_operator_kwargs[attr])
-            elif cfg and getattr(cfg, attr):
-                _log.info(f"Setting {attr} to {getattr(cfg, attr)}")
-                self._ssh_operator_kwargs[attr] = getattr(cfg, attr)
 
         # Integrate with airflow-balancer, use host if provided
         if host:
             _log.info(f"Setting host to {host.name}")
             self._ssh_operator_kwargs["remote_host"] = host.name
             self._ssh_operator_kwargs["ssh_hook"] = host.hook()
-            cfg.ssh_hook = self._ssh_operator_kwargs["ssh_hook"]
+            cfg.ssh_operator_args = SSHOperatorArgs(**self._ssh_operator_kwargs)
 
             # Ensure host matches the configuration
             cfg.convenience.host = host.name
