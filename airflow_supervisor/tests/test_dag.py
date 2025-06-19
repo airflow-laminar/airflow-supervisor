@@ -22,3 +22,9 @@ class TestDag:
         assert s.stop_programs in dag.tasks
         assert s.stop_supervisor in dag.tasks
         assert s.unconfigure_supervisor in dag.tasks
+
+        for task in dag.tasks:
+            assert task.dag == dag, f"Task {task.task_id} is not associated with the DAG"
+            assert task.pool == supervisor_airflow_configuration.airflow.pool, (
+                f"Task {task.task_id} does not have the correct pool set"
+            )

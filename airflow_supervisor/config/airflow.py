@@ -30,3 +30,9 @@ class AirflowConfiguration(_BaseCfgModel):
         default="data_interval_end",
         description="Reference date for the job. NOTE: Airflow schedules after end of date interval, so `data_interval_end` is the default",
     )
+
+    # Airflow-specific settings
+    pool: Optional[str] = Field(
+        default=None,
+        description="Airflow pool to use for the job. If not set, the job will use the default pool, or the pool from a balancer host.",
+    )

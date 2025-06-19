@@ -39,7 +39,7 @@ def permissioned_open_port() -> int:
 def supervisor_airflow_configuration(open_port: int) -> Iterator[SupervisorAirflowConfiguration]:
     with NamedTemporaryFile("w", suffix=".cfg") as tf:
         cfg = SupervisorAirflowConfiguration(
-            airflow=AirflowConfiguration(port=f"*:{open_port}"),
+            airflow=AirflowConfiguration(port=f"*:{open_port}", pool="test-pool"),
             path=tf.name,
             program={
                 "test": ProgramConfiguration(
