@@ -1,0 +1,10 @@
+# @package _global_
+_target_: airflow_config.Configuration
+
+defaults:
+  - balancer@extensions.balancer
+  - supervisor@extensions.supervisor
+
+dags:
+  example_dag:
+    schedule: "0 3 * * *"
