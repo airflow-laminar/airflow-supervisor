@@ -309,6 +309,11 @@
             <span class="c1"># Ensure host matches the configuration</span>
             <span class="n">cfg</span><span class="o">.</span><span class="n">convenience</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">name</span>
 
+            <span class="c1"># Extract pool if available</span>
+            <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">pool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">airflow</span><span class="o">.</span><span class="n">pool</span><span class="p">:</span>
+                <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting airflow pool to </span><span class="si">{</span><span class="n">host</span><span class="o">.</span><span class="n">pool</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">cfg</span><span class="o">.</span><span class="n">airflow</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">pool</span>
+
         <span class="k">if</span> <span class="n">port</span><span class="p">:</span>
             <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting port to </span><span class="si">{</span><span class="n">port</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="c1"># Ensure port matches the configuration</span>
