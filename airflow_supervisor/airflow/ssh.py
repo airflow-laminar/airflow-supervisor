@@ -40,7 +40,13 @@ class SupervisorSSH(Supervisor):
                 setattr(self, f"_{attr}", "")
 
         self._ssh_operator_kwargs = cfg.ssh_operator_args.model_dump(exclude_none=True)
-        for attr in cfg.ssh_operator_args.__pydantic_fields__.keys():
+
+        pydantic_fields = (
+            cfg.ssh_operator_args.__pydantic_fields__.keys()
+            if hasattr(cfg.ssh_operator_args, "__pydantic_fields__")
+            else cfg.ssh_operator_args.__fields__
+        )
+        for attr in pydantic_fields:
             if attr in kwargs:
                 _log.info(f"Setting {attr} to {kwargs.get(attr)}")
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
