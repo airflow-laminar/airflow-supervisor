@@ -259,3 +259,19 @@ class Supervisor(object):
         return PythonOperator(
             **{"task_id": f"{self._dag.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
         )
+
+    def __lshift__(self, other: "Operator") -> "Operator":
+        """e.g. a << Supervisor() << b"""
+        self.unconfigure_supervisor >> other
+        return self.configure_supervisor
+
+    def __rshift__(self, other: "Operator") -> "Operator":
+        """e.g. a >> Supervisor() >> b"""
+        other >> self.configure_supervisor
+        return self.unconfigure_supervisors
+
+    def set_upstream(self, other: "Operator"):
+        self.configure_supervisor.set_upstream(other)
+
+    def set_downstream(self, other: "Operator"):
+        self.unconfigure_supervisor.set_downstream(other)
