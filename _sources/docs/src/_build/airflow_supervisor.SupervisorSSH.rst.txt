@@ -18,6 +18,8 @@
       ~SupervisorSSH.get_step_kwargs
       ~SupervisorSSH.get_step_operator
       ~SupervisorSSH.initialize_tasks
+      ~SupervisorSSH.set_downstream
+      ~SupervisorSSH.set_upstream
       ~SupervisorSSH.setup_dag
    
    

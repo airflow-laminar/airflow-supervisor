@@ -512,7 +512,23 @@
             <span class="k">return</span> <span class="n">HighAvailabilityOperator</span><span class="p">(</span><span class="o">**</span><span class="n">ha_operator_args</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">PythonOperator</span><span class="p">(</span>
             <span class="o">**</span><span class="p">{</span><span class="s2">&quot;task_id&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_dag</span><span class="o">.</span><span class="n">dag_id</span><span class="si">}</span><span class="s2">-</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">get_base_operator_kwargs</span><span class="p">(),</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">get_step_kwargs</span><span class="p">(</span><span class="n">step</span><span class="p">)}</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__lshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;e.g. a &lt;&lt; Supervisor() &lt;&lt; b&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span> <span class="o">&gt;&gt;</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__rshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;e.g. a &gt;&gt; Supervisor() &gt;&gt; b&quot;&quot;&quot;</span>
+        <span class="n">other</span> <span class="o">&gt;&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisors</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_upstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span><span class="o">.</span><span class="n">set_upstream</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">set_downstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span><span class="o">.</span><span class="n">set_downstream</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
 
 </pre></div>
         </article>

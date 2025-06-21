@@ -18,6 +18,8 @@
       ~Supervisor.get_step_kwargs
       ~Supervisor.get_step_operator
       ~Supervisor.initialize_tasks
+      ~Supervisor.set_downstream
+      ~Supervisor.set_upstream
       ~Supervisor.setup_dag
    
    
