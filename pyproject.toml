@@ -24,7 +24,7 @@ classifiers = [
 ]
 
 dependencies = [
-    "airflow-ha>=1.4.1,<1.5",
+    "airflow-ha>=1.4.1,<1.6",
     "apache-airflow>=2.8,<3",
     "airflow-common-operators>=0.6,<0.7",
     "airflow-pydantic>=1.2.8,<1.4",
