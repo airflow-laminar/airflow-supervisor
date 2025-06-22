@@ -3254,6 +3254,29 @@
 <span class="w">               </span><span class="p">],</span>
 <span class="w">               </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span>
 <span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;ssh_hook_foo&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                  </span><span class="p">{},</span>
+<span class="w">                  </span><span class="p">{</span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span>
+<span class="w">                  </span><span class="p">}</span>
+<span class="w">               </span><span class="p">],</span>
+<span class="w">               </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Ssh Hook Foo&quot;</span>
+<span class="w">            </span><span class="p">},</span>
+<span class="w">            </span><span class="nt">&quot;ssh_hook_external&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                  </span><span class="p">{</span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean&quot;</span>
+<span class="w">                  </span><span class="p">},</span>
+<span class="w">                  </span><span class="p">{</span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span>
+<span class="w">                  </span><span class="p">}</span>
+<span class="w">               </span><span class="p">],</span>
+<span class="w">               </span><span class="nt">&quot;default&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">               </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Whether to force the ssh_hook to be an external call or not. Only works when ssh_hook is a Callable&quot;</span><span class="p">,</span>
+<span class="w">               </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Ssh Hook External&quot;</span>
+<span class="w">            </span><span class="p">},</span>
 <span class="w">            </span><span class="nt">&quot;ssh_conn_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">                  </span><span class="p">{</span>
