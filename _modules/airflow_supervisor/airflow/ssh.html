@@ -281,6 +281,10 @@
         <span class="n">port</span><span class="p">:</span> <span class="s2">&quot;Port&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
     <span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cfg</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="c1"># NOTE: used in airflow-pydantic rendering</span>
+            <span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorSSHAirflowConfiguration</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+
         <span class="k">for</span> <span class="n">attr</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;command_prefix&quot;</span><span class="p">,):</span>
             <span class="k">if</span> <span class="n">attr</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
                 <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting </span><span class="si">{</span><span class="n">attr</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
