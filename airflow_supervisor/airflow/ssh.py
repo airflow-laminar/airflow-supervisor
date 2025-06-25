@@ -28,6 +28,10 @@ class SupervisorSSH(Supervisor):
         port: "Port" = None,
         **kwargs,
     ):
+        if isinstance(cfg, dict):
+            # NOTE: used in airflow-pydantic rendering
+            cfg = SupervisorSSHAirflowConfiguration.model_validate(cfg)
+
         for attr in ("command_prefix",):
             if attr in kwargs:
                 _log.info(f"Setting {attr} to {kwargs.get(attr)}")

@@ -9,8 +9,12 @@ from .supervisor import SupervisorAirflowConfiguration, SupervisorSSHAirflowConf
 __all__ = (
     "SupervisorOperatorArgs",
     "SupervisorTaskArgs",
+    "SupervisorSSHOperatorArgs",
+    "SupervisorSSHTaskArgs",
     "SupervisorOperator",
     "SupervisorTask",
+    "SupervisorSSHOperator",
+    "SupervisorSSHTask",
 )
 
 
@@ -39,10 +43,18 @@ SupervisorOperator = SupervisorTask
 
 class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
     cfg: SupervisorAirflowConfiguration
-    host: Optional[Host] = Field(description="The host to connect to for SSH, if not otherwise provided in configs")
-    port: Optional[Port] = Field(
-        default=None, description="The port to user for Supervisor, if not otherwise provided in configs"
+    host: Optional[Host] = Field(
+        default=None,
+        description="The host to connect to for SSH, if not otherwise provided in configs",
     )
+    port: Optional[Port] = Field(
+        default=None,
+        description="The port to user for Supervisor, if not otherwise provided in configs",
+    )
+
+
+# Alias
+SupervisorSSHOperatorArgs = SupervisorSSHTaskArgs
 
 
 class SupervisorSSHTask(Task, SupervisorSSHTaskArgs):
@@ -54,3 +66,7 @@ class SupervisorSSHTask(Task, SupervisorSSHTaskArgs):
         if not isinstance(v, Type) and issubclass(v, SupervisorSSHAirflowConfiguration):
             raise ValueError(f"operator must be 'airflow_supervisor.SupervisorSSH', got: {v}")
         return v
+
+
+# Alias
+SupervisorSSHOperator = SupervisorSSHTask

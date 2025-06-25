@@ -34,6 +34,10 @@ class Supervisor(object):
     _xmlrpc_client: SupervisorRemoteXMLRPCClient
 
     def __init__(self, dag: DAG, cfg: SupervisorAirflowConfiguration, **kwargs):
+        if isinstance(cfg, dict):
+            # NOTE: used in airflow-pydantic rendering
+            cfg = SupervisorAirflowConfiguration.model_validate(cfg)
+
         # store config
         self._cfg = cfg
 
