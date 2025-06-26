@@ -1,0 +1,36 @@
+# @package _global_
+_target_: airflow_config.Configuration
+
+defaults:
+  - balancer@extensions.balancer
+
+dags:
+  example_dag:
+    schedule: "0 3 * * *"
+    start_date: 2023-01-01
+    tasks:
+      run:
+        _target_: airflow_supervisor.SupervisorSSHTask
+        cfg:
+          _target_: airflow_supervisor.SupervisorSSHAirflowConfiguration
+          convenience:
+            _target_: airflow_supervisor.ConvenienceConfiguration
+            local_or_remote: remote
+          ssh_operator_args:
+            _target_: airflow_supervisor.SSHOperatorArgs
+          working_dir: /data
+          program:
+            echo:
+              _target_: airflow_supervisor.ProgramConfiguration
+              command: echo "hello"
+        host:
+          _target_: airflow_balancer.Host
+          name: my-remote-host
+          os: rhel
+          password_variable: blerg
+          password_variable_key: password
+        port:
+          _target_: airflow_balancer.Port
+          name: my-remote-port
+          host: ${..host}
+          port: 8080

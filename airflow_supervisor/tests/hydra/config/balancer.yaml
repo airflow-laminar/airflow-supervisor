@@ -7,3 +7,7 @@ hosts:
     username: user1
     password_variable: myvar
     password_variable_key: password
+ports:
+  - name: my-app
+    host_name: server2
+    port: 8080
