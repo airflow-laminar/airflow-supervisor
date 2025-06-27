@@ -2,14 +2,21 @@ from getpass import getuser
 from pathlib import Path
 from unittest.mock import patch
 
-from airflow_balancer.testing import pools, variables
+import pytest
 from airflow_config import load_config
 from airflow_pydantic import SSHOperatorArgs
 
-from airflow_supervisor import SupervisorSSHAirflowConfiguration
-
 
 def test_hydra_config():
+    try:
+        from airflow_supervisor import SupervisorSSHAirflowConfiguration
+    except ImportError:
+        pytest.skip("SupervisorSSHAirflowConfiguration not available")
+
+    try:
+        from airflow_balancer.testing import pools
+    except ImportError:
+        pytest.skip("airflow-balancer not available")
     with (
         patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
     ):
@@ -26,7 +33,7 @@ def test_hydra_config():
             assert supervisor_cfg.command_prefix == ""
             assert supervisor_cfg.working_dir == pth / f"supervisor-{getuser()}-sleep-echo"
             assert supervisor_cfg.inet_http_server.port == "*:9001"
-            assert supervisor_cfg.supervisorctl.serverurl == "http://localhost:9001/"
+            assert str(supervisor_cfg.supervisorctl.serverurl) == "http://localhost:9001/"
 
             assert "sleep" in supervisor_cfg.program
             assert "echo" in supervisor_cfg.program
@@ -40,6 +47,10 @@ def test_hydra_config():
 
 
 def test_hydra_config_render():
+    try:
+        from airflow_balancer.testing import pools
+    except ImportError:
+        pytest.skip("airflow-balancer not available")
     with (
         patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
         patch("supervisor_pydantic.config.supervisor.getuser") as p2,
@@ -82,6 +93,8 @@ with DAG(
                     "stopwaitsecs": 30,
                     "stopasgroup": True,
                     "killasgroup": True,
+                    "stdout_logfile": Path("/data/echo/output.log"),
+                    "stderr_logfile": Path("/data/echo/error.log"),
                     "directory": Path("/data/echo"),
                 },
                 "sleep": {
@@ -95,6 +108,8 @@ with DAG(
                     "stopwaitsecs": 30,
                     "stopasgroup": True,
                     "killasgroup": True,
+                    "stdout_logfile": Path("/data/sleep/output.log"),
+                    "stderr_logfile": Path("/data/sleep/error.log"),
                     "directory": Path("/data/sleep"),
                 },
             },
@@ -113,6 +128,7 @@ with DAG(
             "cleanup": False,
             "restart_on_initial": True,
             "restart_on_retrigger": False,
+            "ssh_operator_args": {"cmd_timeout": 63},
         },
         task_id="run",
         dag=dag,
@@ -124,6 +140,10 @@ with DAG(
 
 
 def test_hydra_config_render_hosts():
+    try:
+        from airflow_balancer.testing import pools
+    except ImportError:
+        pytest.skip("airflow-balancer not available")
     with (
         patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
         patch("supervisor_pydantic.config.supervisor.getuser") as p2,
@@ -166,6 +186,8 @@ with DAG(
                     "stopwaitsecs": 30,
                     "stopasgroup": True,
                     "killasgroup": True,
+                    "stdout_logfile": Path("/data/echo/output.log"),
+                    "stderr_logfile": Path("/data/echo/error.log"),
                     "directory": Path("/data/echo"),
                 }
             },
@@ -190,6 +212,10 @@ with DAG(
 
 
 def test_hydra_config_render_hosts_query():
+    try:
+        from airflow_balancer.testing import pools, variables
+    except ImportError:
+        pytest.skip("airflow-balancer not available")
     with (
         patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
         patch("supervisor_pydantic.config.supervisor.getuser") as p2,
@@ -233,6 +259,8 @@ with DAG(
                     "stopwaitsecs": 30,
                     "stopasgroup": True,
                     "killasgroup": True,
+                    "stdout_logfile": Path("/data/echo/output.log"),
+                    "stderr_logfile": Path("/data/echo/error.log"),
                     "directory": Path("/data/echo"),
                 }
             },

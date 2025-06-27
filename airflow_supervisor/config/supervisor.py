@@ -1,6 +1,5 @@
 from typing import Optional
 
-from airflow_pydantic import SSHOperatorArgs
 from pydantic import Field
 from supervisor_pydantic import SupervisorConvenienceConfiguration
 
@@ -8,11 +7,15 @@ from .airflow import AirflowConfiguration
 
 __all__ = (
     "SupervisorAirflowConfiguration",
-    "SupervisorSSHAirflowConfiguration",
-    "SSHOperatorArgs",
     "load_airflow_config",
-    "load_airflow_ssh_config",
 )
+
+
+# PredefinedTemplates = Literal[
+#     "always_on",
+#     "half_day",
+#     # TODO add more
+# ]
 
 
 class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
@@ -37,15 +40,26 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
         description="Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown",
     )
 
+    # template: Optional[PredefinedTemplates] = Field(
+    #     default=None,
+    #     description="A template of settings to use. This is a convenience for common settings. Individual settings will override the template.",
+    # )
 
-class SupervisorSSHAirflowConfiguration(SupervisorAirflowConfiguration):
-    command_prefix: Optional[str] = Field(default="")
+    # @model_validator(mode="after")
+    # def _set_fields_from_template(self):
+    #     if self.template == "always_on":
 
-    ssh_operator_args: Optional[SSHOperatorArgs] = Field(
-        default_factory=SSHOperatorArgs,
-        description="SSH Operator arguments to use for remote execution.",
-    )
+    #         self.stop_on_exit = False
+    #         self.cleanup = False
+    #         self.restart_on_initial = True
+    #         self.restart_on_retrigger = True
+    #     elif self.template == "half_day":
+    #         self.airflow.runtime = self.airflow.runtime or self.airflow.timedelta(hours=12)
+    #         self.stop_on_exit = True
+    #         self.cleanup = True
+    #         self.restart_on_initial = False
+    #         self.restart_on_retrigger = False
+    #     return self
 
 
 load_airflow_config = SupervisorAirflowConfiguration.load
-load_airflow_ssh_config = SupervisorSSHAirflowConfiguration.load
