@@ -2,6 +2,8 @@ from getpass import getuser
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
+
 from airflow_supervisor import load_airflow_config, load_airflow_ssh_config
 
 EXPECTED_CFG = """[inet_http_server]
@@ -27,6 +29,8 @@ stopsignal=TERM
 stopwaitsecs=30
 stopasgroup=true
 killasgroup=true
+stdout_logfile={dir}/sleep/output.log
+stderr_logfile={dir}/sleep/error.log
 directory={dir}/sleep
 
 [program:echo]
@@ -39,6 +43,8 @@ stopsignal=TERM
 stopwaitsecs=30
 stopasgroup=true
 killasgroup=true
+stdout_logfile={dir}/echo/output.log
+stderr_logfile={dir}/echo/error.log
 directory={dir}/echo
 
 [rpcinterface:supervisor]
@@ -58,6 +64,10 @@ def test_hydra_overrides():
 
 
 def test_hydra_overrides_ssh():
+    try:
+        import airflow_supervisor.config.supervisor_ssh  # noqa: F401
+    except ImportError:
+        pytest.skip("airflow-balancer not available")
     with (
         patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
     ):

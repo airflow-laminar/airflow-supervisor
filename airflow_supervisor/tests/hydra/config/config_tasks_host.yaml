@@ -16,8 +16,6 @@ dags:
           convenience:
             _target_: airflow_supervisor.ConvenienceConfiguration
             local_or_remote: remote
-          ssh_operator_args:
-            _target_: airflow_supervisor.SSHOperatorArgs
           working_dir: /data
           program:
             echo:

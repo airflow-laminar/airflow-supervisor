@@ -3,6 +3,7 @@ from tempfile import NamedTemporaryFile
 from time import sleep
 from typing import Iterator
 
+import pytest
 from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow_pydantic import SSHOperatorArgs
 from pytest import fixture
@@ -11,7 +12,6 @@ from airflow_supervisor import (
     AirflowConfiguration,
     ProgramConfiguration,
     SupervisorAirflowConfiguration,
-    SupervisorSSHAirflowConfiguration,
 )
 
 
@@ -51,7 +51,11 @@ def supervisor_airflow_configuration(open_port: int) -> Iterator[SupervisorAirfl
 
 
 @fixture(scope="module")
-def supervisor_airflow_ssh_configuration(open_port: int) -> Iterator[SupervisorSSHAirflowConfiguration]:
+def supervisor_airflow_ssh_configuration(open_port: int):
+    try:
+        from airflow_supervisor import SupervisorSSHAirflowConfiguration
+    except ImportError:
+        pytest.skip("SupervisorSSHAirflowConfiguration not available")
     with NamedTemporaryFile("w", suffix=".cfg") as tf:
         cfg = SupervisorSSHAirflowConfiguration(
             airflow=AirflowConfiguration(port=f"*:{open_port}"),

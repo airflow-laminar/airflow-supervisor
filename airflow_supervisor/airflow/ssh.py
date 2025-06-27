@@ -43,13 +43,17 @@ class SupervisorSSH(Supervisor):
                 _log.info(f"Setting {attr} to empty string")
                 setattr(self, f"_{attr}", "")
 
-        self._ssh_operator_kwargs = cfg.ssh_operator_args.model_dump(exclude_none=True)
+        if cfg.ssh_operator_args is not None:
+            self._ssh_operator_kwargs = cfg.ssh_operator_args.model_dump(exclude_none=True)
+            pydantic_fields = (
+                cfg.ssh_operator_args.__pydantic_fields__.keys()
+                if hasattr(cfg.ssh_operator_args, "__pydantic_fields__")
+                else cfg.ssh_operator_args.__fields__
+            )
+        else:
+            self._ssh_operator_kwargs = {}
+            pydantic_fields = ()
 
-        pydantic_fields = (
-            cfg.ssh_operator_args.__pydantic_fields__.keys()
-            if hasattr(cfg.ssh_operator_args, "__pydantic_fields__")
-            else cfg.ssh_operator_args.__fields__
-        )
         for attr in pydantic_fields:
             if attr in kwargs:
                 _log.info(f"Setting {attr} to {kwargs.get(attr)}")
