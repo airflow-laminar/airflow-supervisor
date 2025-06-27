@@ -5,7 +5,7 @@
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
     <!-- Generated with Sphinx 8.2.3 and Furo 2024.08.06 -->
-        <title>airflow_supervisor.config.supervisor - airflow-supervisor v1.7.9</title>
+        <title>airflow_supervisor.config.supervisor_ssh - airflow-supervisor v1.7.9</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.4510f1fc1dee50b3e5859aac5469c37c29e427902b24a333a5f9fcb2f0b3ac41.css" />
@@ -246,75 +246,34 @@
           </label>
         </div>
         <article role="main" id="furo-main-content">
-          <h1>Source code for airflow_supervisor.config.supervisor</h1><div class="highlight"><pre>
+          <h1>Source code for airflow_supervisor.config.supervisor_ssh</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperatorArgs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorConvenienceConfiguration</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">.airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">AirflowConfiguration</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="s2">&quot;SupervisorAirflowConfiguration&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;load_airflow_config&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SupervisorSSHAirflowConfiguration&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;SSHOperatorArgs&quot;</span><span class="p">,</span>  <span class="c1"># reexport</span>
+    <span class="s2">&quot;load_airflow_ssh_config&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 
 
-<span class="c1"># PredefinedTemplates = Literal[</span>
-<span class="c1">#     &quot;always_on&quot;,</span>
-<span class="c1">#     &quot;half_day&quot;,</span>
-<span class="c1">#     # TODO add more</span>
-<span class="c1"># ]</span>
+<div class="viewcode-block" id="SupervisorSSHAirflowConfiguration">
+<a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html#airflow_supervisor.SupervisorSSHAirflowConfiguration">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SupervisorSSHAirflowConfiguration</span><span class="p">(</span><span class="n">SupervisorAirflowConfiguration</span><span class="p">):</span>
+    <span class="n">command_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-
-<div class="viewcode-block" id="SupervisorAirflowConfiguration">
-<a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html#airflow_supervisor.SupervisorAirflowConfiguration">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">SupervisorAirflowConfiguration</span><span class="p">(</span><span class="n">SupervisorConvenienceConfiguration</span><span class="p">):</span>
-    <span class="n">airflow</span><span class="p">:</span> <span class="n">AirflowConfiguration</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default_factory</span><span class="o">=</span><span class="n">AirflowConfiguration</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Required options for airflow integration&quot;</span>
-    <span class="p">)</span>
-
-    <span class="c1"># Should the programs be stopped when the DAG finishes?</span>
-    <span class="n">stop_on_exit</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Stop supervisor on dag completion&quot;</span><span class="p">)</span>
-    <span class="c1"># Should the supervisor folder be removed on dag completion?</span>
-    <span class="n">cleanup</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True&quot;</span>
-    <span class="p">)</span>
-    <span class="c1"># For Jobs that do not shutdown, e.g. stop_on_exit=False, one might want to configure them to</span>
-    <span class="c1"># restart when the DAG is rescheduled by airflow or retriggered by airflow-ha</span>
-    <span class="n">restart_on_initial</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Restart the job when the DAG is run directly via airflow (NOT retriggered). This is useful for jobs that do not shutdown&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">restart_on_retrigger</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown&quot;</span><span class="p">,</span>
+    <span class="n">ssh_operator_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SSHOperatorArgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;SSH Operator arguments to use for remote execution.&quot;</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
-    <span class="c1"># template: Optional[PredefinedTemplates] = Field(</span>
-    <span class="c1">#     default=None,</span>
-    <span class="c1">#     description=&quot;A template of settings to use. This is a convenience for common settings. Individual settings will override the template.&quot;,</span>
-    <span class="c1"># )</span>
 
-    <span class="c1"># @model_validator(mode=&quot;after&quot;)</span>
-    <span class="c1"># def _set_fields_from_template(self):</span>
-    <span class="c1">#     if self.template == &quot;always_on&quot;:</span>
-
-    <span class="c1">#         self.stop_on_exit = False</span>
-    <span class="c1">#         self.cleanup = False</span>
-    <span class="c1">#         self.restart_on_initial = True</span>
-    <span class="c1">#         self.restart_on_retrigger = True</span>
-    <span class="c1">#     elif self.template == &quot;half_day&quot;:</span>
-    <span class="c1">#         self.airflow.runtime = self.airflow.runtime or self.airflow.timedelta(hours=12)</span>
-    <span class="c1">#         self.stop_on_exit = True</span>
-    <span class="c1">#         self.cleanup = True</span>
-    <span class="c1">#         self.restart_on_initial = False</span>
-    <span class="c1">#         self.restart_on_retrigger = False</span>
-    <span class="c1">#     return self</span>
-
-
-<span class="n">load_airflow_config</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="o">.</span><span class="n">load</span>
+<span class="n">load_airflow_ssh_config</span> <span class="o">=</span> <span class="n">SupervisorSSHAirflowConfiguration</span><span class="o">.</span><span class="n">load</span>
 </pre></div>
         </article>
       </div>
