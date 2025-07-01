@@ -13,7 +13,7 @@ __all__ = (
 )
 
 
-class SupervisorTaskArgs(TaskArgs, extra="allow"):
+class SupervisorTaskArgs(TaskArgs):
     cfg: SupervisorAirflowConfiguration
 
 

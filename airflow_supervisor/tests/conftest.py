@@ -4,12 +4,10 @@ from time import sleep
 from typing import Iterator
 
 import pytest
-from airflow.providers.ssh.hooks.ssh import SSHHook
 from airflow_pydantic import SSHOperatorArgs
 from pytest import fixture
 
 from airflow_supervisor import (
-    AirflowConfiguration,
     ProgramConfiguration,
     SupervisorAirflowConfiguration,
 )
@@ -39,7 +37,8 @@ def permissioned_open_port() -> int:
 def supervisor_airflow_configuration(open_port: int) -> Iterator[SupervisorAirflowConfiguration]:
     with NamedTemporaryFile("w", suffix=".cfg") as tf:
         cfg = SupervisorAirflowConfiguration(
-            airflow=AirflowConfiguration(port=f"*:{open_port}", pool="test-pool"),
+            port=open_port,
+            pool="test-pool",
             path=tf.name,
             program={
                 "test": ProgramConfiguration(
@@ -53,12 +52,16 @@ def supervisor_airflow_configuration(open_port: int) -> Iterator[SupervisorAirfl
 @fixture(scope="module")
 def supervisor_airflow_ssh_configuration(open_port: int):
     try:
+        from airflow.providers.ssh.hooks.ssh import SSHHook
+    except ImportError:
+        pytest.skip("SSHHook not available")
+    try:
         from airflow_supervisor import SupervisorSSHAirflowConfiguration
     except ImportError:
         pytest.skip("SupervisorSSHAirflowConfiguration not available")
     with NamedTemporaryFile("w", suffix=".cfg") as tf:
         cfg = SupervisorSSHAirflowConfiguration(
-            airflow=AirflowConfiguration(port=f"*:{open_port}"),
+            port=open_port,
             path=tf.name,
             program={
                 "test": ProgramConfiguration(
@@ -81,9 +84,9 @@ def permissioned_supervisor_airflow_configuration(
 ) -> Iterator[SupervisorAirflowConfiguration]:
     with NamedTemporaryFile("w", suffix=".cfg") as tf:
         cfg = SupervisorAirflowConfiguration(
-            airflow=AirflowConfiguration(
-                port=f"*:{permissioned_open_port}", username="user1", password="testpassword1"
-            ),
+            port=f"*:{permissioned_open_port}",
+            username="user1",
+            password="testpassword1",
             path=tf.name,
             program={
                 "test": ProgramConfiguration(

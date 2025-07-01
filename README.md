@@ -86,9 +86,7 @@ all_dags:
 extensions:
   supervisor:
     _target_: airflow_supervisor.SupervisorAirflowConfiguration
-    airflow:
-      _target_: airflow_supervisor.ConvenienceConfiguration
-      port: "*:9091"
+    port: 9091
     working_dir: "/data/airflow/supervisor"
     config_path: "/data/airflow/supervisor/supervisor.conf"
     program:
@@ -117,7 +115,6 @@ See [supervisor-pydantic](http://airflow-laminar.github.io/supervisor-pydantic/)
 
 - `SupervisorAirflowConfiguration`: Wrapper around `supervisor_pydantic.SupervisorConvenienceConfiguration`, with added airflow-specific configuration
 - `SupervisorSSHAirflowConfiguration`: Wrapper around `SupervisorAirflowConfiguration`, with added parameters for airflow's `SSHOperator`
-- `AirflowConfiguration`: Airflow-specific configuration for how the DAG and Operators should behave, including `airflow_ha.HighAvailabilityOperator` and `PythonSensor`
 
 ```mermaid
 classDiagram
@@ -127,11 +124,19 @@ classDiagram
     class SupervisorConvenienceConfiguration {
       supervisor_pydantic.SupervisorConvenienceConfiguration
     }
-    SupervisorAirflowConfiguration *-- AirflowConfiguration
 
     class SupervisorAirflowConfiguration{
-        airflow: AirflowConfiguration
+        # PythonSensor arguments
+        check_interval: timedelta
+        check_timeout: timedelta
 
+        # HighAvailabilityOperator arguments
+        runtime: timedelta
+        endtime: time
+        maxretrigger: int
+        reference_date: str
+
+        # Airflow arguments
         stop_on_exit: bool
         cleanup: bool
         restart_on_initial: bool
@@ -142,17 +147,6 @@ classDiagram
 
       # Airflow SSHOperator Arguments
       ssh_operator_args: SSHOperatorArgs
-    }
-    class AirflowConfiguration {
-      # PythonSensor arguments
-      check_interval: timedelta
-      check_timeout: timedelta
-
-      # HighAvailabilityOperator custom args
-      runtime: timedelta
-      endtime: time
-      maxretrigger: int
-      reference_date: str
     }
 ```
 

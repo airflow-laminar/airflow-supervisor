@@ -1,11 +1,7 @@
 from logging import getLogger
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
-from airflow.models.dag import DAG
-from airflow.models.operator import Operator
-from airflow.operators.python import PythonOperator
 from airflow_common_operators import fail, skip
-from airflow_ha import Action, CheckResult, HighAvailabilityOperator, Result
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
 from supervisor_pydantic.convenience import (
     SupervisorTaskStep,
@@ -22,18 +18,23 @@ from supervisor_pydantic.convenience import (
 
 from airflow_supervisor.config import SupervisorAirflowConfiguration
 
+if TYPE_CHECKING:
+    from airflow.models.dag import DAG
+    from airflow.models.operator import Operator
+    from airflow_ha import CheckResult, HighAvailabilityOperator
+
 __all__ = ("Supervisor",)
 
 _log = getLogger(__name__)
 
 
 class Supervisor(object):
-    _dag: DAG
+    _dag: "DAG"
     _cfg: SupervisorAirflowConfiguration
-    _kill_dag: DAG
+    _kill_dag: "DAG"
     _xmlrpc_client: SupervisorRemoteXMLRPCClient
 
-    def __init__(self, dag: DAG, cfg: SupervisorAirflowConfiguration, **kwargs):
+    def __init__(self, dag: "DAG", cfg: SupervisorAirflowConfiguration, **kwargs):
         if isinstance(cfg, dict):
             # NOTE: used in airflow-pydantic rendering
             cfg = SupervisorAirflowConfiguration.model_validate(cfg)
@@ -64,10 +65,10 @@ class Supervisor(object):
         self._force_kill = self.get_step_operator("force-kill")
 
         # Default non running
+        from airflow.operators.python import PythonOperator
+
         (
-            PythonOperator(
-                task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, pool=self._cfg.airflow.pool
-            )
+            PythonOperator(task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, pool=self._cfg.pool)
             >> self._force_kill
         )
 
@@ -76,7 +77,7 @@ class Supervisor(object):
             task_id=f"{self._dag.dag_id}-check-config-failed",
             python_callable=fail,
             trigger_rule="one_failed",
-            pool=self._cfg.airflow.pool,
+            pool=self._cfg.pool,
         )
         self.configure_supervisor >> any_config_fail
         self.start_supervisor >> any_config_fail
@@ -92,6 +93,8 @@ class Supervisor(object):
         self._dag.max_active_runs = 1
 
     def initialize_tasks(self):
+        from airflow.operators.python import PythonOperator
+
         # NOTE: initialize this first as it is relied upon by startup steps
         self._check_programs = self.get_step_operator("check-programs")
 
@@ -158,7 +161,7 @@ class Supervisor(object):
         return SupervisorRemoteXMLRPCClient(self._cfg)
 
     def get_base_operator_kwargs(self) -> Dict:
-        return dict(dag=self._dag, pool=self._cfg.airflow.pool)
+        return dict(dag=self._dag, pool=self._cfg.pool)
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
         if step == "configure-supervisor":
@@ -219,7 +222,9 @@ class Supervisor(object):
             return dict(python_callable=lambda: stop_programs(self._cfg, _exit=False), do_xcom_push=True)
         elif step == "check-programs":
 
-            def _check_programs(supervisor_cfg=self._cfg, **kwargs) -> CheckResult:
+            def _check_programs(supervisor_cfg=self._cfg, **kwargs) -> "CheckResult":
+                from airflow_ha import Action, Result
+
                 # TODO formalize
                 if check_programs(supervisor_cfg, check_done=True, _exit=False):
                     # finish
@@ -242,18 +247,21 @@ class Supervisor(object):
         raise NotImplementedError(f"Unknown step: {step}")
 
     def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
+        from airflow.operators.python import PythonOperator
+        from airflow_ha import HighAvailabilityOperator
+
         if step == "check-programs":
             ha_operator_args = {
                 # Sensor Args
                 "task_id": f"{self._dag.dag_id}-{step}",
-                "poke_interval": self._cfg.airflow.check_interval.total_seconds(),
-                "timeout": self._cfg.airflow.check_timeout.total_seconds(),
+                "poke_interval": self._cfg.check_interval.total_seconds(),
+                "timeout": self._cfg.check_timeout.total_seconds(),
                 "mode": "poke",
                 # HighAvailabilityOperator Args
-                "runtime": self._cfg.airflow.runtime,
-                "endtime": self._cfg.airflow.endtime,
-                "maxretrigger": self._cfg.airflow.maxretrigger,
-                "reference_date": self._cfg.airflow.reference_date,
+                "runtime": self._cfg.runtime,
+                "endtime": self._cfg.endtime,
+                "maxretrigger": self._cfg.maxretrigger,
+                "reference_date": self._cfg.reference_date,
                 # Pass through
                 **self.get_base_operator_kwargs(),
                 **self.get_step_kwargs(step),
