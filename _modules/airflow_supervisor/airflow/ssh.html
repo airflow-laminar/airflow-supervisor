@@ -209,7 +209,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSH.html">airflow_supervisor.SupervisorSSH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html">airflow_supervisor.SupervisorAirflowConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html">airflow_supervisor.SupervisorSSHAirflowConfiguration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.AirflowConfiguration.html">airflow_supervisor.AirflowConfiguration</a></li>
 </ul>
 </li>
 </ul>
@@ -249,11 +248,8 @@
           <h1>Source code for airflow_supervisor.airflow.ssh</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">getLogger</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">shlex</span><span class="w"> </span><span class="kn">import</span> <span class="n">quote</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span><span class="p">,</span> <span class="n">Dict</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.dag</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.providers.ssh.operators.ssh</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperator</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_balancer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Host</span><span class="p">,</span> <span class="n">Port</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperatorArgs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic.convenience</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorTaskStep</span>
@@ -261,6 +257,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorSSHAirflowConfiguration</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.local</span><span class="w"> </span><span class="kn">import</span> <span class="n">Supervisor</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.dag</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">airflow.models.operator</span><span class="w"> </span><span class="kn">import</span> <span class="n">Operator</span>
+
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;SupervisorSSH&quot;</span><span class="p">,)</span>
 
@@ -275,7 +276,7 @@
 <a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSH.html#airflow_supervisor.SupervisorSSH.__init__">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">dag</span><span class="p">:</span> <span class="n">DAG</span><span class="p">,</span>
+        <span class="n">dag</span><span class="p">:</span> <span class="s2">&quot;DAG&quot;</span><span class="p">,</span>
         <span class="n">cfg</span><span class="p">:</span> <span class="n">SupervisorSSHAirflowConfiguration</span><span class="p">,</span>
         <span class="n">host</span><span class="p">:</span> <span class="s2">&quot;Host&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">port</span><span class="p">:</span> <span class="s2">&quot;Port&quot;</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -321,17 +322,17 @@
             <span class="n">cfg</span><span class="o">.</span><span class="n">ssh_operator_args</span> <span class="o">=</span> <span class="n">SSHOperatorArgs</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">)</span>
 
             <span class="c1"># Ensure host matches the configuration</span>
-            <span class="n">cfg</span><span class="o">.</span><span class="n">convenience</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">host</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">name</span>
 
             <span class="c1"># Extract pool if available</span>
-            <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">pool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">airflow</span><span class="o">.</span><span class="n">pool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">host</span><span class="o">.</span><span class="n">pool</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">cfg</span><span class="o">.</span><span class="n">pool</span><span class="p">:</span>
                 <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting airflow pool to </span><span class="si">{</span><span class="n">host</span><span class="o">.</span><span class="n">pool</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="n">cfg</span><span class="o">.</span><span class="n">airflow</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">pool</span>
+                <span class="n">cfg</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">pool</span>
 
         <span class="k">if</span> <span class="n">port</span><span class="p">:</span>
             <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting port to </span><span class="si">{</span><span class="n">port</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="c1"># Ensure port matches the configuration</span>
-            <span class="n">cfg</span><span class="o">.</span><span class="n">convenience</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;*:</span><span class="si">{</span><span class="n">port</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">cfg</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;*:</span><span class="si">{</span><span class="n">port</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="k">if</span> <span class="n">host</span> <span class="ow">or</span> <span class="n">port</span><span class="p">:</span>
             <span class="c1"># revalidate</span>
@@ -364,7 +365,9 @@
             <span class="c1"># can be done via XMLRPC API</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">get_step_kwargs</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_step_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">SupervisorTaskStep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Operator</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_step_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="n">SupervisorTaskStep</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">airflow.providers.ssh.operators.ssh</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperator</span>
+
         <span class="k">if</span> <span class="n">step</span> <span class="ow">in</span> <span class="p">(</span>
             <span class="s2">&quot;configure-supervisor&quot;</span><span class="p">,</span>
             <span class="s2">&quot;start-supervisor&quot;</span><span class="p">,</span>

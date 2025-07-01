@@ -1,6 +1,0 @@
-﻿airflow\_supervisor.AirflowConfiguration
-========================================
-
-.. currentmodule:: airflow_supervisor
-
-.. autopydantic_model:: AirflowConfiguration

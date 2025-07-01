@@ -210,7 +210,6 @@
 <li class="toctree-l2"><a class="reference internal" href="docs/src/_build/airflow_supervisor.SupervisorSSH.html">airflow_supervisor.SupervisorSSH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html">airflow_supervisor.SupervisorAirflowConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html">airflow_supervisor.SupervisorSSHAirflowConfiguration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="docs/src/_build/airflow_supervisor.AirflowConfiguration.html">airflow_supervisor.AirflowConfiguration</a></li>
 </ul>
 </li>
 </ul>
@@ -337,9 +336,7 @@
 <span class="nt">extensions</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">supervisor</span><span class="p">:</span>
 <span class="w">    </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorAirflowConfiguration</span>
-<span class="w">    </span><span class="nt">airflow</span><span class="p">:</span>
-<span class="w">      </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.ConvenienceConfiguration</span>
-<span class="w">      </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;*:9091&quot;</span>
+<span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9091</span>
 <span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/airflow/supervisor&quot;</span>
 <span class="w">    </span><span class="nt">config_path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/airflow/supervisor/supervisor.conf&quot;</span>
 <span class="w">    </span><span class="nt">program</span><span class="p">:</span>
@@ -369,7 +366,6 @@
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code>: Wrapper around <code class="docutils literal notranslate"><span class="pre">supervisor_pydantic.SupervisorConvenienceConfiguration</span></code>, with added airflow-specific configuration</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code>: Wrapper around <code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code>, with added parameters for airflow’s <code class="docutils literal notranslate"><span class="pre">SSHOperator</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">AirflowConfiguration</span></code>: Airflow-specific configuration for how the DAG and Operators should behave, including <code class="docutils literal notranslate"><span class="pre">airflow_ha.HighAvailabilityOperator</span></code> and <code class="docutils literal notranslate"><span class="pre">PythonSensor</span></code></p></li>
 </ul>
 <pre  class="mermaid">
         classDiagram
@@ -379,11 +375,19 @@
     class SupervisorConvenienceConfiguration {
       supervisor_pydantic.SupervisorConvenienceConfiguration
     }
-    SupervisorAirflowConfiguration *-- AirflowConfiguration
 
     class SupervisorAirflowConfiguration{
-        airflow: AirflowConfiguration
+        # PythonSensor arguments
+        check_interval: timedelta
+        check_timeout: timedelta
 
+        # HighAvailabilityOperator arguments
+        runtime: timedelta
+        endtime: time
+        maxretrigger: int
+        reference_date: str
+
+        # Airflow arguments
         stop_on_exit: bool
         cleanup: bool
         restart_on_initial: bool
@@ -394,17 +398,6 @@
 
       # Airflow SSHOperator Arguments
       ssh_operator_args: SSHOperatorArgs
-    }
-    class AirflowConfiguration {
-      # PythonSensor arguments
-      check_interval: timedelta
-      check_timeout: timedelta
-
-      # HighAvailabilityOperator custom args
-      runtime: timedelta
-      endtime: time
-      maxretrigger: int
-      reference_date: str
     }
     </pre><div class="admonition note">
 <p class="admonition-title">Note</p>

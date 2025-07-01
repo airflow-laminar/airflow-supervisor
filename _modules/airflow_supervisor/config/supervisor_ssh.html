@@ -209,7 +209,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSH.html">airflow_supervisor.SupervisorSSH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html">airflow_supervisor.SupervisorAirflowConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html">airflow_supervisor.SupervisorSSHAirflowConfiguration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../../docs/src/_build/airflow_supervisor.AirflowConfiguration.html">airflow_supervisor.AirflowConfiguration</a></li>
 </ul>
 </li>
 </ul>
@@ -251,6 +250,7 @@
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperatorArgs</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorLocation</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span>
 
@@ -269,6 +269,12 @@
     <span class="n">ssh_operator_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SSHOperatorArgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">description</span><span class="o">=</span><span class="s2">&quot;SSH Operator arguments to use for remote execution.&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># NOTE: Override in base-base class</span>
+    <span class="n">local_or_remote</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SupervisorLocation</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;remote&quot;</span><span class="p">,</span>
+        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicates via inet http server&quot;</span><span class="p">,</span>
     <span class="p">)</span></div>
 
 
