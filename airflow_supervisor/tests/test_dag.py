@@ -1,10 +1,15 @@
-from airflow.models.dag import DAG
+import pytest
 
 from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration
 
 
 class TestDag:
     def test_instantiation(self, supervisor_airflow_configuration: SupervisorAirflowConfiguration):
+        try:
+            from airflow.models.dag import DAG
+        except ImportError:
+            pytest.skip("DAG not available")
+
         dag = DAG(dag_id="test_dag", default_args={}, schedule=None, params={})
         s = Supervisor(dag=dag, cfg=supervisor_airflow_configuration)
         assert len(dag.tasks) == 17
@@ -25,6 +30,6 @@ class TestDag:
 
         for task in dag.tasks:
             assert task.dag == dag, f"Task {task.task_id} is not associated with the DAG"
-            assert task.pool == supervisor_airflow_configuration.airflow.pool, (
+            assert task.pool == supervisor_airflow_configuration.pool, (
                 f"Task {task.task_id} does not have the correct pool set"
             )

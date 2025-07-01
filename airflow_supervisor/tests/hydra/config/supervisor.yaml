@@ -4,25 +4,20 @@ defaults:
   - inet_http_server: local
   - program: [sleep,echo]
   - rpcinterface: standard
+
 _target_: airflow_supervisor.SupervisorSSHAirflowConfiguration
 
-airflow:
-  _target_: airflow_supervisor.AirflowConfiguration
-  runtime: 360
-  check_interval: 10
-  check_timeout: 60
-  endtime: 23:00:00
-  maxretrigger: 5
-
-convenience:
-  _target_: airflow_supervisor.ConvenienceConfiguration
-  local_or_remote: remote
-
+# Airflow
+check_interval: 10
+check_timeout: 60
+endtime: 23:00:00
+maxretrigger: 5
+runtime: 360
 ssh_operator_args:
-  _target_: airflow_supervisor.SSHOperatorArgs
   cmd_timeout: 63
 
-stop_on_exit: false
+# Supervisor
 cleanup: false
+stop_on_exit: false
 restart_on_retrigger: false
 restart_on_initial: true

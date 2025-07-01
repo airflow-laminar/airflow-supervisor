@@ -13,9 +13,6 @@ dags:
         _target_: airflow_supervisor.SupervisorSSHTask
         cfg:
           _target_: airflow_supervisor.SupervisorSSHAirflowConfiguration
-          convenience:
-            _target_: airflow_supervisor.ConvenienceConfiguration
-            local_or_remote: remote
           working_dir: /data
           program:
             echo:

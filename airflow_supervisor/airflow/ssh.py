@@ -1,10 +1,7 @@
 from logging import getLogger
 from shlex import quote
-from typing import Dict
+from typing import TYPE_CHECKING, Dict
 
-from airflow.models.dag import DAG
-from airflow.models.operator import Operator
-from airflow.providers.ssh.operators.ssh import SSHOperator
 from airflow_balancer import Host, Port
 from airflow_pydantic import SSHOperatorArgs
 from supervisor_pydantic.convenience import SupervisorTaskStep
@@ -12,6 +9,11 @@ from supervisor_pydantic.convenience import SupervisorTaskStep
 from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
 
 from .local import Supervisor
+
+if TYPE_CHECKING:
+    from airflow.models.dag import DAG
+    from airflow.models.operator import Operator
+
 
 __all__ = ("SupervisorSSH",)
 
@@ -22,7 +24,7 @@ class SupervisorSSH(Supervisor):
     # Mimic SSH Operator: https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/_api/airflow/providers/ssh/operators/ssh/index.html
     def __init__(
         self,
-        dag: DAG,
+        dag: "DAG",
         cfg: SupervisorSSHAirflowConfiguration,
         host: "Host" = None,
         port: "Port" = None,
@@ -68,17 +70,17 @@ class SupervisorSSH(Supervisor):
             cfg.ssh_operator_args = SSHOperatorArgs(**self._ssh_operator_kwargs)
 
             # Ensure host matches the configuration
-            cfg.convenience.host = host.name
+            cfg.host = host.name
 
             # Extract pool if available
-            if host.pool and not cfg.airflow.pool:
+            if host.pool and not cfg.pool:
                 _log.info(f"Setting airflow pool to {host.pool}")
-                cfg.airflow.pool = host.pool
+                cfg.pool = host.pool
 
         if port:
             _log.info(f"Setting port to {port.port}")
             # Ensure port matches the configuration
-            cfg.convenience.port = f"*:{port.port}"
+            cfg.port = f"*:{port.port}"
 
         if host or port:
             # revalidate
@@ -110,7 +112,9 @@ _supervisor_convenience {step} --cfg {quote(str(self._cfg._pydantic_path))}
             # can be done via XMLRPC API
             return super().get_step_kwargs(step=step)
 
-    def get_step_operator(self, step: SupervisorTaskStep) -> Operator:
+    def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
+        from airflow.providers.ssh.operators.ssh import SSHOperator
+
         if step in (
             "configure-supervisor",
             "start-supervisor",

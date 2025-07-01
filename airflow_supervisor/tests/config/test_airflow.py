@@ -2,7 +2,7 @@ from getpass import getuser
 from pathlib import Path
 from unittest.mock import patch
 
-from airflow_supervisor import AirflowConfiguration, ProgramConfiguration, SupervisorAirflowConfiguration
+from airflow_supervisor import ProgramConfiguration, SupervisorAirflowConfiguration
 
 
 def test_airflow_inst():
@@ -12,7 +12,7 @@ def test_airflow_inst():
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         c = SupervisorAirflowConfiguration(
-            airflow=AirflowConfiguration(port="*:9001"),
+            port=9001,
             program={
                 "test": ProgramConfiguration(
                     command="sleep 1 && exit 1",
@@ -20,7 +20,7 @@ def test_airflow_inst():
             },
         )
         assert str(c.working_dir) == str(pth / f"supervisor-{getuser()}-test")
-        assert str(c.config_path) == str(pth / f"supervisor-{getuser()}-test" / "supervisor.cfg")
+        assert str(c.config_path) == str(pth / f"supervisor-{getuser()}-test" / "supervisord.conf")
 
 
 def test_airflow_cfg_roundtrip_json():
@@ -30,7 +30,7 @@ def test_airflow_cfg_roundtrip_json():
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         c = SupervisorAirflowConfiguration(
-            airflow=AirflowConfiguration(port="*:9001"),
+            port="*:9001",
             program={
                 "test": ProgramConfiguration(
                     command="sleep 1 && exit 1",

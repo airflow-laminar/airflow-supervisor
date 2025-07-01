@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from airflow_supervisor import AirflowConfiguration, ProgramConfiguration, SupervisorAirflowConfiguration
+from airflow_supervisor import ProgramConfiguration, SupervisorAirflowConfiguration
 
 if __name__ == "__main__":
     path = Path(__file__).parent.parent.parent
     cfg = SupervisorAirflowConfiguration(
-        airflow=AirflowConfiguration(port="*:9090"),
+        port=9090,
         working_dir=path,
         path=path,
         program={
