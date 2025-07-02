@@ -43,6 +43,9 @@ develop = [
     "twine",
     "uv",
     "wheel",
+    # airflow
+    "apache-airflow>=2.8,<3",
+    "apache-airflow-providers-ssh",
     # airflow-config integration
     "airflow-config>=0.1.2",
     "airflow-pydantic",
