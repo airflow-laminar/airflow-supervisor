@@ -1,4 +1,3 @@
-import pytest
 from airflow.models.dag import DAG
 
 
@@ -11,10 +10,7 @@ class TestSSH:
         assert supervisor_airflow_ssh_configuration.ssh_operator_args.ssh_hook.remote_host == "localhost"
 
     def test_ssh_overrides(self, supervisor_airflow_ssh_configuration):
-        try:
-            from airflow_balancer import Host
-        except ImportError:
-            pytest.skip("airflow-balancer not available")
+        from airflow_pydantic import Host
 
         from airflow_supervisor import SupervisorSSH
 

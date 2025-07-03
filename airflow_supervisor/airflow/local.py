@@ -1,7 +1,7 @@
 from logging import getLogger
 from typing import TYPE_CHECKING, Dict
 
-from airflow_common_operators import fail, skip
+from airflow_pydantic import fail, skip
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
 from supervisor_pydantic.convenience import (
     SupervisorTaskStep,

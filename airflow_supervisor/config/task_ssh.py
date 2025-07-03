@@ -1,8 +1,7 @@
 from types import FunctionType, MethodType
 from typing import Any, Optional, Type, Union
 
-from airflow_balancer.config import Host, HostQuery, Port, PortQuery
-from airflow_pydantic import CallablePath, ImportPath, Task, TaskArgs, get_import_path
+from airflow_pydantic import CallablePath, Host, HostQuery, ImportPath, Port, PortQuery, Task, TaskArgs, get_import_path
 from pydantic import Field, TypeAdapter, field_validator, model_validator
 
 from .supervisor_ssh import SupervisorSSHAirflowConfiguration

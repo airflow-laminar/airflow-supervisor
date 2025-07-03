@@ -2,8 +2,7 @@ from logging import getLogger
 from shlex import quote
 from typing import TYPE_CHECKING, Dict
 
-from airflow_balancer import Host, Port
-from airflow_pydantic import SSHOperatorArgs
+from airflow_pydantic import Host, Port, SSHOperatorArgs
 from supervisor_pydantic.convenience import SupervisorTaskStep
 
 from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
