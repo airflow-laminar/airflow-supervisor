@@ -19,10 +19,10 @@ dags:
               _target_: airflow_supervisor.ProgramConfiguration
               command: echo "hello"
         host:
-          _target_: airflow_balancer.HostQuery
+          _target_: airflow_pydantic.HostQuery
           balancer: ${extensions.balancer}
           name: server2
         port:
-          _target_: airflow_balancer.PortQuery
+          _target_: airflow_pydantic.PortQuery
           balancer: ${extensions.balancer}
           name: my-app
