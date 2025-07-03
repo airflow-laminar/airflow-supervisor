@@ -195,6 +195,7 @@ with DAG(
 """
             )
 
+        dag.instantiate()
         exec(dag.render())
 
 
@@ -285,4 +286,5 @@ with DAG(
 """
             )
         with pools(Pool()), variables({"username": "user1", "password": "myvar"}):
+            dag.instantiate()
             exec(dag.render())

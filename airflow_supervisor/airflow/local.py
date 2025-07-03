@@ -2,6 +2,7 @@ from logging import getLogger
 from typing import TYPE_CHECKING, Dict
 
 from airflow_pydantic import fail, skip
+from airflow_pydantic.airflow import Pool
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
 from supervisor_pydantic.convenience import (
     SupervisorTaskStep,
@@ -29,9 +30,10 @@ _log = getLogger(__name__)
 
 
 class Supervisor(object):
-    _dag: "DAG"
     _cfg: SupervisorAirflowConfiguration
+    _dag: "DAG"
     _kill_dag: "DAG"
+    _pool: "Pool"
     _xmlrpc_client: SupervisorRemoteXMLRPCClient
 
     def __init__(self, dag: "DAG", cfg: SupervisorAirflowConfiguration, **kwargs):
@@ -41,6 +43,9 @@ class Supervisor(object):
 
         # store config
         self._cfg = cfg
+
+        # process pool
+        self._pool = cfg.pool.pool if isinstance(cfg.pool, Pool) else cfg.pool
 
         # store or create client
         self._xmlrpc_client = kwargs.pop("xmlrpc_client", SupervisorRemoteXMLRPCClient(self._cfg))
@@ -68,7 +73,7 @@ class Supervisor(object):
         from airflow.operators.python import PythonOperator
 
         (
-            PythonOperator(task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, pool=self._cfg.pool)
+            PythonOperator(task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, pool=self._pool)
             >> self._force_kill
         )
 
@@ -77,7 +82,7 @@ class Supervisor(object):
             task_id=f"{self._dag.dag_id}-check-config-failed",
             python_callable=fail,
             trigger_rule="one_failed",
-            pool=self._cfg.pool,
+            pool=self._pool,
         )
         self.configure_supervisor >> any_config_fail
         self.start_supervisor >> any_config_fail
@@ -161,7 +166,7 @@ class Supervisor(object):
         return SupervisorRemoteXMLRPCClient(self._cfg)
 
     def get_base_operator_kwargs(self) -> Dict:
-        return dict(dag=self._dag, pool=self._cfg.pool)
+        return dict(dag=self._dag, pool=self._pool)
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
         if step == "configure-supervisor":

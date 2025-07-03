@@ -1,6 +1,7 @@
 from datetime import time, timedelta
-from typing import Literal, Optional
+from typing import Literal, Optional, Union
 
+from airflow_pydantic import Pool
 from pydantic import Field
 from supervisor_pydantic import SupervisorConvenienceConfiguration
 
@@ -42,7 +43,7 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
     )
 
     # Airflow-specific settings
-    pool: Optional[str] = Field(
+    pool: Optional[Union[str, Pool]] = Field(
         default=None,
         description="Airflow pool to use for the job. If not set, the job will use the default pool, or the pool from a balancer host.",
     )
