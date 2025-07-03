@@ -2077,7 +2077,31 @@
 <span class="w">            </span><span class="nt">&quot;pool&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
 <span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">                  </span><span class="p">{</span>
-<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
+<span class="w">                     </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="nt">&quot;pool&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pool&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="nt">&quot;slots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slots&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Description&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="nt">&quot;include_deferred&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Include Deferred&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean&quot;</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                     </span><span class="p">},</span>
+<span class="w">                     </span><span class="nt">&quot;required&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                        </span><span class="s2">&quot;pool&quot;</span><span class="p">,</span>
+<span class="w">                        </span><span class="s2">&quot;slots&quot;</span><span class="p">,</span>
+<span class="w">                        </span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
+<span class="w">                        </span><span class="s2">&quot;include_deferred&quot;</span>
+<span class="w">                     </span><span class="p">],</span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span>
 <span class="w">                  </span><span class="p">},</span>
 <span class="w">                  </span><span class="p">{</span>
 <span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span>
@@ -2886,6 +2910,33 @@
 <span class="w">               </span><span class="nt">&quot;anyOf&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <span class="w">                  </span><span class="p">{</span>
 <span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
+<span class="w">                  </span><span class="p">},</span>
+<span class="w">                  </span><span class="p">{</span>
+<span class="w">                     </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="nt">&quot;pool&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Pool&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="nt">&quot;slots&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Slots&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;integer&quot;</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Description&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span>
+<span class="w">                        </span><span class="p">},</span>
+<span class="w">                        </span><span class="nt">&quot;include_deferred&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                           </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Include Deferred&quot;</span><span class="p">,</span>
+<span class="w">                           </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean&quot;</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                     </span><span class="p">},</span>
+<span class="w">                     </span><span class="nt">&quot;required&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                        </span><span class="s2">&quot;pool&quot;</span><span class="p">,</span>
+<span class="w">                        </span><span class="s2">&quot;slots&quot;</span><span class="p">,</span>
+<span class="w">                        </span><span class="s2">&quot;description&quot;</span><span class="p">,</span>
+<span class="w">                        </span><span class="s2">&quot;include_deferred&quot;</span>
+<span class="w">                     </span><span class="p">],</span>
+<span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span>
 <span class="w">                  </span><span class="p">},</span>
 <span class="w">                  </span><span class="p">{</span>
 <span class="w">                     </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;null&quot;</span>
@@ -3699,7 +3750,9 @@
 <span class="w">            </span><span class="s2">&quot;one_failed&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="s2">&quot;one_done&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="s2">&quot;none_failed&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;none_failed_or_skipped&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="s2">&quot;none_skipped&quot;</span><span class="p">,</span>
+<span class="w">            </span><span class="s2">&quot;dummy&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="s2">&quot;always&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="s2">&quot;none_failed_min_one_success&quot;</span><span class="p">,</span>
 <span class="w">            </span><span class="s2">&quot;all_skipped&quot;</span>
