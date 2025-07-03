@@ -315,6 +315,8 @@
 
         <span class="c1"># Integrate with airflow-balancer, use host if provided</span>
         <span class="k">if</span> <span class="n">host</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">host</span> <span class="o">=</span> <span class="n">Host</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">host</span><span class="p">)</span>
             <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting host to </span><span class="si">{</span><span class="n">host</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="s2">&quot;remote_host&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">name</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_ssh_operator_kwargs</span><span class="p">[</span><span class="s2">&quot;ssh_hook&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">hook</span><span class="p">()</span>
@@ -329,6 +331,8 @@
                 <span class="n">cfg</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">host</span><span class="o">.</span><span class="n">pool</span>
 
         <span class="k">if</span> <span class="n">port</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">port</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="n">port</span> <span class="o">=</span> <span class="n">Port</span><span class="o">.</span><span class="n">model_validate</span><span class="p">(</span><span class="n">port</span><span class="p">)</span>
             <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting port to </span><span class="si">{</span><span class="n">port</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="c1"># Ensure port matches the configuration</span>
             <span class="n">cfg</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;*:</span><span class="si">{</span><span class="n">port</span><span class="o">.</span><span class="n">port</span><span class="si">}</span><span class="s2">&quot;</span>
