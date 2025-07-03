@@ -63,6 +63,8 @@ class SupervisorSSH(Supervisor):
 
         # Integrate with airflow-balancer, use host if provided
         if host:
+            if isinstance(host, dict):
+                host = Host.model_validate(host)
             _log.info(f"Setting host to {host.name}")
             self._ssh_operator_kwargs["remote_host"] = host.name
             self._ssh_operator_kwargs["ssh_hook"] = host.hook()
@@ -77,6 +79,8 @@ class SupervisorSSH(Supervisor):
                 cfg.pool = host.pool
 
         if port:
+            if isinstance(port, dict):
+                port = Port.model_validate(port)
             _log.info(f"Setting port to {port.port}")
             # Ensure port matches the configuration
             cfg.port = f"*:{port.port}"
