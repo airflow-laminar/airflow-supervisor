@@ -22,8 +22,10 @@ dags:
           _target_: airflow_pydantic.Host
           name: my-remote-host
           os: rhel
-          password_variable: blerg
-          password_variable_key: password
+          password:
+            _target_: airflow_pydantic.Variable
+            key: blerg
+            deserialize_json: true
         port:
           _target_: airflow_pydantic.Port
           name: my-remote-port

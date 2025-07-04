@@ -149,7 +149,7 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow.models import DAG
-from airflow_pydantic import Host, Port
+from airflow_pydantic import Host, Port, Variable
 
 from airflow_supervisor.airflow.ssh import SupervisorSSH
 
@@ -183,10 +183,10 @@ with DAG(
             "config_path": Path("/data/supervisord.conf"),
             "working_dir": Path("/data"),
         },
-        host=Host(name="my-remote-host", password_variable="blerg", password_variable_key="password", os="rhel"),
+        host=Host(name="my-remote-host", password=Variable(key="blerg", deserialize_json=True), os="rhel"),
         port=Port(
             name="my-remote-port",
-            host=Host(name="my-remote-host", password_variable="blerg", password_variable_key="password", os="rhel"),
+            host=Host(name="my-remote-host", password=Variable(key="blerg", deserialize_json=True), os="rhel"),
             port=8080,
         ),
         task_id="run",
@@ -219,7 +219,7 @@ from pathlib import Path
 
 from airflow.models import DAG
 from airflow.models.pool import Pool
-from airflow_pydantic import Host, Port
+from airflow_pydantic import Host, Port, Variable
 
 from airflow_supervisor.airflow.ssh import SupervisorSSH
 
@@ -256,8 +256,7 @@ with DAG(
         host=Host(
             name="server2",
             username="user1",
-            password_variable="myvar",
-            password_variable_key="password",
+            password=Variable(key="myvar", deserialize_json=True),
             pool=Pool.create_or_update_pool(
                 name="server2", slots=8, description="Balancer pool for host(server2)", include_deferred=False
             ).pool,
@@ -269,8 +268,7 @@ with DAG(
             host=Host(
                 name="server2",
                 username="user1",
-                password_variable="myvar",
-                password_variable_key="password",
+                password=Variable(key="myvar", deserialize_json=True),
                 pool=Pool.create_or_update_pool(
                     name="server2", slots=8, description="Balancer pool for host(server2)", include_deferred=False
                 ).pool,
