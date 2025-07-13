@@ -9,8 +9,12 @@ dags:
     schedule: "0 3 * * *"
     start_date: 2023-01-01
     tasks:
+      pre:
+        _target_: airflow_pydantic.BashTask
+        bash_command: echo "pre task"
       run:
         _target_: airflow_supervisor.SupervisorSSHTask
+        dependencies: [pre]
         cfg:
           _target_: airflow_supervisor.SupervisorSSHAirflowConfiguration
           # Airflow
@@ -35,3 +39,7 @@ dags:
             sleep:
               _target_: airflow_supervisor.ProgramConfiguration
               command: sleep 1000
+      post:
+        _target_: airflow_pydantic.BashTask
+        bash_command: echo "post task"
+        dependencies: [run]

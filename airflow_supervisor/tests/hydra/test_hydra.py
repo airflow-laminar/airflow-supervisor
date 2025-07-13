@@ -63,6 +63,7 @@ from datetime import datetime, time, timedelta
 from pathlib import Path
 
 from airflow.models import DAG
+from airflow.providers.standard.operators.bash import BashOperator
 
 from airflow_supervisor.airflow.ssh import SupervisorSSH
 
@@ -72,6 +73,7 @@ with DAG(
     dag_id="example_dag",
     default_args={},
 ) as dag:
+    pre = BashOperator(bash_command='echo "pre task"', task_id="pre", dag=dag)
     run = SupervisorSSH(
         cfg={
             "inet_http_server": {"port": "*:9001", "username": None, "password": None},
@@ -124,10 +126,31 @@ with DAG(
         task_id="run",
         dag=dag,
     )
+    post = BashOperator(bash_command='echo "post task"', task_id="post", dag=dag)
+    pre >> run
+    run >> post
 """
             )
 
-        exec(dag.render())
+        rendered = dag.render()
+        # Ensure dag is rendered correctly and make sure pre is upstream of run.configure_supervisor
+        rendered = (
+            rendered
+            + "\n    assert run.configure_supervisor.upstream_task_ids == {'pre'}, run.configure_supervisor.upstream_task_ids"
+        )
+        rendered = (
+            rendered
+            + "\n    assert 'post' in run.unconfigure_supervisor.downstream_task_ids, run.unconfigure_supervisor.downstream_task_ids"
+        )
+        rendered = (
+            rendered
+            + "\n    assert post.upstream_task_ids == {'example_dag-unconfigure-supervisor'}, post.upstream_task_ids"
+        )
+        rendered = (
+            rendered
+            + "\n    assert pre.downstream_task_ids == {'example_dag-configure-supervisor'}, pre.downstream_task_ids"
+        )
+        exec(rendered)
 
 
 def test_hydra_config_render_hosts():
