@@ -530,20 +530,37 @@
         <span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__lshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;e.g. a &lt;&lt; Supervisor() &lt;&lt; b&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span> <span class="o">&gt;&gt;</span> <span class="n">other</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;e.g. Supervisor() &lt;&lt; b&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span> <span class="o">&lt;&lt;</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__rshift__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Operator&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;e.g. a &gt;&gt; Supervisor() &gt;&gt; b&quot;&quot;&quot;</span>
-        <span class="n">other</span> <span class="o">&gt;&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisors</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;e.g. Supervisor() &gt;&gt; b&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span> <span class="o">&gt;&gt;</span> <span class="n">other</span>
+        <span class="k">return</span> <span class="n">other</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">set_upstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span><span class="o">.</span><span class="n">set_upstream</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">set_downstream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Operator&quot;</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span><span class="o">.</span><span class="n">set_downstream</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span><span class="o">.</span><span class="n">set_downstream</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_relative</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">upstream</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">edge_modifier</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">upstream</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span><span class="o">.</span><span class="n">update_relative</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">upstream</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">edge_modifier</span><span class="o">=</span><span class="n">edge_modifier</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span><span class="o">.</span><span class="n">update_relative</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">upstream</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">edge_modifier</span><span class="o">=</span><span class="n">edge_modifier</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">leaves</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the leaves of the DAG.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">unconfigure_supervisor</span><span class="o">.</span><span class="n">leaves</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">roots</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the roots of the DAG.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configure_supervisor</span><span class="o">.</span><span class="n">roots</span></div>
 
 </pre></div>
         </article>

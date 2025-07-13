@@ -21,6 +21,7 @@
       ~SupervisorSSH.set_downstream
       ~SupervisorSSH.set_upstream
       ~SupervisorSSH.setup_dag
+      ~SupervisorSSH.update_relative
    
    
 
@@ -32,7 +33,9 @@
    
       ~SupervisorSSH.check_programs
       ~SupervisorSSH.configure_supervisor
+      ~SupervisorSSH.leaves
       ~SupervisorSSH.restart_programs
+      ~SupervisorSSH.roots
       ~SupervisorSSH.start_programs
       ~SupervisorSSH.start_supervisor
       ~SupervisorSSH.stop_programs

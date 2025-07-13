@@ -21,6 +21,7 @@
       ~Supervisor.set_downstream
       ~Supervisor.set_upstream
       ~Supervisor.setup_dag
+      ~Supervisor.update_relative
    
    
 
@@ -32,7 +33,9 @@
    
       ~Supervisor.check_programs
       ~Supervisor.configure_supervisor
+      ~Supervisor.leaves
       ~Supervisor.restart_programs
+      ~Supervisor.roots
       ~Supervisor.start_programs
       ~Supervisor.start_supervisor
       ~Supervisor.stop_programs
