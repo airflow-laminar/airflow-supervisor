@@ -277,17 +277,34 @@ class Supervisor(object):
         )
 
     def __lshift__(self, other: "Operator") -> "Operator":
-        """e.g. a << Supervisor() << b"""
-        self.unconfigure_supervisor >> other
-        return self.configure_supervisor
+        """e.g. Supervisor() << b"""
+        self.configure_supervisor << other
+        return self.unconfigure_supervisor
 
     def __rshift__(self, other: "Operator") -> "Operator":
-        """e.g. a >> Supervisor() >> b"""
-        other >> self.configure_supervisor
-        return self.unconfigure_supervisors
+        """e.g. Supervisor() >> b"""
+        self.unconfigure_supervisor >> other
+        return other
 
     def set_upstream(self, other: "Operator"):
         self.configure_supervisor.set_upstream(other)
 
     def set_downstream(self, other: "Operator"):
         self.unconfigure_supervisor.set_downstream(other)
+
+    def update_relative(self, other, upstream: bool = True, edge_modifier=None):
+        if upstream:
+            self.configure_supervisor.update_relative(other, upstream=True, edge_modifier=edge_modifier)
+        else:
+            self.unconfigure_supervisor.update_relative(other, upstream=False, edge_modifier=edge_modifier)
+        return self
+
+    @property
+    def leaves(self):
+        """Return the leaves of the DAG."""
+        return self.unconfigure_supervisor.leaves
+
+    @property
+    def roots(self):
+        """Return the roots of the DAG."""
+        return self.configure_supervisor.roots
