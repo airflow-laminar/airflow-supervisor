@@ -136,8 +136,6 @@ docs/src/_build/
 docs/api
 docs/index.md
 docs/html
-<<<<<<< before updating
-=======
 docs/jupyter_execute
 index.md
 _template/labextension
@@ -148,7 +146,6 @@ js/dist
 js/lib
 js/node_modules
 airflow_supervisor/extension
->>>>>>> after updating
 
 # Jupyter
 .ipynb_checkpoints
@@ -156,18 +153,15 @@ airflow_supervisor/extension
 airflow_supervisor/nbextension
 airflow_supervisor/labextension
 
+# Rust
+target
+
 # Mac
 .DS_Store
 
-<<<<<<< before updating
 # Supervisor
 supervisord.pid
 supervisor-2024*.cfg
 pydantic.json
 Untitled*.ipynb
 tmp
-
-=======
-# Rust
-target
->>>>>>> after updating
