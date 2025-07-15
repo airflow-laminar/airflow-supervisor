@@ -4,8 +4,12 @@ __pycache__/
 *$py.class
 
 # C extensions
+*.a
 *.so
+*.obj
 *.dll
+*.exp
+*.lib
 
 # Distribution / packaging
 .Python
@@ -132,10 +136,25 @@ docs/src/_build/
 docs/api
 docs/index.md
 docs/html
+docs/jupyter_execute
+index.md
+_template/labextension
+
+# JS
+js/coverage
+js/dist
+js/lib
+js/node_modules
+airflow_supervisor/extension
 
 # Jupyter
 .ipynb_checkpoints
 .autoversion
+airflow_supervisor/nbextension
+airflow_supervisor/labextension
+
+# Rust
+target
 
 # Mac
 .DS_Store
@@ -146,4 +165,3 @@ supervisor-2024*.cfg
 pydantic.json
 Untitled*.ipynb
 tmp
-
