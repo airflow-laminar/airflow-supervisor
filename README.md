@@ -19,16 +19,17 @@ This library provides a configuration-driven way of generating [supervisor](http
 - `SupervisorSSH`: creates a DAG representing a remote supervisor instance running on another machine (underlying tasks will use `SSHOperator` to communicate between airflow and supervisor)
 
 We expose DAGs composed of a variety of tasks and sensors, which are exposed as a discrete pipeline of steps:
+
 1. Setup `supervisord` configuration
-2. Start the `supervisord` daemon
-3. Start the supervised programs with `supervisorctl`
-4. Start sensors to query the programs' state via [supervisor's XML-RPC API](http://supervisord.org/api.html)
-5. Evaluate and take action according to the program's state changes
-6. Restart programs if necessary
-7. Tear down the sensors from (4)
-8. Stop the supervised programs from (3)
-9. Stop the `supervisord` daemon from (2)
-10. Remove configuration from (1)
+1. Start the `supervisord` daemon
+1. Start the supervised programs with `supervisorctl`
+1. Start sensors to query the programs' state via [supervisor's XML-RPC API](http://supervisord.org/api.html)
+1. Evaluate and take action according to the program's state changes
+1. Restart programs if necessary
+1. Tear down the sensors from (4)
+1. Stop the supervised programs from (3)
+1. Stop the `supervisord` daemon from (2)
+1. Remove configuration from (1)
 
 This setup provides maximal configureability with a minimal requirements on the machine (for example, no requirements on an existing `supervisord` daemon via e.g. `systemd`). It also lets you hook your own tasks into any step of the process. For example, if we detect a process has died in step (5), you could configure your own task to take some custom action before/instead of the default restart of step 6.
 
@@ -71,7 +72,6 @@ with DAG(
 
 ## Example DAG: [`airflow-config`](https://github.com/airflow-laminar/airflow-config)
 
-
 ```yaml
 # @package _global_
 _target_: airflow_config.Configuration
@@ -111,6 +111,7 @@ with DAG(
 ```
 
 ## Configuration
+
 See [supervisor-pydantic](http://airflow-laminar.github.io/supervisor-pydantic/) for reference.
 
 - `SupervisorAirflowConfiguration`: Wrapper around `supervisor_pydantic.SupervisorConvenienceConfiguration`, with added airflow-specific configuration
@@ -150,10 +151,8 @@ classDiagram
     }
 ```
 
-
 > [!NOTE]
 > This library is built on [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic), which provides configuration elements for all supervisor structures, as well as self-contained tools for interacting with supervisor instances.
-
 
 > [!NOTE]
 > This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).
