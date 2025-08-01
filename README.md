@@ -9,7 +9,6 @@
 
 ## Overview
 
-<<<<<<< before updating
 This library provides a configuration-driven way of generating [supervisor](http://supervisord.org) configurations and airflow [operators](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/operators.html)/[sensors](https://airflow.apache.org/docs/apache-airflow/stable/core-concepts/sensors.html) for long-running or always-on jobs. Configuration is managed by [Pydantic](https://pydantic.dev), [Hydra](https://hydra.cc), and [OmegaConf](https://omegaconf.readthedocs.io/) via the [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic) library.
 
 ## How To: Use in Airflow
@@ -151,12 +150,8 @@ classDiagram
     }
 ```
 
-
 > [!NOTE]
 > This library is built on [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic), which provides configuration elements for all supervisor structures, as well as self-contained tools for interacting with supervisor instances.
 
-
-=======
->>>>>>> after updating
 > [!NOTE]
 > This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).
