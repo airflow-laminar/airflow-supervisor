@@ -48,6 +48,7 @@ develop = [
     # airflow
     "apache-airflow>=2.8,<3",
     "apache-airflow-providers-ssh",
+    "paramiko<4",
     # airflow-config integration
     "airflow-config>=0.1.2",
     "airflow-pydantic",
