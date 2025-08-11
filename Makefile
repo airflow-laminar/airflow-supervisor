@@ -103,7 +103,7 @@ dist-check:  ## run python dist checker with twine
 
 dist: clean dist-build dist-check  ## build all dists
 
-publish: dist  # publish python assets
+publish: dist  ## publish python assets
 
 #########
 # CLEAN #
