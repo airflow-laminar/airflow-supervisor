@@ -1,4 +1,4 @@
-from airflow.models.dag import DAG
+from airflow_pydantic.airflow import DAG
 
 
 class TestSSH:

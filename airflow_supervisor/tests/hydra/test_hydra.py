@@ -3,10 +3,11 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from airflow.models.pool import Pool
 from airflow_balancer.testing import pools, variables
 from airflow_config import load_config
 from airflow_pydantic import SSHOperatorArgs
+from airflow_pydantic.airflow import Pool
+from airflow_pydantic.migration import _airflow_3
 
 
 def test_hydra_config():
@@ -150,7 +151,8 @@ with DAG(
             rendered
             + "\n    assert pre.downstream_task_ids == {'example_dag-configure-supervisor'}, pre.downstream_task_ids"
         )
-        exec(rendered)
+        if _airflow_3() is not None:
+            exec(rendered)
 
 
 def test_hydra_config_render_hosts():
@@ -218,8 +220,9 @@ with DAG(
 """
             )
 
-        dag.instantiate()
-        exec(dag.render())
+        if _airflow_3() is not None:
+            dag.instantiate()
+            exec(dag.render())
 
 
 def test_hydra_config_render_hosts_query():
@@ -306,6 +309,7 @@ with DAG(
     )
 """
             )
-        with pools(Pool()), variables({"username": "user1", "password": "myvar"}):
-            dag.instantiate()
-            exec(dag.render())
+        if _airflow_3() is not None:
+            with pools(Pool(pool="default")), variables({"username": "user1", "password": "myvar"}):
+                dag.instantiate()
+                exec(dag.render())
