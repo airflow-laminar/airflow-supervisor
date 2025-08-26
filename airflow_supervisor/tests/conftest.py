@@ -5,12 +5,20 @@ from typing import Iterator
 
 import pytest
 from airflow_pydantic import SSHOperatorArgs
+from airflow_pydantic.migration import _airflow_3
 from pytest import fixture
 
 from airflow_supervisor import (
     ProgramConfiguration,
     SupervisorAirflowConfiguration,
 )
+
+
+@fixture()
+def has_airflow():
+    if _airflow_3() is None:
+        pytest.skip("Airflow is not installed")
+    return True
 
 
 @fixture(scope="module")
