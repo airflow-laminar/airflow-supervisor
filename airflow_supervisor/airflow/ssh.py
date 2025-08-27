@@ -59,7 +59,16 @@ class SupervisorSSH(Supervisor):
             if attr in kwargs:
                 _log.info(f"Setting {attr} to {kwargs.get(attr)}")
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
-                setattr(cfg, attr, self._ssh_operator_kwargs[attr])
+                if attr in (cfg.__pydantic_fields__.keys() if hasattr(cfg, "__pydantic_fields__") else cfg.__fields__):
+                    setattr(cfg, attr, self._ssh_operator_kwargs[attr])
+                elif attr in (
+                    cfg.ssh_operator_args.__pydantic_fields__.keys()
+                    if hasattr(cfg.ssh_operator_args, "__pydantic_fields__")
+                    else cfg.ssh_operator_args.__fields__
+                ):
+                    setattr(cfg.ssh_operator_args, attr, self._ssh_operator_kwargs[attr])
+                else:
+                    raise ValueError(f"Unknown attribute {attr}")
 
         # Integrate with airflow-balancer, use host if provided
         if host:
