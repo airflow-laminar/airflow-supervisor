@@ -31,6 +31,7 @@ stopasgroup=true
 killasgroup=true
 stdout_logfile={dir}/sleep/output.log
 stderr_logfile={dir}/sleep/error.log
+environment=HOME=/home/airflow,USER=airflow
 directory={dir}/sleep
 
 [program:echo]
@@ -45,6 +46,7 @@ stopasgroup=true
 killasgroup=true
 stdout_logfile={dir}/echo/output.log
 stderr_logfile={dir}/echo/error.log
+environment=HOME=/home/airflow,USER=airflow
 directory={dir}/echo
 
 [rpcinterface:supervisor]

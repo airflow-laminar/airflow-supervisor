@@ -1,3 +1,6 @@
 sleep:
   _target_: airflow_supervisor.ProgramConfiguration
-  command: sleep 1000 
+  command: sleep 1000
+  environment:
+    HOME: /home/airflow
+    USER: airflow

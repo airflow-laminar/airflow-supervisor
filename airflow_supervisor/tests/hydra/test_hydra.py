@@ -201,6 +201,7 @@ with DAG(
                     "killasgroup": True,
                     "stdout_logfile": Path("/data/echo/output.log"),
                     "stderr_logfile": Path("/data/echo/error.log"),
+                    "environment": {"HOME": "/home/airflow", "USER": "airflow"},
                     "directory": Path("/data/echo"),
                 }
             },
@@ -272,6 +273,7 @@ with DAG(
                     "killasgroup": True,
                     "stdout_logfile": Path("/data/echo/output.log"),
                     "stderr_logfile": Path("/data/echo/error.log"),
+                    "environment": {"HOME": "/home/airflow", "USER": "airflow"},
                     "directory": Path("/data/echo"),
                 }
             },
