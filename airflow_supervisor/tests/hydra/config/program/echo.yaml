@@ -1,3 +1,6 @@
 echo:
   _target_: airflow_supervisor.ProgramConfiguration
   command: echo "hello"
+  environment:
+    HOME: /home/airflow
+    USER: airflow
