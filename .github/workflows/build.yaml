@@ -54,7 +54,7 @@ jobs:
 
     - name: Install Pydantic
       run: pip install "pydantic${{ matrix.pydantic }}"
-      if: ${{ matrix.airflow == '<3' }}
+      if: ${{ matrix.airflow == '2' }}
 
     - name: Lint
       run: make lint

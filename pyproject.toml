@@ -50,6 +50,8 @@ develop = [
     "airflow-pydantic",
     # airflow-balancer integration
     "airflow-balancer>=0.3.1",
+    # temp
+    "supervisor-pydantic>=1.3.3,<1.4",
 ]
 airflow = [
     "apache-airflow>=2.8,<3",
