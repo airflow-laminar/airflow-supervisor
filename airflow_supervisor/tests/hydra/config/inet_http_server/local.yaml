@@ -1,1 +1,3 @@
+_target_: airflow_supervisor.InetHttpServerConfiguration
 port: localhost:8000
+password: test

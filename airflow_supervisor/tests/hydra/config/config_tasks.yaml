@@ -39,6 +39,7 @@ dags:
             sleep:
               _target_: airflow_supervisor.ProgramConfiguration
               command: sleep 1000
+          password: test
       post:
         _target_: airflow_pydantic.BashTask
         bash_command: echo "post task"

@@ -8,6 +8,7 @@ from airflow_supervisor import load_airflow_config, load_airflow_ssh_config
 
 EXPECTED_CFG = """[inet_http_server]
 port=*:9001
+password=test
 
 [supervisord]
 logfile={dir}/supervisord.log

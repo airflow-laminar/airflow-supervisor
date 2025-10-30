@@ -21,6 +21,7 @@ dags:
               environment:
                 HOME: /home/airflow
                 USER: airflow
+          password: test
         host:
           _target_: airflow_pydantic.HostQuery
           balancer: ${extensions.balancer}
