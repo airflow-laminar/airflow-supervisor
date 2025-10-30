@@ -47,7 +47,7 @@ develop = [
     "wheel",
     # airflow-config integration
     "airflow-config>=0.1.2",
-    "airflow-pydantic",
+    "airflow-pydantic>=1.5.6,<1.6",
     # airflow-balancer integration
     "airflow-balancer>=0.3.1",
 ]
