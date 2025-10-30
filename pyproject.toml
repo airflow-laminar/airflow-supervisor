@@ -45,17 +45,25 @@ develop = [
     "twine",
     "uv",
     "wheel",
-    # airflow
-    "apache-airflow>=2.8,<3",
-    "apache-airflow-providers-ssh",
-    "apache-airflow-providers-standard",
-    "paramiko<4",
-    "structlog<25.5.0",
     # airflow-config integration
     "airflow-config>=0.1.2",
     "airflow-pydantic",
     # airflow-balancer integration
     "airflow-balancer>=0.3.1",
+]
+airflow = [
+    "apache-airflow>=2.8,<3",
+    "apache-airflow-providers-ssh",
+    "apache-airflow-providers-standard",
+    "paramiko<4",
+    "structlog<25.5.0",
+]
+airflow3 = [
+    "apache-airflow>=3,<3.2",
+    "apache-airflow-providers-ssh",
+    "apache-airflow-providers-standard",
+    "paramiko<4",
+    "structlog<25.5.0",
 ]
 
 [project.scripts]
