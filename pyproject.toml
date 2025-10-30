@@ -52,7 +52,7 @@ develop = [
     "airflow-balancer>=0.3.1",
 ]
 airflow = [
-    "apache-airflow>=2.8,<3",
+    "apache-airflow>=2.8,<4",
     "apache-airflow-providers-ssh",
     "apache-airflow-providers-standard",
     "paramiko<4",
