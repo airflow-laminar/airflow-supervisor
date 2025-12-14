@@ -69,7 +69,7 @@ jobs:
       run: make coverage
 
     - name: Upload test results (Python)
-      uses: actions/upload-artifact@v5
+      uses: actions/upload-artifact@v6
       with:
         name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
         path: junit.xml
@@ -91,7 +91,7 @@ jobs:
       run: make dist
       if: ${{ matrix.pydantic == '>=2.11' && matrix.airflow == '2' }}
 
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v6
       with:
         name: dist-${{matrix.os}}
         path: dist
