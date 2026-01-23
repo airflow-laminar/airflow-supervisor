@@ -1,0 +1,803 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../">
+  <head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="index" title="Index" href="../../genindex.html"><link rel="search" title="Search" href="../../search.html"><link rel="next" title="API Reference" href="API.html"><link rel="prev" title="Getting Started" href="getting-started.html">
+
+    <!-- Generated with Sphinx 8.2.3 and Furo 2025.12.19 -->
+        <title>Examples - airflow-supervisor v1.10.2</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=7bdb33bb" />
+    <link rel="stylesheet" type="text/css" href="../../_static/mystnb.8ecb98da25f57f5357bf6f572d296f466b2cfe2517ffebfabe82451661e28f02.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/autodoc_pydantic.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-design.min.css?v=95c83b7e" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=8dab3a3b" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/custom.css?v=890fd012" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation" aria-label="Toggle site navigation sidebar">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc" aria-label="Toggle table of contents sidebar">
+<label class="overlay sidebar-overlay" for="__navigation"></label>
+<label class="overlay toc-overlay" for="__toc"></label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <span class="icon"><svg><use href="#svg-menu"></use></svg></span>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../index.html"><div class="brand">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.2</code></div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon" for="__toc">
+        <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../index.html">
+  
+  <span class="sidebar-brand-text">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.2</code></span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="getting-started.html">Getting Started</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">Examples</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="API.html">API Reference</a><input aria-label="Toggle navigation of API Reference" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><span class="icon"><svg><use href="#svg-arrow-right"></use></svg></span></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorSSH.html">airflow_supervisor.SupervisorSSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorAirflowConfiguration.html">airflow_supervisor.SupervisorAirflowConfiguration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html">airflow_supervisor.SupervisorSSHAirflowConfiguration</a></li>
+</ul>
+</li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="view-this-page">
+  <a class="muted-link" href="../../_sources/docs/src/examples.md.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle" aria-label="Toggle Light / Dark / Auto color theme">
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon" for="__toc">
+            <span class="icon"><svg><use href="#svg-toc"></use></svg></span>
+          </label>
+        </div>
+        <article role="main" id="furo-main-content">
+          <section class="tex2jax_ignore mathjax_ignore" id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading">¶</a></h1>
+<p>This page provides comprehensive examples of using <code class="docutils literal notranslate"><span class="pre">airflow-supervisor</span></code> for various use cases.</p>
+<section id="basic-local-supervisor">
+<h2>Basic Local Supervisor<a class="headerlink" href="#basic-local-supervisor" title="Link to this heading">¶</a></h2>
+<p>The simplest example runs a supervisor instance on the same machine as the Airflow worker:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">Supervisor</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Define the programs to supervise</span>
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9001</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/my-service&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;my-app&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;python /app/server.py&quot;</span><span class="p">,</span>
+            <span class="n">stdout_logfile</span><span class="o">=</span><span class="s2">&quot;/var/log/my-app/output.log&quot;</span><span class="p">,</span>
+            <span class="n">stderr_logfile</span><span class="o">=</span><span class="s2">&quot;/var/log/my-app/error.log&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;basic-supervisor-dag&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="multiple-programs">
+<h2>Multiple Programs<a class="headerlink" href="#multiple-programs" title="Link to this heading">¶</a></h2>
+<p>Supervise multiple programs within a single supervisor instance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">Supervisor</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9002</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/multi-service&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;web-server&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;gunicorn app:app --bind 0.0.0.0:8000&quot;</span><span class="p">,</span>
+            <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;/app/web&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;celery-worker&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;celery -A tasks worker --loglevel=info&quot;</span><span class="p">,</span>
+            <span class="n">directory</span><span class="o">=</span><span class="s2">&quot;/app/tasks&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="s2">&quot;redis&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;redis-server /etc/redis.conf&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;multi-program-supervisor&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">12</span><span class="p">),</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="remote-supervisor-via-ssh">
+<h2>Remote Supervisor via SSH<a class="headerlink" href="#remote-supervisor-via-ssh" title="Link to this heading">¶</a></h2>
+<p>Manage a supervisor instance on a remote machine using SSH:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.providers.ssh.hooks.ssh</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHHook</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperatorArgs</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorSSHAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">SupervisorSSH</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorSSHAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9001</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/opt/services/my-app&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;my-app&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;/opt/services/my-app/run.sh&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">ssh_operator_args</span><span class="o">=</span><span class="n">SSHOperatorArgs</span><span class="p">(</span>
+        <span class="n">ssh_hook</span><span class="o">=</span><span class="n">SSHHook</span><span class="p">(</span>
+            <span class="n">remote_host</span><span class="o">=</span><span class="s2">&quot;app-server.example.com&quot;</span><span class="p">,</span>
+            <span class="n">username</span><span class="o">=</span><span class="s2">&quot;deploy&quot;</span><span class="p">,</span>
+            <span class="n">key_file</span><span class="o">=</span><span class="s2">&quot;/home/airflow/.ssh/id_rsa&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+        <span class="n">cmd_timeout</span><span class="o">=</span><span class="mi">300</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">command_prefix</span><span class="o">=</span><span class="s2">&quot;source /etc/profile &amp;&amp;&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;remote-supervisor-dag&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">SupervisorSSH</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="always-on-service">
+<h2>Always-On Service<a class="headerlink" href="#always-on-service" title="Link to this heading">¶</a></h2>
+<p>Configure a service that stays running and doesn’t stop when the DAG completes:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">Supervisor</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9003</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/always-on&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;persistent-service&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;python /app/daemon.py&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="c1"># Don&#39;t stop the service when DAG completes</span>
+    <span class="n">stop_on_exit</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">cleanup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="c1"># Restart when DAG is re-triggered</span>
+    <span class="n">restart_on_initial</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">restart_on_retrigger</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;always-on-supervisor&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>  <span class="c1"># Check every hour</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="time-limited-job-with-runtime">
+<h2>Time-Limited Job with Runtime<a class="headerlink" href="#time-limited-job-with-runtime" title="Link to this heading">¶</a></h2>
+<p>Run a job for a maximum duration:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">time</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">Supervisor</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9004</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/batch-job&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;batch-process&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;python /app/batch_processor.py&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="c1"># Run for maximum 4 hours</span>
+    <span class="n">runtime</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">4</span><span class="p">),</span>
+    <span class="c1"># Or end at specific time</span>
+    <span class="n">endtime</span><span class="o">=</span><span class="n">time</span><span class="p">(</span><span class="mi">18</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># 6 PM</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;time-limited-supervisor&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="s2">&quot;0 9 * * *&quot;</span><span class="p">,</span>  <span class="c1"># Start at 9 AM daily</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="using-airflow-pools">
+<h2>Using Airflow Pools<a class="headerlink" href="#using-airflow-pools" title="Link to this heading">¶</a></h2>
+<p>Control concurrency with Airflow pools:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">Supervisor</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9005</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/pooled-job&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;resource-intensive&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span>
+            <span class="n">command</span><span class="o">=</span><span class="s2">&quot;python /app/heavy_compute.py&quot;</span><span class="p">,</span>
+        <span class="p">),</span>
+    <span class="p">},</span>
+    <span class="c1"># Use specific Airflow pool</span>
+    <span class="n">pool</span><span class="o">=</span><span class="s2">&quot;gpu-workers&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;pooled-supervisor&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="configuration-driven-with-airflow-config">
+<h2>Configuration-Driven with airflow-config<a class="headerlink" href="#configuration-driven-with-airflow-config" title="Link to this heading">¶</a></h2>
+<section id="basic-yaml-configuration">
+<h3>Basic YAML Configuration<a class="headerlink" href="#basic-yaml-configuration" title="Link to this heading">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config/supervisor/web-service.yaml</span>
+<span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_config.Configuration</span>
+
+<span class="nt">default_args</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_config.DefaultArgs</span>
+<span class="w">  </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">  </span><span class="nt">depends_on_past</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="nt">all_dags</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_config.DagArgs</span>
+<span class="w">  </span><span class="nt">start_date</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;2024-01-01&quot;</span>
+<span class="w">  </span><span class="nt">catchup</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">  </span><span class="nt">tags</span><span class="p">:</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">supervisor</span>
+<span class="w">    </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">production</span>
+
+<span class="nt">extensions</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">supervisor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorAirflowConfiguration</span>
+<span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9091</span>
+<span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/data/supervisor/web-service&quot;</span>
+<span class="w">    </span><span class="nt">check_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span><span class="w">  </span><span class="c1"># seconds</span>
+<span class="w">    </span><span class="nt">check_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28800</span><span class="w">  </span><span class="c1"># 8 hours</span>
+<span class="w">    </span><span class="nt">program</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">web-server</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.ProgramConfiguration</span>
+<span class="w">        </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;gunicorn</span><span class="nv"> </span><span class="s">app:app</span><span class="nv"> </span><span class="s">--bind</span><span class="nv"> </span><span class="s">0.0.0.0:8080&quot;</span>
+<span class="w">        </span><span class="nt">directory</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/app&quot;</span>
+<span class="w">        </span><span class="nt">stdout_logfile</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/var/log/web-server/output.log&quot;</span>
+<span class="w">        </span><span class="nt">stderr_logfile</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/var/log/web-server/error.log&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># dags/web_service_supervisor.py</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span><span class="p">,</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Supervisor</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="s2">&quot;config/supervisor&quot;</span><span class="p">,</span> <span class="s2">&quot;web-service&quot;</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;web-service-supervisor&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">12</span><span class="p">),</span>
+    <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">extensions</span><span class="p">[</span><span class="s2">&quot;supervisor&quot;</span><span class="p">])</span>
+</pre></div>
+</div>
+</section>
+<section id="ssh-with-host-from-airflow-balancer">
+<h3>SSH with Host from airflow-balancer<a class="headerlink" href="#ssh-with-host-from-airflow-balancer" title="Link to this heading">¶</a></h3>
+<p>When using <a class="reference external" href="https://github.com/airflow-laminar/airflow-balancer">airflow-balancer</a> for dynamic host selection:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># config/supervisor/distributed-service.yaml</span>
+<span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_config.Configuration</span>
+
+<span class="nt">extensions</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">balancer</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_balancer.BalancerConfiguration</span>
+<span class="w">    </span><span class="nt">hosts</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.Host</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;server-1.example.com&quot;</span>
+<span class="w">        </span><span class="nt">pool</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;compute-pool&quot;</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.Host</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;server-2.example.com&quot;</span>
+<span class="w">        </span><span class="nt">pool</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;compute-pool&quot;</span>
+
+<span class="w">  </span><span class="nt">supervisor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorSSHAirflowConfiguration</span>
+<span class="w">    </span><span class="nt">port</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">9001</span>
+<span class="w">    </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/opt/services/distributed&quot;</span>
+<span class="w">    </span><span class="nt">program</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">worker</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.ProgramConfiguration</span>
+<span class="w">        </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;python</span><span class="nv"> </span><span class="s">/opt/services/worker.py&quot;</span>
+<span class="w">    </span><span class="nt">ssh_operator_args</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.SSHOperatorArgs</span>
+<span class="w">      </span><span class="nt">cmd_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
+
+<span class="nt">dags</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">distributed-supervisor</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">schedule</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;0</span><span class="nv"> </span><span class="s">*/4</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*</span><span class="nv"> </span><span class="s">*&quot;</span>
+<span class="w">    </span><span class="nt">tasks</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">run-service</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorSSHTask</span>
+<span class="w">        </span><span class="nt">task_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">run-service</span>
+<span class="w">        </span><span class="nt">cfg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${extensions.supervisor}</span>
+<span class="w">        </span><span class="nt">host</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.HostQuery</span>
+<span class="w">          </span><span class="nt">balancer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${extensions.balancer}</span>
+<span class="w">          </span><span class="nt">kind</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">select</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="chaining-with-other-tasks">
+<h2>Chaining with Other Tasks<a class="headerlink" href="#chaining-with-other-tasks" title="Link to this heading">¶</a></h2>
+<p>Supervisor DAGs can be chained with other Airflow tasks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.operators.python</span><span class="w"> </span><span class="kn">import</span> <span class="n">PythonOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow.operators.bash</span><span class="w"> </span><span class="kn">import</span> <span class="n">BashOperator</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">Supervisor</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">setup_environment</span><span class="p">():</span>
+    <span class="c1"># Setup code here</span>
+    <span class="k">pass</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">cleanup_environment</span><span class="p">():</span>
+    <span class="c1"># Cleanup code here</span>
+    <span class="k">pass</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9006</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/chained&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;my-service&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s2">&quot;python service.py&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;chained-supervisor&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="c1"># Pre-supervisor setup</span>
+    <span class="n">setup</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
+        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;setup&quot;</span><span class="p">,</span>
+        <span class="n">python_callable</span><span class="o">=</span><span class="n">setup_environment</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Supervisor job</span>
+    <span class="n">supervisor</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">)</span>
+
+    <span class="c1"># Post-supervisor cleanup</span>
+    <span class="n">cleanup</span> <span class="o">=</span> <span class="n">PythonOperator</span><span class="p">(</span>
+        <span class="n">task_id</span><span class="o">=</span><span class="s2">&quot;cleanup&quot;</span><span class="p">,</span>
+        <span class="n">python_callable</span><span class="o">=</span><span class="n">cleanup_environment</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Chain the tasks</span>
+    <span class="n">setup</span> <span class="o">&gt;&gt;</span> <span class="n">supervisor</span> <span class="o">&gt;&gt;</span> <span class="n">cleanup</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-check-intervals">
+<h2>Custom Check Intervals<a class="headerlink" href="#custom-check-intervals" title="Link to this heading">¶</a></h2>
+<p>Configure monitoring frequency for different use cases:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span>
+    <span class="n">Supervisor</span><span class="p">,</span>
+    <span class="n">ProgramConfiguration</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># High-frequency monitoring for critical services</span>
+<span class="n">critical_cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9007</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/critical&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;critical-service&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s2">&quot;python critical.py&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">check_interval</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>  <span class="c1"># Check every 2 seconds</span>
+    <span class="n">check_timeout</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">24</span><span class="p">),</span>    <span class="c1"># 24-hour timeout</span>
+<span class="p">)</span>
+
+<span class="c1"># Low-frequency monitoring for batch jobs</span>
+<span class="n">batch_cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+    <span class="n">port</span><span class="o">=</span><span class="mi">9008</span><span class="p">,</span>
+    <span class="n">working_dir</span><span class="o">=</span><span class="s2">&quot;/data/supervisor/batch&quot;</span><span class="p">,</span>
+    <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">&quot;batch-job&quot;</span><span class="p">:</span> <span class="n">ProgramConfiguration</span><span class="p">(</span><span class="n">command</span><span class="o">=</span><span class="s2">&quot;python batch.py&quot;</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="n">check_interval</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>  <span class="c1"># Check every minute</span>
+    <span class="n">check_timeout</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>     <span class="c1"># 8-hour timeout</span>
+<span class="p">)</span>
+
+<span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+    <span class="n">dag_id</span><span class="o">=</span><span class="s2">&quot;monitoring-examples&quot;</span><span class="p">,</span>
+    <span class="n">schedule</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2024</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+    <span class="n">catchup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+    <span class="n">critical</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span><span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span> <span class="n">cfg</span><span class="o">=</span><span class="n">critical_cfg</span><span class="p">)</span>
+    <span class="c1"># Note: Typically you&#39;d have separate DAGs for different services</span>
+</pre></div>
+</div>
+</section>
+<section id="integration-notes">
+<h2>Integration Notes<a class="headerlink" href="#integration-notes" title="Link to this heading">¶</a></h2>
+<section id="supervisor-pydantic">
+<h3>supervisor-pydantic<a class="headerlink" href="#supervisor-pydantic" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">airflow-supervisor</span></code> builds on <a class="reference external" href="https://github.com/airflow-laminar/supervisor-pydantic">supervisor-pydantic</a>, which provides:</p>
+<ul class="simple">
+<li><p>Pydantic models for all supervisor configuration sections</p></li>
+<li><p>XML-RPC client for supervisor communication</p></li>
+<li><p>Convenience utilities for supervisor management</p></li>
+</ul>
+</section>
+<section id="airflow-config">
+<h3>airflow-config<a class="headerlink" href="#airflow-config" title="Link to this heading">¶</a></h3>
+<p>For YAML-driven DAG definitions, use <a class="reference external" href="https://github.com/airflow-laminar/airflow-config">airflow-config</a>:</p>
+<ul class="simple">
+<li><p>Hydra-based configuration management</p></li>
+<li><p>Per-environment overrides</p></li>
+<li><p>Integration with airflow-pydantic models</p></li>
+</ul>
+</section>
+<section id="airflow-ha">
+<h3>airflow-ha<a class="headerlink" href="#airflow-ha" title="Link to this heading">¶</a></h3>
+<p>High availability features come from <a class="reference external" href="https://github.com/airflow-laminar/airflow-ha">airflow-ha</a>:</p>
+<ul class="simple">
+<li><p>Automatic retrigger on failure</p></li>
+<li><p>Runtime and endtime constraints</p></li>
+<li><p>Reference date handling</p></li>
+</ul>
+</section>
+<section id="airflow-balancer">
+<h3>airflow-balancer<a class="headerlink" href="#airflow-balancer" title="Link to this heading">¶</a></h3>
+<p>For dynamic host selection, integrate with <a class="reference external" href="https://github.com/airflow-laminar/airflow-balancer">airflow-balancer</a>:</p>
+<ul class="simple">
+<li><p>Host pool management</p></li>
+<li><p>Dynamic host and port selection</p></li>
+<li><p>Load balancing across machines</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="API.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">API Reference</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="getting-started.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Getting Started</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; the airflow-supervisor authors
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer">
+      
+      
+      <div class="toc-sticky toc-scroll">
+        <div class="toc-title-container">
+          <span class="toc-title">
+            On this page
+          </span>
+        </div>
+        <div class="toc-tree-container">
+          <div class="toc-tree">
+            <ul>
+<li><a class="reference internal" href="#">Examples</a><ul>
+<li><a class="reference internal" href="#basic-local-supervisor">Basic Local Supervisor</a></li>
+<li><a class="reference internal" href="#multiple-programs">Multiple Programs</a></li>
+<li><a class="reference internal" href="#remote-supervisor-via-ssh">Remote Supervisor via SSH</a></li>
+<li><a class="reference internal" href="#always-on-service">Always-On Service</a></li>
+<li><a class="reference internal" href="#time-limited-job-with-runtime">Time-Limited Job with Runtime</a></li>
+<li><a class="reference internal" href="#using-airflow-pools">Using Airflow Pools</a></li>
+<li><a class="reference internal" href="#configuration-driven-with-airflow-config">Configuration-Driven with airflow-config</a><ul>
+<li><a class="reference internal" href="#basic-yaml-configuration">Basic YAML Configuration</a></li>
+<li><a class="reference internal" href="#ssh-with-host-from-airflow-balancer">SSH with Host from airflow-balancer</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#chaining-with-other-tasks">Chaining with Other Tasks</a></li>
+<li><a class="reference internal" href="#custom-check-intervals">Custom Check Intervals</a></li>
+<li><a class="reference internal" href="#integration-notes">Integration Notes</a><ul>
+<li><a class="reference internal" href="#supervisor-pydantic">supervisor-pydantic</a></li>
+<li><a class="reference internal" href="#airflow-config">airflow-config</a></li>
+<li><a class="reference internal" href="#airflow-ha">airflow-ha</a></li>
+<li><a class="reference internal" href="#airflow-balancer">airflow-balancer</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+          </div>
+        </div>
+      </div>
+      
+      
+    </aside>
+  </div>
+</div><script src="../../_static/documentation_options.js?v=8ea4bfaa"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/furo.js?v=46bd48cc"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../_static/design-tabs.js?v=f930bc37"></script>
+    <script src="../../_static/js/custom.js?v=956e5d78"></script>
+    </body>
+</html>
