@@ -1,10 +1,14 @@
 [build-system]
-requires = ["hatchling"]
+requires = [
+    "hatchling",
+]
 build-backend="hatchling.build"
 
 [project]
 name = "airflow-supervisor"
-authors = [{name = "the airflow-supervisor authors", email = "t.paine154@gmail.com"}]
+authors = [
+    {name = "the airflow-supervisor authors", email = "t.paine154@gmail.com"},
+]
 description = "Supervisor operators and configuration for long-running tasks"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -43,6 +47,7 @@ develop = [
     "pytest-cov",
     "ruff>=0.9,<0.15",
     "twine",
+    "ty",
     "uv",
     "wheel",
     # airflow-config integration
@@ -118,28 +123,46 @@ artifacts = []
 src = "/"
 
 [tool.hatch.build.targets.sdist]
-packages = ["airflow_supervisor"]
+packages = [
+    "airflow_supervisor",
+]
 
 [tool.hatch.build.targets.wheel]
-packages = ["airflow_supervisor"]
+packages = [
+    "airflow_supervisor",
+]
 
 [tool.pytest.ini_options]
-addopts = ["-vvv", "--junitxml=junit.xml"]
+addopts = [
+    "-vvv",
+    "--junitxml=junit.xml",
+]
 testpaths = "airflow_supervisor/tests"
 
 [tool.ruff]
 line-length = 120
 
 [tool.ruff.lint]
-extend-select = ["I"]
+extend-select = [
+    "I",
+]
 
 [tool.ruff.lint.isort]
 combine-as-imports = true
 default-section = "third-party"
-known-first-party = ["airflow_supervisor"]
-section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+known-first-party = [
+    "airflow_supervisor",
+]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
 
 [tool.ruff.lint.per-file-ignores]
+<<<<<<< before updating
 "__init__.py" = ["F401", "F403"]
 
 [tool.yardang]
@@ -151,3 +174,9 @@ pages = [
     "docs/src/API.md",
 ]
 use-autoapi = false
+=======
+"__init__.py" = [
+    "F401",
+    "F403",
+]
+>>>>>>> after updating
