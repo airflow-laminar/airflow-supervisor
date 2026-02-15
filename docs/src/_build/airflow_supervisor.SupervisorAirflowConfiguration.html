@@ -2741,24 +2741,7 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-</details></p><dl class="field-list simple">
-<dt class="field-odd">Fields<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_interval</span> <span class="pre">(datetime.timedelta)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_timeout</span> <span class="pre">(datetime.timedelta)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cleanup</span> <span class="pre">(bool</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">endtime</span> <span class="pre">(datetime.time</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">maxretrigger</span> <span class="pre">(int</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">pool</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">airflow_pydantic.utils.pool.Pool</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">reference_date</span> <span class="pre">(Literal['start_date',</span> <span class="pre">'logical_date',</span> <span class="pre">'data_interval_end'])</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">restart_on_initial</span> <span class="pre">(bool</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">restart_on_retrigger</span> <span class="pre">(bool</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">runtime</span> <span class="pre">(datetime.timedelta</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_on_exit</span> <span class="pre">(bool</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute pydantic_field">
+</details></p><dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="airflow_supervisor.SupervisorAirflowConfiguration.check_interval">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">check_interval</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">timedelta</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">datetime.timedelta(seconds=5)</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.check_interval" title="Link to this definition">¶</a></dt>
 <dd><p>Interval between supervisor program status checks</p>
@@ -2823,21 +2806,6 @@
 <dt class="sig sig-object py" id="airflow_supervisor.SupervisorAirflowConfiguration.restart_on_retrigger">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">restart_on_retrigger</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_retrigger" title="Link to this definition">¶</a></dt>
 <dd><p>Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="airflow_supervisor.SupervisorAirflowConfiguration.model_post_init">
-<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.model_post_init" title="Link to this definition">¶</a></dt>
-<dd><p>This function is meant to behave like a BaseModel method to initialise private attributes.</p>
-<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> – The BaseModel instance.</p></li>
-<li><p><strong>context</strong> – The context.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -2912,7 +2880,6 @@
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.cleanup"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.cleanup</span></code></a></li>
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_initial"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.restart_on_initial</span></code></a></li>
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_retrigger"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.restart_on_retrigger</span></code></a></li>
-<li><a class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.model_post_init"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.model_post_init()</span></code></a></li>
 </ul>
 </li>
 </ul>

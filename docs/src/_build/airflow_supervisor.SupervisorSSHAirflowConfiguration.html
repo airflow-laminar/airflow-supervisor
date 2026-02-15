@@ -3954,16 +3954,7 @@
 <span class="p">}</span>
 </pre></div>
 </div>
-</details></p><dl class="field-list simple">
-<dt class="field-odd">Fields<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">command_prefix</span> <span class="pre">(str</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">local_or_remote</span> <span class="pre">(Literal['local',</span> <span class="pre">'remote']</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-<li><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ssh_operator_args</span> <span class="pre">(airflow_pydantic.operators.ssh.SSHTaskArgs</span> <span class="pre">|</span> <span class="pre">None)</span></code></p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute pydantic_field">
+</details></p><dl class="py attribute pydantic_field">
 <dt class="sig sig-object py" id="airflow_supervisor.SupervisorSSHAirflowConfiguration.command_prefix">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">command_prefix</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">''</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorSSHAirflowConfiguration.command_prefix" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -3978,21 +3969,6 @@
 <dt class="sig sig-object py" id="airflow_supervisor.SupervisorSSHAirflowConfiguration.local_or_remote">
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">local_or_remote</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'local'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'remote'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'remote'</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorSSHAirflowConfiguration.local_or_remote" title="Link to this definition">¶</a></dt>
 <dd><p>Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicates via inet http server</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="airflow_supervisor.SupervisorSSHAirflowConfiguration.model_post_init">
-<span class="sig-name descname"><span class="pre">model_post_init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">context</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#airflow_supervisor.SupervisorSSHAirflowConfiguration.model_post_init" title="Link to this definition">¶</a></dt>
-<dd><p>This function is meant to behave like a BaseModel method to initialise private attributes.</p>
-<p>It takes context as an argument since that’s what pydantic-core passes when calling it.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>self</strong> – The BaseModel instance.</p></li>
-<li><p><strong>context</strong> – The context.</p></li>
-</ul>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -4051,7 +4027,6 @@
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorSSHAirflowConfiguration.command_prefix"><code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration.command_prefix</span></code></a></li>
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorSSHAirflowConfiguration.ssh_operator_args"><code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration.ssh_operator_args</span></code></a></li>
 <li><a class="reference internal" href="#airflow_supervisor.SupervisorSSHAirflowConfiguration.local_or_remote"><code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration.local_or_remote</span></code></a></li>
-<li><a class="reference internal" href="#airflow_supervisor.SupervisorSSHAirflowConfiguration.model_post_init"><code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration.model_post_init()</span></code></a></li>
 </ul>
 </li>
 </ul>
