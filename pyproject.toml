@@ -162,8 +162,10 @@ section-order = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-<<<<<<< before updating
-"__init__.py" = ["F401", "F403"]
+"__init__.py" = [
+    "F401",
+    "F403",
+]
 
 [tool.yardang]
 title = "airflow-supervisor"
@@ -174,9 +176,3 @@ pages = [
     "docs/src/API.md",
 ]
 use-autoapi = false
-=======
-"__init__.py" = [
-    "F401",
-    "F403",
-]
->>>>>>> after updating
