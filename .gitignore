@@ -156,18 +156,16 @@ target
 # Mac
 .DS_Store
 
-<<<<<<< before updating
-# Supervisor
-supervisord.pid
-supervisor-2024*.cfg
-pydantic.json
-Untitled*.ipynb
-tmp
-=======
 # Rust
 target
 
 # Hydra
 outputs/
 multirun/
->>>>>>> after updating
+
+# Supervisor
+supervisord.pid
+supervisor-2024*.cfg
+pydantic.json
+Untitled*.ipynb
+tmp
