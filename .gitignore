@@ -141,14 +141,12 @@ js/node_modules
 js/test-results
 js/playwright-report
 js/*.tgz
-airflow_supervisor/extension
 
 # Jupyter
 .ipynb_checkpoints
 .autoversion
 Untitled*.ipynb
-!airflow_supervisor/extension/airflow_supervisor.json
-!airflow_supervisor/extension/install.json
+airflow_supervisor/extension
 airflow_supervisor/nbextension
 airflow_supervisor/labextension
 
@@ -158,9 +156,18 @@ target
 # Mac
 .DS_Store
 
+<<<<<<< before updating
 # Supervisor
 supervisord.pid
 supervisor-2024*.cfg
 pydantic.json
 Untitled*.ipynb
 tmp
+=======
+# Rust
+target
+
+# Hydra
+outputs/
+multirun/
+>>>>>>> after updating
