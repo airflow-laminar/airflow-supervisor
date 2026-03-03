@@ -236,6 +236,7 @@ def test_hydra_config_render_hosts_query():
     with (
         patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
         patch("supervisor_pydantic.config.supervisor.getuser") as p2,
+        patch("airflow_pydantic.extras.balancer.balancer.get_pool", return_value=None),
     ):
         with pools():
             pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
