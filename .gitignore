@@ -149,9 +149,16 @@ target
 outputs/
 multirun/
 
+<<<<<<< before updating
 # Supervisor
 supervisord.pid
 supervisor-2024*.cfg
 pydantic.json
 Untitled*.ipynb
 tmp
+=======
+# AI
+ROADMAP.md
+AGENTS.md
+.github/hooks/sdlc.json
+>>>>>>> after updating
