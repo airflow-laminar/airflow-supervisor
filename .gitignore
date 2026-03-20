@@ -149,6 +149,11 @@ target
 outputs/
 multirun/
 
+# AI
+ROADMAP.md
+AGENTS.md
+.github/hooks/sdlc.json
+
 # Supervisor
 supervisord.pid
 supervisor-2024*.cfg
