@@ -91,17 +91,13 @@ jobs:
       run: make dist
       if: ${{ matrix.pydantic == '>=2.11' && matrix.airflow == '2' }}
 
-    - name: Test wheel install
-      run: |
-        python -m venv /tmp/test-wheel
-        /tmp/test-wheel/bin/pip install dist/*.whl
-        /tmp/test-wheel/bin/python -c "import airflow_supervisor"
+    - uses: actions-ext/python/test-wheel@main
+      with:
+        module: airflow_supervisor
 
-    - name: Test sdist install
-      run: |
-        python -m venv /tmp/test-sdist
-        /tmp/test-sdist/bin/pip install dist/*.tar.gz
-        /tmp/test-sdist/bin/python -c "import airflow_supervisor"
+    - uses: actions-ext/python/test-sdist@main
+      with:
+        module: airflow_supervisor
 
     - uses: actions/upload-artifact@v7
       with:
