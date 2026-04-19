@@ -154,7 +154,7 @@ multirun/
 ROADMAP.md
 AGENTS.md
 .github/hooks/sdlc.json
-<<<<<<< before updating
+.superpowers
 
 # Supervisor
 supervisord.pid
@@ -162,6 +162,3 @@ supervisor-2024*.cfg
 pydantic.json
 Untitled*.ipynb
 tmp
-=======
-.superpowers
->>>>>>> after updating
