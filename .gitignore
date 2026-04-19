@@ -154,6 +154,7 @@ multirun/
 ROADMAP.md
 AGENTS.md
 .github/hooks/sdlc.json
+.superpowers
 
 # Supervisor
 supervisord.pid
