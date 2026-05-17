@@ -5,6 +5,8 @@ __pycache__/
 
 # C extensions
 *.a
+*.o
+*.dSYM
 *.so
 *.obj
 *.dll
@@ -13,6 +15,7 @@ __pycache__/
 
 # Rust
 target
+target-capi
 
 # Distribution / packaging
 .Python
@@ -137,14 +140,16 @@ airflow_supervisor/extension
 airflow_supervisor/nbextension
 airflow_supervisor/labextension
 
+<<<<<<< before updating
 # Rust
 target
+=======
+# Emscripten SDK (locally installed)
+emsdk
+>>>>>>> after updating
 
 # Mac
 .DS_Store
-
-# Rust
-target
 
 # Hydra
 outputs/
