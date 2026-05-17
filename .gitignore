@@ -140,13 +140,8 @@ airflow_supervisor/extension
 airflow_supervisor/nbextension
 airflow_supervisor/labextension
 
-<<<<<<< before updating
-# Rust
-target
-=======
 # Emscripten SDK (locally installed)
 emsdk
->>>>>>> after updating
 
 # Mac
 .DS_Store
