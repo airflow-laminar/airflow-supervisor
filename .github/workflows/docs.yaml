@@ -1,23 +1,50 @@
-name: Docs
+name: Publish Docs
+
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["Build Status"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+
 permissions:
+  actions: read
   contents: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
+      - uses: actions-ext/python/setup@main
+
+      - name: Download dist from build
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          python-version: 3.11
-      - run: pip install .
-      - run: pip install yardang
+          pattern: dist-ubuntu-latest*
+          merge-multiple: true
+          path: dist
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+        if: github.event_name == 'workflow_run'
+
+      - name: Install from wheel
+        run: |
+          uv pip install dist/*.whl --target .
+          uv pip install yardang
+        if: github.event_name == 'workflow_run'
+
+      - name: Install from source (manual trigger)
+        run: |
+          uv pip install .[develop]
+          uv pip install yardang
+        if: github.event_name == 'workflow_dispatch'
+
       - run: yardang build
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
+
+      - uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           publish_branch: gh-pages
           github_token: ${{ secrets.GITHUB_TOKEN }}
