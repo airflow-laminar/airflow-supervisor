@@ -12,11 +12,7 @@ authors = [
 description = "Supervisor operators and configuration for long-running tasks"
 readme = "README.md"
 license = { text = "Apache-2.0" }
-<<<<<<< before updating
 version = "1.10.2"
-=======
-version = "0.1.0"
->>>>>>> after updating
 requires-python = ">=3.11"
 keywords = []
 
