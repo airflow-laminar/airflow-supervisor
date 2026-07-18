@@ -34,13 +34,13 @@ jobs:
         run: |
           uv pip install dist/*.whl
           uv pip install dist/*.whl --target . --no-deps
-          uv pip install yardang
+          uv pip install 'yardang[llms,themes]>=0.6.1,<0.7'
         if: github.event_name == 'workflow_run'
 
       - name: Install from source (manual trigger)
         run: |
           uv pip install .[develop]
-          uv pip install yardang
+          uv pip install 'yardang[llms,themes]>=0.6.1,<0.7'
         if: github.event_name == 'workflow_dispatch'
 
       - run: yardang build
