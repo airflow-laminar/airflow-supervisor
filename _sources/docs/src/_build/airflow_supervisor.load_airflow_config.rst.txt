@@ -1,0 +1,6 @@
+﻿airflow\_supervisor.load\_airflow\_config
+=========================================
+
+.. currentmodule:: airflow_supervisor
+
+.. autofunction:: load_airflow_config

@@ -1,0 +1,6 @@
+﻿airflow\_supervisor.ProcessInfo
+===============================
+
+.. currentmodule:: airflow_supervisor
+
+.. autopydantic_model:: ProcessInfo

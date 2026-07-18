@@ -1,0 +1,36 @@
+﻿airflow\_supervisor.SupervisorRemoteXMLRPCClient
+================================================
+
+.. currentmodule:: airflow_supervisor
+
+.. autoclass:: SupervisorRemoteXMLRPCClient
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~SupervisorRemoteXMLRPCClient.__init__
+      ~SupervisorRemoteXMLRPCClient.getAllProcessInfo
+      ~SupervisorRemoteXMLRPCClient.getProcessInfo
+      ~SupervisorRemoteXMLRPCClient.getState
+      ~SupervisorRemoteXMLRPCClient.readProcessLog
+      ~SupervisorRemoteXMLRPCClient.readProcessStderrLog
+      ~SupervisorRemoteXMLRPCClient.readProcessStdoutLog
+      ~SupervisorRemoteXMLRPCClient.reloadConfig
+      ~SupervisorRemoteXMLRPCClient.restart
+      ~SupervisorRemoteXMLRPCClient.shutdown
+      ~SupervisorRemoteXMLRPCClient.signalProcess
+      ~SupervisorRemoteXMLRPCClient.startAllProcesses
+      ~SupervisorRemoteXMLRPCClient.startProcess
+      ~SupervisorRemoteXMLRPCClient.stopAllProcesses
+      ~SupervisorRemoteXMLRPCClient.stopProcess
+   
+   
+
+   
+   
+   

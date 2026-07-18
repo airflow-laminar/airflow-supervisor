@@ -1,0 +1,859 @@
+# index.html.md
+
+# airflow-supervisor
+
+Run and monitor supervisord-managed jobs from Apache Airflow.
+
+[![Build Status](https://github.com/airflow-laminar/airflow-supervisor/actions/workflows/build.yaml/badge.svg?branch=main&event=push)](https://github.com/airflow-laminar/airflow-supervisor/actions/workflows/build.yaml)
+[![codecov](https://codecov.io/gh/airflow-laminar/airflow-supervisor/branch/main/graph/badge.svg)](https://codecov.io/gh/airflow-laminar/airflow-supervisor)
+[![License](https://img.shields.io/github/license/airflow-laminar/airflow-supervisor)](https://github.com/airflow-laminar/airflow-supervisor)
+[![PyPI](https://img.shields.io/pypi/v/airflow-supervisor.svg)](https://pypi.python.org/pypi/airflow-supervisor)
+
+```python
+from airflow import DAG
+from airflow_supervisor import ProgramConfiguration, Supervisor, SupervisorAirflowConfiguration
+
+dag = DAG(dag_id="nightly-supervisor", schedule="@daily")
+config = SupervisorAirflowConfiguration(
+    working_dir="/var/tmp/nightly-supervisor",
+    program={
+        "nightly": ProgramConfiguration(command="python /opt/jobs/nightly.py"),
+    },
+)
+Supervisor(dag=dag, cfg=config)
+```
+
+The generated lifecycle creates a dedicated supervisord instance, starts and
+monitors programs with `airflow-ha`, handles retriggers, and optionally stops and
+removes the instance. `SupervisorSSH` manages the same lifecycle remotely.
+
+## Documentation
+
+- [Tutorial: run a supervised job from Airflow](docs/src/tutorial.md)
+- [How-to guides](docs/src/how-to.md)
+- [Why Airflow delegates process ownership](docs/src/explanation.md)
+- [API reference](docs/src/api.md)
+
+Published documentation is available at
+[airflow-laminar.github.io/airflow-supervisor](https://airflow-laminar.github.io/airflow-supervisor/).
+
+## Ecosystem
+
+- [supervisor-pydantic](https://github.com/airflow-laminar/supervisor-pydantic) supplies supervisord models and lifecycle tools.
+- [systemd-pydantic](https://github.com/airflow-laminar/systemd-pydantic) and [cron-pydantic](https://github.com/airflow-laminar/cron-pydantic) model alternative runtimes.
+- [airflow-systemd](https://github.com/airflow-laminar/airflow-systemd) provides the analogous systemd lifecycle.
+- [airflow-cron](https://github.com/airflow-laminar/airflow-cron) converts cron jobs into ordinary Airflow tasks.
+- [airflow-pydantic](https://github.com/airflow-laminar/airflow-pydantic) supplies declarative task, host, and connection models.
+- [airflow-config](https://github.com/airflow-laminar/airflow-config) produces YAML-driven DAGs.
+
+#### NOTE
+This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).
+
+
+# airflow_supervisor.ProcessInfo.html.md
+
+# airflow_supervisor.ProcessInfo
+
+### *pydantic model* airflow_supervisor.ProcessInfo
+
+Bases: `BaseModel`
+
+#### *field* name *: str* *[Required]*
+
+#### *field* group *: str* *[Required]*
+
+#### *field* state *: ProcessState* *[Required]*
+
+#### *field* description *: str* *[Required]*
+
+#### *field* start *: datetime* *[Required]*
+
+#### *field* stop *: datetime* *[Required]*
+
+#### *field* now *: datetime* *[Required]*
+
+#### *field* spawner *: str* *= ''*
+
+#### *field* exitstatus *: int* *[Required]*
+
+#### *field* logfile *: str* *[Required]*
+
+#### *field* stdout_logfile *: str* *[Required]*
+
+#### *field* stderr_logfile *: str* *[Required]*
+
+#### *field* pid *: int* *[Required]*
+
+#### running()
+
+#### stopped()
+
+#### done(ok_exitstatuses=None)
+
+#### ok(ok_exitstatuses=None)
+
+#### bad(ok_exitstatuses=None)
+
+
+# airflow_supervisor.ProgramConfiguration.html.md
+
+# airflow_supervisor.ProgramConfiguration
+
+### *pydantic model* airflow_supervisor.ProgramConfiguration
+
+Bases: `_BaseCfgModel`
+
+#### to_cfg(key: str) → str
+
+#### *field* command *: str* *[Required]*
+
+The command that will be run when this program is started. The command can be either absolute (e.g. /path/to/programname) or relative (e.g. programname). If it is relative, the supervisord’s environment $PATH will be searched for the executable. Programs can accept arguments, e.g. /path/to/program foo bar. The command line can use double quotes to group arguments with spaces in them to pass to the program, e.g. /path/to/program/name -p ‘foo bar’. Note that the value of command may include Python string expressions, e.g. /path/to/programname –port=80%(process_num)02d might expand to /path/to/programname –port=8000 at runtime. String expressions are evaluated against a dictionary containing the keys group_name, host_node_name, program_name, process_num, numprocs, here (the directory of the supervisord config file), and all supervisord’s environment variables prefixed with 
+
+```
+ENV_
+```
+
+. Controlled programs should themselves not be daemons, as supervisord assumes it is responsible for daemonizing its subprocesses (see Nondaemonizing of Subprocesses). The command will be truncated if it looks like a config file comment, e.g. command=bash -c ‘foo ; bar’ will be truncated to command=bash -c ‘foo. Quoting will not prevent this behavior, since the configuration file reader does not parse the command like a shell would.
+
+#### *field* process_name *: str | None* *= None*
+
+A Python string expression that is used to compose the supervisor process name for this process. You usually don’t need to worry about setting this unless you change numprocs. The string expression is evaluated against a dictionary that includes group_name, host_node_name, process_num, program_name, and here (the directory of the supervisord config file).
+
+#### *field* numprocs *: int | None* *= None*
+
+Supervisor will start as many instances of this program as named by numprocs. Note that if numprocs > 1, the process_name expression must include %(process_num)s (or any other valid Python string expression that includes process_num) within it.
+
+#### *field* numprocs_start *: int | None* *= None*
+
+An integer offset that is used to compute the number at which process_num starts.
+
+#### *field* priority *: int | None* *= None*
+
+The relative priority of the program in the start and shutdown ordering. Lower priorities indicate programs that start first and shut down last at startup and when aggregate commands are used in various clients (e.g. “start all”/”stop all”). Higher priorities indicate programs that start last and shut down first.
+
+#### *field* autostart *: bool | None* *= None*
+
+If true, this program will start automatically when supervisord is started.
+
+#### *field* startsecs *: int | None* *= None*
+
+The total number of seconds which the program needs to stay running after a startup to consider the start successful (moving the process from the STARTING state to the RUNNING state). Set to 0 to indicate that the program needn’t stay running for any particular amount of time. Even if a process exits with an “expected” exit code (see exitcodes), the start will still be considered a failure if the process exits quicker than startsecs.
+
+#### *field* startretries *: int | None* *= None*
+
+The number of serial failure attempts that supervisord will allow when attempting to start the program before giving up and putting the process into an FATAL state. After each failed restart, process will be put in BACKOFF state and each retry attempt will take increasingly more time.
+
+#### *field* autorestart *: bool | Literal['unexpected'] | None* *= None*
+
+Specifies if supervisord should automatically restart a process if it exits when it is in the RUNNING state. May be one of false, unexpected, or true. If false, the process will not be autorestarted. If unexpected, the process will be restarted when the program exits with an exit code that is not one of the exit codes associated with this process’ configuration (see exitcodes). If true, the process will be unconditionally restarted when it exits, without regard to its exit code. autorestart controls whether supervisord will autorestart a program if it exits after it has successfully started up (the process is in the RUNNING state). supervisord has a different restart mechanism for when the process is starting up (the process is in the STARTING state). Retries during process startup are controlled by startsecs and startretries.
+
+#### *field* exitcodes *: List[int] | None* *= None*
+
+The list of “expected” exit codes for this program used with autorestart. If the autorestart parameter is set to unexpected, and the process exits in any other way than as a result of a supervisor stop request, supervisord will restart the process if it exits with an exit code that is not defined in this list.
+
+#### *field* stopsignal *: Literal['TERM', 'HUP', 'INT', 'QUIT', 'KILL', 'USR1', 'USR2'] | None* *= None*
+
+The signal used to kill the program when a stop is requested. This can be specified using the signal’s name or its number. It is normally one of: TERM, HUP, INT, QUIT, KILL, USR1, or USR2.
+
+#### *field* stopwaitsecs *: int | None* *= None*
+
+The number of seconds to wait for the OS to return a SIGCHLD to supervisord after the program has been sent a stopsignal. If this number of seconds elapses before supervisord receives a SIGCHLD from the process, supervisord will attempt to kill it with a final SIGKILL.
+
+#### *field* stopasgroup *: bool | None* *= None*
+
+If true, the flag causes supervisor to send the stop signal to the whole process group and implies killasgroup is true. This is useful for programs, such as Flask in debug mode, that do not propagate stop signals to their children, leaving them orphaned.
+
+#### *field* killasgroup *: bool | None* *= None*
+
+If true, when resorting to send SIGKILL to the program to terminate it send it to its whole process group instead, taking care of its children as well, useful e.g with Python programs using multiprocessing.
+
+#### *field* user *: Annotated[str, AfterValidator(func=\_is_username)] | None* *= None*
+
+Instruct supervisord to use this UNIX user account as the account which runs the program. The user can only be switched if supervisord is run as the root user. If supervisord can’t switch to the specified user, the program will not be started. The user will be changed using setuid only. This does not start a login shell and does not change environment variables like USER or HOME. See Subprocess Environment for details.
+
+#### *field* redirect_stderr *: bool | None* *= None*
+
+If true, cause the process’ stderr output to be sent back to supervisord on its stdout file descriptor (in UNIX shell terms, this is the equivalent of executing /the/program 2>&1). Do not set redirect_stderr=true in an [eventlistener:x] section. Eventlisteners use stdout and stdin to communicate with supervisord. If stderr is redirected, output from stderr will interfere with the eventlistener protocol.
+
+#### *field* stdout_logfile *: Path | None* *= None*
+
+Put process stdout output in this file (and if redirect_stderr is true, also place stderr output in this file). If stdout_logfile is unset or set to AUTO, supervisor will automatically choose a file location. If this is set to NONE, supervisord will create no log file. AUTO log files and their backups will be deleted when supervisord restarts. The stdout_logfile value can contain Python string expressions that will evaluated against a dictionary that contains the keys group_name, host_node_name, process_num, program_name, and here (the directory of the supervisord config file). It is not possible for two processes to share a single log file (stdout_logfile) when rotation (stdout_logfile_maxbytes) is enabled. This will result in the file being corrupted. If stdout_logfile is set to a special file like /dev/stdout that is not seekable, log rotation must be disabled by setting stdout_logfile_maxbytes = 0.
+
+#### *field* stdout_logfile_maxbytes *: str | None* *= None*
+
+The maximum number of bytes that may be consumed by stdout_logfile before it is rotated (suffix multipliers like “KB”, “MB”, and “GB” can be used in the value). Set this value to 0 to indicate an unlimited log size.
+
+#### *field* stdout_logfile_backups *: int | None* *= None*
+
+The number of stdout_logfile backups to keep around resulting from process stdout log file rotation. If set to 0, no backups will be kept.
+
+#### *field* stdout_capture_maxbytes *: int | None* *= None*
+
+Max number of bytes written to capture FIFO when process is in “stdout capture mode” (see Capture Mode). Should be an integer (suffix multipliers like “KB”, “MB” and “GB” can used in the value). If this value is 0, process capture mode will be off.
+
+#### *field* stdout_events_enabled *: int | None* *= None*
+
+If true, PROCESS_LOG_STDOUT events will be emitted when the process writes to its stdout file descriptor. The events will only be emitted if the file descriptor is not in capture mode at the time the data is received (see Capture Mode).
+
+#### *field* stdout_syslog *: bool | None* *= None*
+
+If true, stdout will be directed to syslog along with the process name.
+
+#### *field* stderr_logfile *: Path | None* *= None*
+
+Put process stderr output in this file unless redirect_stderr is true. Accepts the same value types as stdout_logfile and may contain the same Python string expressions. It is not possible for two processes to share a single log file (stderr_logfile) when rotation (stderr_logfile_maxbytes) is enabled. This will result in the file being corrupted. If stderr_logfile is set to a special file like /dev/stderr that is not seekable, log rotation must be disabled by setting stderr_logfile_maxbytes = 0.
+
+#### *field* stderr_logfile_maxbytes *: str | None* *= None*
+
+The maximum number of bytes before logfile rotation for stderr_logfile. Accepts the same value types as stdout_logfile_maxbytes.
+
+#### *field* stderr_logfile_backups *: int | None* *= None*
+
+The number of backups to keep around resulting from process stderr log file rotation. If set to 0, no backups will be kept.
+
+#### *field* stderr_capture_maxbytes *: int | None* *= None*
+
+Max number of bytes written to capture FIFO when process is in “stderr capture mode” (see Capture Mode). Should be an integer (suffix multipliers like “KB”, “MB” and “GB” can used in the value). If this value is 0, process capture mode will be off.
+
+#### *field* stderr_events_enabled *: bool | None* *= None*
+
+If true, PROCESS_LOG_STDERR events will be emitted when the process writes to its stderr file descriptor. The events will only be emitted if the file descriptor is not in capture mode at the time the data is received (see Capture Mode).
+
+#### *field* stderr_syslog *: bool | None* *= None*
+
+If true, stderr will be directed to syslog along with the process name.
+
+#### *field* environment *: Dict[str, str] | None* *= None*
+
+A list of key/value pairs in the form KEY=”val”,KEY2=”val2” that will be placed in the child process’ environment. The environment string may contain Python string expressions that will be evaluated against a dictionary containing group_name, host_node_name, process_num, program_name, and here (the directory of the supervisord config file). Values containing non-alphanumeric characters should be quoted (e.g. KEY=”val:123”,KEY2=”val,456”). Otherwise, quoting the values is optional but recommended. Note that the subprocess will inherit the environment variables of the shell used to start “supervisord” except for the ones overridden here. See Subprocess Environment.
+
+#### *field* directory *: Path | None* *= None*
+
+A file path representing a directory to which supervisord should temporarily chdir before exec’ing the child.
+
+#### *field* umask *: \_check_is_octal)] | None* *= None*
+
+An octal number (e.g. 002, 022) representing the umask of the process.
+
+#### *field* serverurl *: str | None* *= None*
+
+The URL passed in the environment to the subprocess process as SUPERVISOR_SERVER_URL (see supervisor.childutils) to allow the subprocess to easily communicate with the internal HTTP server. If provided, it should have the same syntax and structure as the [supervisorctl] section option of the same name. If this is set to AUTO, or is unset, supervisor will automatically construct a server URL, giving preference to a server that listens on UNIX domain sockets over one that listens on an internet socket.
+
+
+# airflow_supervisor.Supervisor.html.md
+
+# airflow_supervisor.Supervisor
+
+### *class* airflow_supervisor.Supervisor(dag: DAG, cfg: [SupervisorAirflowConfiguration](airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration), \*\*kwargs)
+
+Bases: `object`
+
+#### \_\_init_\_(dag: DAG, cfg: [SupervisorAirflowConfiguration](airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration), \*\*kwargs)
+
+### Methods
+
+| [`__init__`](#airflow_supervisor.Supervisor.__init__)(dag, cfg, \*\*kwargs)   |    |
+|-------------------------------------------------------------------------------|----|
+| `get_base_operator_kwargs`()                                                  |    |
+| `get_step_kwargs`(step)                                                       |    |
+| `get_step_operator`(step)                                                     |    |
+| `initialize_tasks`()                                                          |    |
+| `set_downstream`(other)                                                       |    |
+| `set_upstream`(other)                                                         |    |
+| `setup_dag`()                                                                 |    |
+| `update_relative`(other[, upstream, edge_modifier])                           |    |
+
+### Attributes
+
+| `check_programs`         |                               |
+|--------------------------|-------------------------------|
+| `configure_supervisor`   |                               |
+| `leaves`                 | Return the leaves of the DAG. |
+| `restart_programs`       |                               |
+| `roots`                  | Return the roots of the DAG.  |
+| `start_programs`         |                               |
+| `start_supervisor`       |                               |
+| `stop_programs`          |                               |
+| `stop_supervisor`        |                               |
+| `supervisor_client`      |                               |
+| `unconfigure_supervisor` |                               |
+
+
+# airflow_supervisor.SupervisorAirflowConfiguration.html.md
+
+# airflow_supervisor.SupervisorAirflowConfiguration
+
+### *pydantic model* airflow_supervisor.SupervisorAirflowConfiguration
+
+Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConvenienceConfiguration.md#airflow_supervisor.SupervisorConvenienceConfiguration)
+
+Settings that MUST be set when running in airflow
+
+#### *field* check_interval *: timedelta* *= datetime.timedelta(seconds=5)*
+
+Interval between supervisor program status checks
+
+#### *field* check_timeout *: timedelta* *= datetime.timedelta(seconds=28800)*
+
+Timeout to wait for supervisor program status checks
+
+#### *field* runtime *: timedelta | None* *= None*
+
+Max runtime of Supervisor job
+
+#### *field* endtime *: time | None* *= None*
+
+End time of Supervisor job
+
+#### *field* maxretrigger *: int | None* *= None*
+
+Max number of retriggers of Supervisor job (e.g. max number of checks separated by check_interval)
+
+#### *field* reference_date *: Literal['start_date', 'logical_date', 'data_interval_end']* *= 'data_interval_end'*
+
+Reference date for the job. NOTE: Airflow schedules after end of date interval, so data_interval_end is the default
+
+#### *field* pool *: str | Pool | None* *= None*
+
+Other Airflow Configuration
+
+Airflow pool to use for the job. If not set, the job will use the default pool, or the pool from a balancer host.
+
+#### *field* stop_on_exit *: bool | None* *= True*
+
+Stop supervisor on dag completion
+
+#### *field* cleanup *: bool | None* *= True*
+
+Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True
+
+#### *field* restart_on_initial *: bool | None* *= False*
+
+Restart the job when the DAG is run directly via airflow (NOT retriggered). This is useful for jobs that do not shutdown
+
+#### *field* restart_on_retrigger *: bool | None* *= False*
+
+Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown
+
+
+# airflow_supervisor.SupervisorConfiguration.html.md
+
+# airflow_supervisor.SupervisorConfiguration
+
+### *pydantic model* airflow_supervisor.SupervisorConfiguration
+
+Bases: `BaseModel`
+
+#### to_cfg() → str
+
+#### *field* unix_http_server *: UnixHttpServerConfiguration | None* *= None*
+
+#### *field* inet_http_server *: InetHttpServerConfiguration | None* *= None*
+
+#### *field* supervisord *: SupervisordConfiguration* *= SupervisordConfiguration(logfile=None, logfile_maxbytes=None, logfile_backups=None, loglevel=None, pidfile=None, umask=None, nodaemon=None, silent=None, minfds=None, minprocs=None, nocleanup=None, childlogdir=None, user=None, directory=None, strip_ansi=None, environment=None, identifier=None)*
+
+#### *field* supervisorctl *: SupervisorctlConfiguration* *= SupervisorctlConfiguration(serverurl=None, username=None, password=None, prompt=None, history_file=None)*
+
+#### *field* include *: IncludeConfiguration | None* *= None*
+
+#### *field* program *: Dict[str, [ProgramConfiguration](airflow_supervisor.ProgramConfiguration.md#airflow_supervisor.ProgramConfiguration)]* *[Required]*
+
+#### *field* group *: Dict[str, GroupConfiguration] | None* *= None*
+
+#### *field* fcgiprogram *: Dict[str, FcgiProgramConfiguration] | None* *= None*
+
+#### *field* eventlistener *: Dict[str, EventListenerConfiguration] | None* *= None*
+
+#### *field* rpcinterface *: Dict[str, RpcInterfaceConfiguration] | None* *= None*
+
+#### *field* config_path *: Path | None* *= 'supervisord.conf'*
+
+Path to supervisor configuration file, relative to working_dir
+
+#### *field* working_dir *: Path | None* *= ''*
+
+Path to supervisor working directory
+
+#### *classmethod* load(config_dir: str = 'config', config_name: str = '', overrides: list[str] | None = None, , basepath: str = '', \_offset: int = 3) → [SupervisorConfiguration](#airflow_supervisor.SupervisorConfiguration)
+
+#### write()
+
+#### rmdir()
+
+#### start(daemon: bool = False)
+
+#### running()
+
+#### stop()
+
+#### kill()
+
+
+# airflow_supervisor.SupervisorConvenienceConfiguration.html.md
+
+# airflow_supervisor.SupervisorConvenienceConfiguration
+
+### *pydantic model* airflow_supervisor.SupervisorConvenienceConfiguration
+
+Bases: [`SupervisorConfiguration`](airflow_supervisor.SupervisorConfiguration.md#airflow_supervisor.SupervisorConfiguration)
+
+Convenience layer, settings that MUST be set when running via convenience API
+
+#### *field* startsecs *: int | None* *= 1*
+
+The total number of seconds which the program needs to stay running after a startup to consider the start successful (moving the process from the STARTING state to the RUNNING state). Set to 0 to indicate that the program needn’t stay running for any particular amount of time. Even if a process exits with an “expected” exit code (see exitcodes), the start will still be considered a failure if the process exits quicker than startsecs.
+
+#### *field* startretries *: int | None* *= None*
+
+The number of serial failure attempts that supervisord will allow when attempting to start the program before giving up and putting the process into an FATAL state. After each failed restart, process will be put in BACKOFF state and each retry attempt will take increasingly more time.
+
+#### *field* exitcodes *: List[int] | None* *= [0]*
+
+The list of “expected” exit codes for this program used with autorestart. If the autorestart parameter is set to unexpected, and the process exits in any other way than as a result of a supervisor stop request, supervisord will restart the process if it exits with an exit code that is not defined in this list.
+
+#### *field* stopsignal *: Literal['TERM', 'HUP', 'INT', 'QUIT', 'KILL', 'USR1', 'USR2'] | None* *= 'TERM'*
+
+The signal used to kill the program when a stop is requested. This can be specified using the signal’s name or its number. It is normally one of: TERM, HUP, INT, QUIT, KILL, USR1, or USR2.
+
+#### *field* stopwaitsecs *: int | None* *= 30*
+
+The number of seconds to wait for the OS to return a SIGCHLD to supervisord after the program has been sent a stopsignal. If this number of seconds elapses before supervisord receives a SIGCHLD from the process, supervisord will attempt to kill it with a final SIGKILL.
+
+#### *field* stopasgroup *: bool | None* *= True*
+
+If True, the stopsignal will be sent to the process group of the program, rather than just the program itself. This is useful for programs that spawn child processes.
+
+#### *field* killasgroup *: bool | None* *= True*
+
+If True, the stopsignal will be sent to the process group of the program, rather than just the program itself. This is useful for programs that spawn child processes.
+
+#### *field* port *: Annotated[str, BeforeValidator(func=\_convert_to_host_port, json_schema_input_type=PydanticUndefined), AfterValidator(func=\_is_host_port)]* *= '\*:9001'*
+
+A TCP host:port value or (e.g. 127.0.0.1:9001) on which supervisor will listen for HTTP/XML-RPC requests. supervisorctl will use XML-RPC to communicate with supervisord over this port. To listen on all interfaces in the machine, use :9001 or 
+
+```
+*
+```
+
+:9001. Please read the security warning above.
+
+#### *field* username *: Annotated[str, AfterValidator(func=\_is_username)] | None* *= None*
+
+The username required for authentication to the HTTP/Unix Server.
+
+#### *field* password *: SecretStr | None* *= None*
+
+The password required for authentication to the HTTP/Unix server. This can be a cleartext password, or can be specified as a SHA-1 hash if prefixed by the string {SHA}. For example, {SHA}82ab876d1387bfafe46cc1c8a2ef074eae50cb1d is the SHA-stored version of the password “thepassword”. Note that hashed password must be in hex format.
+
+#### *field* rpcinterface_factory *: str* *= 'supervisor.rpcinterface:make_main_rpcinterface'*
+
+pkg_resources “entry point” dotted name to your RPC interface’s factory function.
+
+#### *field* local_or_remote *: Literal['local', 'remote'] | None* *= 'local'*
+
+Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicates via inet http server
+
+#### *field* host *: str* *= 'localhost'*
+
+Hostname of the supervisor host. Used by the XMLRPC client
+
+#### *field* protocol *: str* *= 'http'*
+
+Protocol of the supervisor XMLRPC HTTP API. Used by the XMLRPC client
+
+#### *field* rpcpath *: str* *= '/RPC2'*
+
+Path for supervisor XMLRPC HTTP API. Used by the XMLRPC client
+
+#### *field* command_timeout *: int* *= 60*
+
+Timeout for convenience commands sent to the supervisor, in seconds
+
+
+# airflow_supervisor.SupervisorRemoteXMLRPCClient.html.md
+
+# airflow_supervisor.SupervisorRemoteXMLRPCClient
+
+### *class* airflow_supervisor.SupervisorRemoteXMLRPCClient(cfg: [SupervisorConvenienceConfiguration](airflow_supervisor.SupervisorConvenienceConfiguration.md#airflow_supervisor.SupervisorConvenienceConfiguration))
+
+Bases: `object`
+
+A light wrapper over the supervisor xmlrpc api: [http://supervisord.org/api.html](http://supervisord.org/api.html)
+
+#### \_\_init_\_(cfg: [SupervisorConvenienceConfiguration](airflow_supervisor.SupervisorConvenienceConfiguration.md#airflow_supervisor.SupervisorConvenienceConfiguration))
+
+### Methods
+
+| [`__init__`](#airflow_supervisor.SupervisorRemoteXMLRPCClient.__init__)(cfg)   |    |
+|--------------------------------------------------------------------------------|----|
+| `getAllProcessInfo`()                                                          |    |
+| `getProcessInfo`(name)                                                         |    |
+| `getState`()                                                                   |    |
+| `readProcessLog`(name)                                                         |    |
+| `readProcessStderrLog`(name)                                                   |    |
+| `readProcessStdoutLog`(name)                                                   |    |
+| `reloadConfig`([start_new])                                                    |    |
+| `restart`()                                                                    |    |
+| `shutdown`()                                                                   |    |
+| `signalProcess`(name, signal)                                                  |    |
+| `startAllProcesses`()                                                          |    |
+| `startProcess`(name)                                                           |    |
+| `stopAllProcesses`()                                                           |    |
+| `stopProcess`(name)                                                            |    |
+
+
+# airflow_supervisor.SupervisorSSH.html.md
+
+# airflow_supervisor.SupervisorSSH
+
+### *class* airflow_supervisor.SupervisorSSH(dag: DAG, cfg: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.md#airflow_supervisor.SupervisorSSHAirflowConfiguration), host: Host = None, port: Port = None, \*\*kwargs)
+
+Bases: [`Supervisor`](airflow_supervisor.Supervisor.md#airflow_supervisor.Supervisor)
+
+#### \_\_init_\_(dag: DAG, cfg: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.md#airflow_supervisor.SupervisorSSHAirflowConfiguration), host: Host = None, port: Port = None, \*\*kwargs)
+
+### Methods
+
+| [`__init__`](#airflow_supervisor.SupervisorSSH.__init__)(dag, cfg[, host, port])   |    |
+|------------------------------------------------------------------------------------|----|
+| `get_base_operator_kwargs`()                                                       |    |
+| `get_step_kwargs`(step)                                                            |    |
+| `get_step_operator`(step)                                                          |    |
+| `initialize_tasks`()                                                               |    |
+| `set_downstream`(other)                                                            |    |
+| `set_upstream`(other)                                                              |    |
+| `setup_dag`()                                                                      |    |
+| `update_relative`(other[, upstream, edge_modifier])                                |    |
+
+### Attributes
+
+| `check_programs`         |                               |
+|--------------------------|-------------------------------|
+| `configure_supervisor`   |                               |
+| `leaves`                 | Return the leaves of the DAG. |
+| `restart_programs`       |                               |
+| `roots`                  | Return the roots of the DAG.  |
+| `start_programs`         |                               |
+| `start_supervisor`       |                               |
+| `stop_programs`          |                               |
+| `stop_supervisor`        |                               |
+| `supervisor_client`      |                               |
+| `unconfigure_supervisor` |                               |
+
+
+# airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md
+
+# airflow_supervisor.SupervisorSSHAirflowConfiguration
+
+### *pydantic model* airflow_supervisor.SupervisorSSHAirflowConfiguration
+
+Bases: [`SupervisorAirflowConfiguration`](airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration)
+
+#### *field* command_prefix *: str | None* *= ''*
+
+#### *field* ssh_operator_args *: SSHTaskArgs | None* *= None*
+
+SSH Operator arguments to use for remote execution.
+
+#### *field* local_or_remote *: Literal['local', 'remote'] | None* *= 'remote'*
+
+Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicates via inet http server
+
+
+# airflow_supervisor.SupervisorSSHTask.html.md
+
+# airflow_supervisor.SupervisorSSHTask
+
+### *pydantic model* airflow_supervisor.SupervisorSSHTask
+
+Bases: `Task`, [`SupervisorSSHTaskArgs`](airflow_supervisor.SupervisorSSHTaskArgs.md#airflow_supervisor.SupervisorSSHTaskArgs)
+
+#### *field* operator *: Annotated[type, BeforeValidator(func=get_import_path, json_schema_input_type=PydanticUndefined), PlainSerializer(func=serialize_path_as_string, return_type=str, when_used=json)]* *= 'airflow_supervisor.SupervisorSSH'*
+
+
+# airflow_supervisor.SupervisorSSHTaskArgs.html.md
+
+# airflow_supervisor.SupervisorSSHTaskArgs
+
+### *pydantic model* airflow_supervisor.SupervisorSSHTaskArgs
+
+Bases: `TaskArgs`
+
+#### *field* cfg *: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.md#airflow_supervisor.SupervisorSSHAirflowConfiguration)* *[Required]*
+
+#### *field* host *: Host | BalancerHostQueryConfiguration | Annotated[object, BeforeValidator(func=get_import_path, json_schema_input_type=PydanticUndefined), PlainSerializer(func=serialize_path_as_string, return_type=str, when_used=json)] | None* *= None*
+
+The host to connect to for SSH, if not otherwise provided in configs
+
+#### *field* host_foo *: Annotated[object, BeforeValidator(func=get_import_path, json_schema_input_type=PydanticUndefined), PlainSerializer(func=serialize_path_as_string, return_type=str, when_used=json)] | None* *= None*
+
+#### *field* port *: Port | BalancerPortQueryConfiguration | Annotated[object, BeforeValidator(func=get_import_path, json_schema_input_type=PydanticUndefined), PlainSerializer(func=serialize_path_as_string, return_type=str, when_used=json)] | None* *= None*
+
+The port to user for Supervisor, if not otherwise provided in configs
+
+#### *field* port_foo *: Annotated[object, BeforeValidator(func=get_import_path, json_schema_input_type=PydanticUndefined), PlainSerializer(func=serialize_path_as_string, return_type=str, when_used=json)] | None* *= None*
+
+
+# airflow_supervisor.SupervisorTask.html.md
+
+# airflow_supervisor.SupervisorTask
+
+### *pydantic model* airflow_supervisor.SupervisorTask
+
+Bases: `Task`, [`SupervisorTaskArgs`](airflow_supervisor.SupervisorTaskArgs.md#airflow_supervisor.SupervisorTaskArgs)
+
+#### *field* operator *: Annotated[type, BeforeValidator(func=get_import_path, json_schema_input_type=PydanticUndefined), PlainSerializer(func=serialize_path_as_string, return_type=str, when_used=json)]* *= 'airflow_supervisor.Supervisor'*
+
+
+# airflow_supervisor.SupervisorTaskArgs.html.md
+
+# airflow_supervisor.SupervisorTaskArgs
+
+### *pydantic model* airflow_supervisor.SupervisorTaskArgs
+
+Bases: `TaskArgs`
+
+#### *field* cfg *: [SupervisorAirflowConfiguration](airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration)* *[Required]*
+
+
+# airflow_supervisor.load_airflow_config.html.md
+
+# airflow_supervisor.load_airflow_config
+
+### airflow_supervisor.load_airflow_config(config_dir: str = 'config', config_name: str = '', overrides: list[str] | None = None, , basepath: str = '', \_offset: int = 3) → [SupervisorConfiguration](airflow_supervisor.SupervisorConfiguration.md#airflow_supervisor.SupervisorConfiguration)
+
+
+# airflow_supervisor.load_airflow_ssh_config.html.md
+
+# airflow_supervisor.load_airflow_ssh_config
+
+### airflow_supervisor.load_airflow_ssh_config(config_dir: str = 'config', config_name: str = '', overrides: list[str] | None = None, , basepath: str = '', \_offset: int = 3) → [SupervisorConfiguration](airflow_supervisor.SupervisorConfiguration.md#airflow_supervisor.SupervisorConfiguration)
+
+
+# api.html.md
+
+# API reference
+
+## Airflow lifecycle
+
+| [`Supervisor`](_build/airflow_supervisor.Supervisor.md#airflow_supervisor.Supervisor)(dag, cfg, \*\*kwargs)                                                |                                                   |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+| [`SupervisorSSH`](_build/airflow_supervisor.SupervisorSSH.md#airflow_supervisor.SupervisorSSH)(dag, cfg[, host, port])                                     |                                                   |
+| [`SupervisorAirflowConfiguration`](_build/airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration)          | Settings that MUST be set when running in airflow |
+| [`SupervisorSSHAirflowConfiguration`](_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.md#airflow_supervisor.SupervisorSSHAirflowConfiguration) |                                                   |
+| [`SupervisorTask`](_build/airflow_supervisor.SupervisorTask.md#airflow_supervisor.SupervisorTask)                                                          |                                                   |
+| [`SupervisorTaskArgs`](_build/airflow_supervisor.SupervisorTaskArgs.md#airflow_supervisor.SupervisorTaskArgs)                                              |                                                   |
+| [`SupervisorSSHTask`](_build/airflow_supervisor.SupervisorSSHTask.md#airflow_supervisor.SupervisorSSHTask)                                                 |                                                   |
+| [`SupervisorSSHTaskArgs`](_build/airflow_supervisor.SupervisorSSHTaskArgs.md#airflow_supervisor.SupervisorSSHTaskArgs)                                     |                                                   |
+| [`load_airflow_config`](_build/airflow_supervisor.load_airflow_config.md#airflow_supervisor.load_airflow_config)([config_dir, ...])                        |                                                   |
+| [`load_airflow_ssh_config`](_build/airflow_supervisor.load_airflow_ssh_config.md#airflow_supervisor.load_airflow_ssh_config)([config_dir, ...])            |                                                   |
+
+## Re-exported supervisor models
+
+| [`SupervisorConfiguration`](_build/airflow_supervisor.SupervisorConfiguration.md#airflow_supervisor.SupervisorConfiguration)                                  |                                                                                                                    |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| [`SupervisorConvenienceConfiguration`](_build/airflow_supervisor.SupervisorConvenienceConfiguration.md#airflow_supervisor.SupervisorConvenienceConfiguration) | Convenience layer, settings that MUST be set when running via convenience API                                      |
+| [`ProgramConfiguration`](_build/airflow_supervisor.ProgramConfiguration.md#airflow_supervisor.ProgramConfiguration)                                           |                                                                                                                    |
+| [`SupervisorRemoteXMLRPCClient`](_build/airflow_supervisor.SupervisorRemoteXMLRPCClient.md#airflow_supervisor.SupervisorRemoteXMLRPCClient)(cfg)              | A light wrapper over the supervisor xmlrpc api: [http://supervisord.org/api.html](http://supervisord.org/api.html) |
+| [`ProcessInfo`](_build/airflow_supervisor.ProcessInfo.md#airflow_supervisor.ProcessInfo)                                                                      |                                                                                                                    |
+
+
+# explanation.html.md
+
+# Why Airflow delegates process ownership
+
+Airflow is effective at scheduling and coordinating finite task instances, but
+its worker process is not always the right owner for a long-running service or a
+process tree. `airflow-supervisor` gives that ownership to a dedicated
+supervisord instance while Airflow retains workflow control.
+
+The DAG lifecycle first writes configuration and starts supervisord, then starts
+the modeled programs. An `airflow-ha` check maps external states back to Airflow:
+completed programs stop successfully, running programs continue, and failed
+states retrigger through the restart path. Cleanup reverses the lifecycle.
+
+## Why configuration is persisted
+
+Lifecycle steps can execute in different Airflow task processes. The
+`supervisor-pydantic` convenience model writes JSON beside `supervisord.conf`, so
+later steps can reconstruct paths, endpoint settings, expected exit codes, and
+program defaults without relying on Python object identity.
+
+## Local and SSH execution
+
+Local mode invokes convenience operations on the Airflow worker.
+`SupervisorSSH` sends configuration and daemon commands through Airflow’s SSH
+provider, while program checks and control use supervisord’s XML-RPC API. This
+split avoids opening a new SSH process for every status poll.
+
+## Comparison with systemd
+
+[airflow-systemd](https://github.com/airflow-laminar/airflow-systemd) delegates
+process ownership to the host’s existing service manager. Supervisord creates an
+application-owned manager with its own configuration, logs, PID, and control
+endpoint. The former fits system-managed hosts; the latter is useful when a
+self-contained supervisor is easier to deploy or behaves consistently across
+hosts.
+
+
+# how-to.html.md
+
+# How-to guides
+
+These guides cover persistent services, monitoring, remote hosts, and task
+composition.
+
+## How to keep programs running after the DAG finishes
+
+Disable stop and cleanup, then configure restart behavior:
+
+```yaml
+cfg:
+  stop_on_exit: false
+  cleanup: false
+  restart_on_initial: true
+  restart_on_retrigger: true
+  working_dir: /var/tmp/api-supervisor
+  port: "127.0.0.1:9001"
+  program:
+    api:
+      command: /opt/services/api
+```
+
+The supervisord instance and program remain active between DAG runs.
+
+## How to limit monitoring
+
+Set Airflow-specific timing fields:
+
+```yaml
+cfg:
+  check_interval: 00:00:10
+  check_timeout: 08:00:00
+  runtime: 04:00:00
+  maxretrigger: 3
+  working_dir: /var/tmp/batch-supervisor
+  program:
+    batch:
+      command: /opt/jobs/batch
+```
+
+`check_interval` controls polling, `check_timeout` controls the sensor timeout,
+and `runtime` controls the allowed external job duration.
+
+## How to manage a remote host
+
+Use `SupervisorSSHTask` and an Airflow SSH connection:
+
+```yaml
+dags:
+  remote-supervisor:
+    schedule: "@daily"
+    tasks:
+      run-remote:
+        _target_: airflow_supervisor.SupervisorSSHTask
+        cfg:
+          working_dir: /var/tmp/report-supervisor
+          port: "*:9001"
+          host: jobs.example.com
+          command_prefix: source /etc/profile
+          ssh_operator_args:
+            ssh_conn_id: supervisor-host
+          program:
+            report:
+              command: /opt/jobs/report
+```
+
+SSH tasks manage configuration and the daemon. Program state and control use the
+supervisord XML-RPC endpoint configured by `host` and `port`.
+
+## How to use a balanced host
+
+Pass an `airflow-pydantic` `Host` or `HostQuery` through
+`SupervisorSSHTask.host`. When the selected host has a pool and the supervisor
+configuration does not, the integration uses that pool for its Airflow tasks.
+
+## How to chain the lifecycle with other tasks
+
+The `Supervisor` object behaves like a task group boundary:
+
+```python
+prepare >> supervisor >> publish
+```
+
+Upstream dependencies attach to `configure_supervisor`. Downstream dependencies
+attach to `unconfigure_supervisor`, including when cleanup is represented by a
+skip task.
+
+
+# tutorial.html.md
+
+# Tutorial: run a supervised job from Airflow
+
+In this tutorial, we will define a supervisord-managed job in `airflow-config`
+YAML and load it as an Airflow DAG.
+
+## Install the packages
+
+For Airflow 3, run:
+
+```bash
+pip install 'airflow-supervisor[airflow3]' airflow-config supervisor
+```
+
+Use the `airflow` extra instead when running Airflow 2. The Airflow worker must
+be allowed to launch the configured command and write the working directory.
+
+## Define the DAG
+
+Create `config/supervisor.yaml`:
+
+```yaml
+dags:
+  nightly-supervisor:
+    schedule: "@daily"
+    start_date: "2024-01-01"
+    catchup: false
+    tasks:
+      run-nightly:
+        _target_: airflow_supervisor.SupervisorTask
+        cfg:
+          working_dir: /var/tmp/nightly-supervisor
+          port: "127.0.0.1:9001"
+          stop_on_exit: true
+          cleanup: true
+          program:
+            nightly:
+              command: python /opt/jobs/nightly.py
+```
+
+## Load the configuration
+
+Create `nightly_supervisor.py` in the DAG folder:
+
+```python
+from airflow_config import load_config
+
+config = load_config("config", "supervisor")
+config.generate_in_mem()
+```
+
+## Inspect the lifecycle
+
+Parse the DAG folder:
+
+```bash
+airflow dags list | grep nightly-supervisor
+airflow tasks list nightly-supervisor
+```
+
+The task list includes configure, daemon start, program start, check, restart,
+program stop, daemon stop, and unconfigure steps.
+
+Trigger the DAG in a test environment containing `/opt/jobs/nightly.py`. The
+check step remains active while the program runs and completes after supervisord
+reports an accepted exit status.
+
+You have now connected a declarative Airflow DAG to a dedicated process manager.
+
+

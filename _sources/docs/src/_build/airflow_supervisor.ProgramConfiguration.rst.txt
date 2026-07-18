@@ -1,0 +1,6 @@
+﻿airflow\_supervisor.ProgramConfiguration
+========================================
+
+.. currentmodule:: airflow_supervisor
+
+.. autopydantic_model:: ProgramConfiguration

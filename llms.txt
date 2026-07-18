@@ -1,0 +1,33 @@
+# airflow-supervisor
+
+> Apache Airflow integration for supervisord-managed jobs
+
+
+the airflow-supervisor authors
+
+## Pages
+
+- [airflow-supervisor](index.html.md): Run and monitor supervisord-managed jobs from Apache Airflow.
+- [airflow_supervisor.ProcessInfo](docs/src/_build/airflow_supervisor.ProcessInfo.html.md): Bases: `BaseModel`
+- [airflow_supervisor.ProgramConfiguration](docs/src/_build/airflow_supervisor.ProgramConfiguration.html.md): Bases: `_BaseCfgModel`
+- [airflow_supervisor.Supervisor](docs/src/_build/airflow_supervisor.Supervisor.html.md): Bases: `object`
+- [airflow_supervisor.SupervisorAirflowConfiguration](docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html.md): Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConvenienceConfiguration....
+- [airflow_supervisor.SupervisorConfiguration](docs/src/_build/airflow_supervisor.SupervisorConfiguration.html.md): Bases: `BaseModel`
+- [airflow_supervisor.SupervisorConvenienceConfiguration](docs/src/_build/airflow_supervisor.SupervisorConvenienceConfiguration.html.md): Bases: [`SupervisorConfiguration`](airflow_supervisor.SupervisorConfiguration.md#airflow_supervisor....
+- [airflow_supervisor.SupervisorRemoteXMLRPCClient](docs/src/_build/airflow_supervisor.SupervisorRemoteXMLRPCClient.html.md): Bases: `object`
+- [airflow_supervisor.SupervisorSSH](docs/src/_build/airflow_supervisor.SupervisorSSH.html.md): Bases: [`Supervisor`](airflow_supervisor.Supervisor.md#airflow_supervisor.Supervisor)
+- [airflow_supervisor.SupervisorSSHAirflowConfiguration](docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md): Bases: [`SupervisorAirflowConfiguration`](airflow_supervisor.SupervisorAirflowConfiguration.md#airfl...
+- [airflow_supervisor.SupervisorSSHTask](docs/src/_build/airflow_supervisor.SupervisorSSHTask.html.md): Bases: `Task`, [`SupervisorSSHTaskArgs`](airflow_supervisor.SupervisorSSHTaskArgs.md#airflow_supervi...
+- [airflow_supervisor.SupervisorSSHTaskArgs](docs/src/_build/airflow_supervisor.SupervisorSSHTaskArgs.html.md): Bases: `TaskArgs`
+- [airflow_supervisor.SupervisorTask](docs/src/_build/airflow_supervisor.SupervisorTask.html.md): Bases: `Task`, [`SupervisorTaskArgs`](airflow_supervisor.SupervisorTaskArgs.md#airflow_supervisor.Su...
+- [airflow_supervisor.SupervisorTaskArgs](docs/src/_build/airflow_supervisor.SupervisorTaskArgs.html.md): Bases: `TaskArgs`
+- [airflow_supervisor.load_airflow_config](docs/src/_build/airflow_supervisor.load_airflow_config.html.md): Page content
+- [airflow_supervisor.load_airflow_ssh_config](docs/src/_build/airflow_supervisor.load_airflow_ssh_config.html.md): Page content
+- [API reference](docs/src/api.html.md): | [`Supervisor`](_build/airflow_supervisor.Supervisor.md#airflow_supervisor.Supervisor)(dag, cfg, \*...
+- [Why Airflow delegates process ownership](docs/src/explanation.html.md): Airflow is effective at scheduling and coordinating finite task instances, but
+- [How-to guides](docs/src/how-to.html.md): These guides cover persistent services, monitoring, remote hosts, and task
+- [Tutorial: run a supervised job from Airflow](docs/src/tutorial.html.md): In this tutorial, we will define a supervisord-managed job in `airflow-config`
+
+---
+
+For more comprehensive documentation, see [llms-full.txt](llms-full.txt)

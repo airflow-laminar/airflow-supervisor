@@ -1,0 +1,6 @@
+﻿airflow\_supervisor.SupervisorSSHTask
+=====================================
+
+.. currentmodule:: airflow_supervisor
+
+.. autopydantic_model:: SupervisorSSHTask
