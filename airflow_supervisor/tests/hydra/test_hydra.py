@@ -16,33 +16,30 @@ def test_hydra_config():
     except ImportError:
         pytest.skip("SupervisorSSHAirflowConfiguration not available")
 
-    with (
-        patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
-    ):
-        with pools():
-            pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
-            p1.return_value = str(pth)
-            cfg = load_config("config", "config")
-            assert "balancer" in cfg.extensions
-            assert "supervisor" in cfg.extensions
+    with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1, pools():
+        pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
+        p1.return_value = str(pth)
+        cfg = load_config("config", "config")
+        assert "balancer" in cfg.extensions
+        assert "supervisor" in cfg.extensions
 
-            supervisor_cfg: SupervisorSSHAirflowConfiguration = cfg.extensions["supervisor"]
+        supervisor_cfg: SupervisorSSHAirflowConfiguration = cfg.extensions["supervisor"]
 
-            # Basic Supervisor checks
-            assert supervisor_cfg.command_prefix == ""
-            assert supervisor_cfg.working_dir == pth / f"supervisor-{getuser()}-sleep-echo"
-            assert supervisor_cfg.inet_http_server.port == "*:9001"
-            assert str(supervisor_cfg.supervisorctl.serverurl) == "http://localhost:9001/"
+        # Basic Supervisor checks
+        assert supervisor_cfg.command_prefix == ""
+        assert supervisor_cfg.working_dir == pth / f"supervisor-{getuser()}-sleep-echo"
+        assert supervisor_cfg.inet_http_server.port == "*:9001"
+        assert str(supervisor_cfg.supervisorctl.serverurl) == "http://localhost:9001/"
 
-            assert "sleep" in supervisor_cfg.program
-            assert "echo" in supervisor_cfg.program
-            assert supervisor_cfg.program["sleep"].command == "sleep 1000"
-            assert supervisor_cfg.program["echo"].command == 'echo "hello"'
+        assert "sleep" in supervisor_cfg.program
+        assert "echo" in supervisor_cfg.program
+        assert supervisor_cfg.program["sleep"].command == "sleep 1000"
+        assert supervisor_cfg.program["echo"].command == 'echo "hello"'
 
-            # SSH Operator checks
-            ssh_args: SSHOperatorArgs = supervisor_cfg.ssh_operator_args
-            assert ssh_args is not None
-            assert ssh_args.cmd_timeout == 63
+        # SSH Operator checks
+        ssh_args: SSHOperatorArgs = supervisor_cfg.ssh_operator_args
+        assert ssh_args is not None
+        assert ssh_args.cmd_timeout == 63
 
 
 def test_hydra_config_render():
@@ -155,7 +152,7 @@ with DAG(
             + "\n    assert pre.downstream_task_ids == {'example_dag-configure-supervisor'}, pre.downstream_task_ids"
         )
         if _airflow_3() is not None:
-            exec(rendered)
+            exec(rendered)  # noqa: S102
 
 
 def test_hydra_config_render_hosts():
@@ -229,7 +226,7 @@ with DAG(
 
         if _airflow_3() is not None:
             dag.instantiate()
-            exec(dag.render())
+            exec(dag.render())  # noqa: S102
 
 
 def test_hydra_config_render_hosts_query():
@@ -324,4 +321,4 @@ with DAG(
         if _airflow_3() is not None:
             with pools(Pool(pool="default")), variables({"username": "user1", "password": "myvar"}):
                 dag.instantiate()
-                exec(dag.render())
+                exec(dag.render())  # noqa: S102

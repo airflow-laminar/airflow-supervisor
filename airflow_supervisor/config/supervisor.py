@@ -1,5 +1,5 @@
 from datetime import time, timedelta
-from typing import Literal, Optional, Union
+from typing import Literal
 
 from airflow_pydantic import Pool
 from pydantic import Field
@@ -30,9 +30,9 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
     )
 
     # HighAvailabilityOperator custom args
-    runtime: Optional[timedelta] = Field(default=None, description="Max runtime of Supervisor job")
-    endtime: Optional[time] = Field(default=None, description="End time of Supervisor job")
-    maxretrigger: Optional[int] = Field(
+    runtime: timedelta | None = Field(default=None, description="Max runtime of Supervisor job")
+    endtime: time | None = Field(default=None, description="End time of Supervisor job")
+    maxretrigger: int | None = Field(
         default=None,
         description="Max number of retriggers of Supervisor job (e.g. max number of checks separated by `check_interval`)",
     )
@@ -43,27 +43,27 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
     )
 
     # Airflow-specific settings
-    pool: Optional[Union[str, Pool]] = Field(
+    pool: str | Pool | None = Field(
         default=None,
         description="Airflow pool to use for the job. If not set, the job will use the default pool, or the pool from a balancer host.",
     )
 
     """Other Airflow Configuration"""
     # Should the programs be stopped when the DAG finishes?
-    stop_on_exit: Optional[bool] = Field(default=True, description="Stop supervisor on dag completion")
+    stop_on_exit: bool | None = Field(default=True, description="Stop supervisor on dag completion")
 
     # Should the supervisor folder be removed on dag completion?
-    cleanup: Optional[bool] = Field(
+    cleanup: bool | None = Field(
         default=True, description="Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True"
     )
 
     # For Jobs that do not shutdown, e.g. stop_on_exit=False, one might want to configure them to
     # restart when the DAG is rescheduled by airflow or retriggered by airflow-ha
-    restart_on_initial: Optional[bool] = Field(
+    restart_on_initial: bool | None = Field(
         default=False,
         description="Restart the job when the DAG is run directly via airflow (NOT retriggered). This is useful for jobs that do not shutdown",
     )
-    restart_on_retrigger: Optional[bool] = Field(
+    restart_on_retrigger: bool | None = Field(
         default=False,
         description="Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown",
     )

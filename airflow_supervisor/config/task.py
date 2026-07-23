@@ -1,15 +1,13 @@
-from typing import Type
-
 from airflow_pydantic import ImportPath, Task, TaskArgs
 from pydantic import Field, field_validator
 
 from .supervisor import SupervisorAirflowConfiguration
 
 __all__ = (
-    "SupervisorOperatorArgs",
-    "SupervisorTaskArgs",
     "SupervisorOperator",
+    "SupervisorOperatorArgs",
     "SupervisorTask",
+    "SupervisorTaskArgs",
 )
 
 
@@ -26,9 +24,9 @@ class SupervisorTask(Task, SupervisorTaskArgs):
 
     @field_validator("operator")
     @classmethod
-    def validate_operator(cls, v: Type) -> Type:
-        if not isinstance(v, Type) and issubclass(v, SupervisorAirflowConfiguration):
-            raise ValueError(f"operator must be 'airflow_supervisor.Supervisor', got: {v}")
+    def validate_operator(cls, v: type) -> type:
+        if not isinstance(v, type) and issubclass(v, SupervisorAirflowConfiguration):
+            raise TypeError(f"operator must be 'airflow_supervisor.Supervisor', got: {v}")
         return v
 
 

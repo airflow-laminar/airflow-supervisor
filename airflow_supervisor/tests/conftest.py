@@ -1,7 +1,7 @@
 import socket
+from collections.abc import Iterator
 from tempfile import NamedTemporaryFile
 from time import sleep
-from typing import Iterator
 
 import pytest
 from airflow_pydantic import SSHOperatorArgs
