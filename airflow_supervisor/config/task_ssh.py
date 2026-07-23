@@ -1,5 +1,5 @@
 from types import FunctionType, MethodType
-from typing import Any, Optional, Type, Union
+from typing import Any
 
 from airflow_pydantic import CallablePath, Host, HostQuery, ImportPath, Port, PortQuery, Task, TaskArgs, get_import_path
 from pydantic import Field, TypeAdapter, field_validator, model_validator
@@ -7,25 +7,25 @@ from pydantic import Field, TypeAdapter, field_validator, model_validator
 from .supervisor_ssh import SupervisorSSHAirflowConfiguration
 
 __all__ = (
-    "SupervisorSSHOperatorArgs",
-    "SupervisorSSHTaskArgs",
     "SupervisorSSHOperator",
+    "SupervisorSSHOperatorArgs",
     "SupervisorSSHTask",
+    "SupervisorSSHTaskArgs",
 )
 
 
 class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
     cfg: SupervisorSSHAirflowConfiguration
-    host: Optional[Union[Host, HostQuery, CallablePath]] = Field(
+    host: Host | HostQuery | CallablePath | None = Field(
         default=None,
         description="The host to connect to for SSH, if not otherwise provided in configs",
     )
-    host_foo: Optional[CallablePath] = Field(default=None, exclude=True)
-    port: Optional[Union[Port, PortQuery, CallablePath]] = Field(
+    host_foo: CallablePath | None = Field(default=None, exclude=True)
+    port: Port | PortQuery | CallablePath | None = Field(
         default=None,
         description="The port to user for Supervisor, if not otherwise provided in configs",
     )
-    port_foo: Optional[CallablePath] = Field(default=None, exclude=True)
+    port_foo: CallablePath | None = Field(default=None, exclude=True)
 
     @model_validator(mode="before")
     @classmethod
@@ -33,12 +33,11 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
         if isinstance(data, dict):
             if "host" in data:
                 host = data["host"]
-                if isinstance(host, (HostQuery, Host)):
-                    if isinstance(host, HostQuery):
-                        # Ensure that the BalancerHostQueryConfiguration is of kind 'select'
-                        if not host.kind == "select":
-                            raise ValueError("BalancerHostQueryConfiguration must be of kind 'select'")
-                        data["host"] = host.execute()
+                if isinstance(host, HostQuery):
+                    # Ensure that the BalancerHostQueryConfiguration is of kind 'select'
+                    if host.kind != "select":
+                        raise ValueError("BalancerHostQueryConfiguration must be of kind 'select'")
+                    data["host"] = host.execute()
 
                 if isinstance(host, str):
                     # If host is a string, we assume it's an import path
@@ -46,7 +45,7 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
 
                     try:
                         data["host"] = data["host"]()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         # Skip, might only run in situ
                         data["host"] = None
 
@@ -56,17 +55,16 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
 
                     try:
                         data["host"] = data["host_foo"]()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         # Skip, might only run in situ
                         data["host"] = None
             if "port" in data:
                 port = data["port"]
-                if isinstance(port, (PortQuery, Port)):
-                    if isinstance(port, PortQuery):
-                        # Ensure that the BalancerPortQueryConfiguration is of kind 'select'
-                        if not port.kind == "select":
-                            raise ValueError("BalancerPortQueryConfiguration must be of kind 'select'")
-                        data["port"] = port.execute()
+                if isinstance(port, PortQuery):
+                    # Ensure that the BalancerPortQueryConfiguration is of kind 'select'
+                    if port.kind != "select":
+                        raise ValueError("BalancerPortQueryConfiguration must be of kind 'select'")
+                    data["port"] = port.execute()
 
                 if isinstance(port, str):
                     # If port is a string, we assume it's an import path
@@ -74,7 +72,7 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
 
                     try:
                         data["port"] = data["port"]()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         # Skip, might only run in situ
                         data["port"] = None
 
@@ -84,7 +82,7 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
 
                     try:
                         data["port"] = data["port_foo"]()
-                    except Exception:
+                    except Exception:  # noqa: BLE001
                         # Skip, might only run in situ
                         data["port"] = None
         return data
@@ -100,7 +98,7 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
                 try:
                     # If it's a callable, we need to call it to get the Host instance
                     v = v()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     # Skip, might only run in situ
                     v = None
 
@@ -125,7 +123,7 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
                 try:
                     # If it's a callable, we need to call it to get the Port instance
                     v = v()
-                except Exception:
+                except Exception:  # noqa: BLE001
                     # Skip, might only run in situ
                     v = None
 
@@ -149,9 +147,9 @@ class SupervisorSSHTask(Task, SupervisorSSHTaskArgs):
 
     @field_validator("operator")
     @classmethod
-    def validate_operator(cls, v: Type) -> Type:
-        if not isinstance(v, Type) and issubclass(v, SupervisorSSHAirflowConfiguration):
-            raise ValueError(f"operator must be 'airflow_supervisor.SupervisorSSH', got: {v}")
+    def validate_operator(cls, v: type) -> type:
+        if not isinstance(v, type) and issubclass(v, SupervisorSSHAirflowConfiguration):
+            raise TypeError(f"operator must be 'airflow_supervisor.SupervisorSSH', got: {v}")
         return v
 
 

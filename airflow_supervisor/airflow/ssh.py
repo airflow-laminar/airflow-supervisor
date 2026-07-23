@@ -1,6 +1,6 @@
 from logging import getLogger
 from shlex import quote
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 from airflow_pydantic import Host, Port, SSHOperatorArgs
 from supervisor_pydantic.convenience import SupervisorTaskStep
@@ -101,7 +101,7 @@ class SupervisorSSH(Supervisor):
 
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
-    def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
+    def get_step_kwargs(self, step: SupervisorTaskStep) -> dict:
         if step == "configure-supervisor":
             # TODO
             return {

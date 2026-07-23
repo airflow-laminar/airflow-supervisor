@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING
 
 from airflow_pydantic import Pool, fail, skip
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
@@ -28,7 +28,7 @@ __all__ = ("Supervisor",)
 _log = getLogger(__name__)
 
 
-class Supervisor(object):
+class Supervisor:
     _cfg: SupervisorAirflowConfiguration
     _dag: "DAG"
     _kill_dag: "DAG"
@@ -164,31 +164,31 @@ class Supervisor(object):
     def supervisor_client(self) -> SupervisorRemoteXMLRPCClient:
         return SupervisorRemoteXMLRPCClient(self._cfg)
 
-    def get_base_operator_kwargs(self) -> Dict:
-        return dict(dag=self._dag, pool=self._pool)
+    def get_base_operator_kwargs(self) -> dict:
+        return {"dag": self._dag, "pool": self._pool}
 
-    def get_step_kwargs(self, step: SupervisorTaskStep) -> Dict:
+    def get_step_kwargs(self, step: SupervisorTaskStep) -> dict:
         if step == "configure-supervisor":
-            return dict(
-                python_callable=lambda **kwargs: (
+            return {
+                "python_callable": lambda **kwargs: (
                     self.check_programs.check_end_conditions(**kwargs) is None
                     and write_supervisor_config(self._cfg, _exit=False)
                 ),
-                do_xcom_push=True,
-            )
+                "do_xcom_push": True,
+            }
         elif step == "start-supervisor":
-            return dict(
-                python_callable=lambda **kwargs: (
+            return {
+                "python_callable": lambda **kwargs: (
                     self.check_programs.check_end_conditions(**kwargs) is None
                     and start_supervisor(self._cfg._pydantic_path, _exit=False)
                 ),
-                do_xcom_push=True,
-            )
+                "do_xcom_push": True,
+            }
         elif step == "start-programs":
             if self._cfg.restart_on_retrigger:
                 _log.info("Restarting programs on retrigger")
-                return dict(
-                    python_callable=lambda **kwargs: (
+                return {
+                    "python_callable": lambda **kwargs: (
                         self.check_programs.check_end_conditions(**kwargs) is None
                         and start_programs(
                             self._cfg,
@@ -197,12 +197,12 @@ class Supervisor(object):
                             _exit=False,
                         )
                     ),
-                    do_xcom_push=True,
-                )
+                    "do_xcom_push": True,
+                }
             if self._cfg.restart_on_initial:
                 _log.info("Restarting programs on initial run")
-                return dict(
-                    python_callable=lambda **kwargs: (
+                return {
+                    "python_callable": lambda **kwargs: (
                         self.check_programs.check_end_conditions(**kwargs) is None
                         and start_programs(
                             self._cfg,
@@ -211,19 +211,19 @@ class Supervisor(object):
                             _exit=False,
                         )
                     ),
-                    do_xcom_push=True,
-                )
+                    "do_xcom_push": True,
+                }
             _log.info("Starting programs as normal on initial run")
-            return dict(
-                python_callable=lambda **kwargs: (
+            return {
+                "python_callable": lambda **kwargs: (
                     self.check_programs.check_end_conditions(**kwargs) is None
                     # Don't restart programs
                     and start_programs(self._cfg, _exit=False)
                 ),
-                do_xcom_push=True,
-            )
+                "do_xcom_push": True,
+            }
         elif step == "stop-programs":
-            return dict(python_callable=lambda: stop_programs(self._cfg, _exit=False), do_xcom_push=True)
+            return {"python_callable": lambda: stop_programs(self._cfg, _exit=False), "do_xcom_push": True}
         elif step == "check-programs":
 
             def _check_programs(supervisor_cfg=self._cfg, **kwargs) -> "CheckResult":
@@ -239,15 +239,15 @@ class Supervisor(object):
                     return Result.PASS, Action.CONTINUE
                 return Result.FAIL, Action.RETRIGGER
 
-            return dict(python_callable=_check_programs, do_xcom_push=True)
+            return {"python_callable": _check_programs, "do_xcom_push": True}
         elif step == "restart-programs":
-            return dict(python_callable=lambda: restart_programs(self._cfg, _exit=False), do_xcom_push=True)
+            return {"python_callable": lambda: restart_programs(self._cfg, _exit=False), "do_xcom_push": True}
         elif step == "stop-supervisor":
-            return dict(python_callable=lambda: stop_supervisor(self._cfg, _exit=False), do_xcom_push=True)
+            return {"python_callable": lambda: stop_supervisor(self._cfg, _exit=False), "do_xcom_push": True}
         elif step == "unconfigure-supervisor":
-            return dict(python_callable=lambda: remove_supervisor_config(self._cfg, _exit=False), do_xcom_push=True)
+            return {"python_callable": lambda: remove_supervisor_config(self._cfg, _exit=False), "do_xcom_push": True}
         elif step == "force-kill":
-            return dict(python_callable=lambda: kill_supervisor(self._cfg, _exit=False), do_xcom_push=True)
+            return {"python_callable": lambda: kill_supervisor(self._cfg, _exit=False), "do_xcom_push": True}
         raise NotImplementedError(f"Unknown step: {step}")
 
     def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
