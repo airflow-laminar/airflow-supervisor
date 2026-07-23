@@ -174,48 +174,46 @@
 
     <div id="content" role="main">
       <h1>Source code for airflow_supervisor.config.task</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Type</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImportPath</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">TaskArgs</span>
-</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span>
+<span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImportPath</span><span class="p">,</span> <span class="n">Task</span><span class="p">,</span> <span class="n">TaskArgs</span>
+</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">field_validator</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">.supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span>
 </span><span id="line-5">
-</span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">.supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span>
-</span><span id="line-7">
-</span><span id="line-8"><span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="line-9">    <span class="s2">&quot;SupervisorOperatorArgs&quot;</span><span class="p">,</span>
+</span><span id="line-6"><span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-7">    <span class="s2">&quot;SupervisorOperator&quot;</span><span class="p">,</span>
+</span><span id="line-8">    <span class="s2">&quot;SupervisorOperatorArgs&quot;</span><span class="p">,</span>
+</span><span id="line-9">    <span class="s2">&quot;SupervisorTask&quot;</span><span class="p">,</span>
 </span><span id="line-10">    <span class="s2">&quot;SupervisorTaskArgs&quot;</span><span class="p">,</span>
-</span><span id="line-11">    <span class="s2">&quot;SupervisorOperator&quot;</span><span class="p">,</span>
-</span><span id="line-12">    <span class="s2">&quot;SupervisorTask&quot;</span><span class="p">,</span>
-</span><span id="line-13"><span class="p">)</span>
-</span><span id="line-14">
-</span><span id="line-15">
+</span><span id="line-11"><span class="p">)</span>
+</span><span id="line-12">
+</span><span id="line-13">
 <div class="viewcode-block" id="SupervisorTaskArgs">
 <a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.SupervisorTaskArgs.html#airflow_supervisor.SupervisorTaskArgs">[docs]</a>
-</span><span id="line-16"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorTaskArgs</span><span class="p">(</span><span class="n">TaskArgs</span><span class="p">):</span>
-</span><span id="line-17">    <span class="n">cfg</span><span class="p">:</span> <span class="n">SupervisorAirflowConfiguration</span></div>
+</span><span id="line-14"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorTaskArgs</span><span class="p">(</span><span class="n">TaskArgs</span><span class="p">):</span>
+</span><span id="line-15">    <span class="n">cfg</span><span class="p">:</span> <span class="n">SupervisorAirflowConfiguration</span></div>
 
-</span><span id="line-18">
-</span><span id="line-19">
-</span><span id="line-20"><span class="c1"># Alias</span>
-</span><span id="line-21"><span class="n">SupervisorOperatorArgs</span> <span class="o">=</span> <span class="n">SupervisorTaskArgs</span>
-</span><span id="line-22">
-</span><span id="line-23">
+</span><span id="line-16">
+</span><span id="line-17">
+</span><span id="line-18"><span class="c1"># Alias</span>
+</span><span id="line-19"><span class="n">SupervisorOperatorArgs</span> <span class="o">=</span> <span class="n">SupervisorTaskArgs</span>
+</span><span id="line-20">
+</span><span id="line-21">
 <div class="viewcode-block" id="SupervisorTask">
 <a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.SupervisorTask.html#airflow_supervisor.SupervisorTask">[docs]</a>
-</span><span id="line-24"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorTask</span><span class="p">(</span><span class="n">Task</span><span class="p">,</span> <span class="n">SupervisorTaskArgs</span><span class="p">):</span>
-</span><span id="line-25">    <span class="n">operator</span><span class="p">:</span> <span class="n">ImportPath</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;airflow_supervisor.Supervisor&quot;</span><span class="p">,</span> <span class="n">validate_default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span id="line-26">
-</span><span id="line-27">    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;operator&quot;</span><span class="p">)</span>
-</span><span id="line-28">    <span class="nd">@classmethod</span>
-</span><span id="line-29">    <span class="k">def</span><span class="w"> </span><span class="nf">validate_operator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">:</span>
-</span><span id="line-30">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">):</span>
-</span><span id="line-31">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;operator must be &#39;airflow_supervisor.Supervisor&#39;, got: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span id="line-32">        <span class="k">return</span> <span class="n">v</span></div>
+</span><span id="line-22"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorTask</span><span class="p">(</span><span class="n">Task</span><span class="p">,</span> <span class="n">SupervisorTaskArgs</span><span class="p">):</span>
+</span><span id="line-23">    <span class="n">operator</span><span class="p">:</span> <span class="n">ImportPath</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;airflow_supervisor.Supervisor&quot;</span><span class="p">,</span> <span class="n">validate_default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span id="line-24">
+</span><span id="line-25">    <span class="nd">@field_validator</span><span class="p">(</span><span class="s2">&quot;operator&quot;</span><span class="p">)</span>
+</span><span id="line-26">    <span class="nd">@classmethod</span>
+</span><span id="line-27">    <span class="k">def</span><span class="w"> </span><span class="nf">validate_operator</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">v</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
+</span><span id="line-28">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">type</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">):</span>
+</span><span id="line-29">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;operator must be &#39;airflow_supervisor.Supervisor&#39;, got: </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span id="line-30">        <span class="k">return</span> <span class="n">v</span></div>
 
-</span><span id="line-33">
-</span><span id="line-34">
-</span><span id="line-35"><span class="c1"># Alias</span>
-</span><span id="line-36"><span class="n">SupervisorOperator</span> <span class="o">=</span> <span class="n">SupervisorTask</span>
+</span><span id="line-31">
+</span><span id="line-32">
+</span><span id="line-33"><span class="c1"># Alias</span>
+</span><span id="line-34"><span class="n">SupervisorOperator</span> <span class="o">=</span> <span class="n">SupervisorTask</span>
 </span></code></pre></div>
     </div></div>
           </main>

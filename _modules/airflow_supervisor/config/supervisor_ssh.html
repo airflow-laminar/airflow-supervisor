@@ -174,40 +174,38 @@
 
     <div id="content" role="main">
       <h1>Source code for airflow_supervisor.config.supervisor_ssh</h1><div class="highlight"><pre>
-<span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
-</span><span id="line-2">
-</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperatorArgs</span>
-</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
-</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorLocation</span>
+<span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SSHOperatorArgs</span>
+</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorLocation</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="kn">from</span><span class="w"> </span><span class="nn">.supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span>
 </span><span id="line-6">
-</span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">.supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span>
-</span><span id="line-8">
-</span><span id="line-9"><span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="line-10">    <span class="s2">&quot;SupervisorSSHAirflowConfiguration&quot;</span><span class="p">,</span>
-</span><span id="line-11">    <span class="s2">&quot;SSHOperatorArgs&quot;</span><span class="p">,</span>  <span class="c1"># reexport</span>
-</span><span id="line-12">    <span class="s2">&quot;load_airflow_ssh_config&quot;</span><span class="p">,</span>
-</span><span id="line-13"><span class="p">)</span>
-</span><span id="line-14">
-</span><span id="line-15">
+</span><span id="line-7"><span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-8">    <span class="s2">&quot;SSHOperatorArgs&quot;</span><span class="p">,</span>  <span class="c1"># reexport</span>
+</span><span id="line-9">    <span class="s2">&quot;SupervisorSSHAirflowConfiguration&quot;</span><span class="p">,</span>
+</span><span id="line-10">    <span class="s2">&quot;load_airflow_ssh_config&quot;</span><span class="p">,</span>
+</span><span id="line-11"><span class="p">)</span>
+</span><span id="line-12">
+</span><span id="line-13">
 <div class="viewcode-block" id="SupervisorSSHAirflowConfiguration">
 <a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html#airflow_supervisor.SupervisorSSHAirflowConfiguration">[docs]</a>
-</span><span id="line-16"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorSSHAirflowConfiguration</span><span class="p">(</span><span class="n">SupervisorAirflowConfiguration</span><span class="p">):</span>
-</span><span id="line-17">    <span class="n">command_prefix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-</span><span id="line-18">
-</span><span id="line-19">    <span class="n">ssh_operator_args</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SSHOperatorArgs</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-</span><span id="line-20">        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="line-21">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;SSH Operator arguments to use for remote execution.&quot;</span><span class="p">,</span>
-</span><span id="line-22">    <span class="p">)</span>
-</span><span id="line-23">
-</span><span id="line-24">    <span class="c1"># NOTE: Override in base-base class</span>
-</span><span id="line-25">    <span class="n">local_or_remote</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SupervisorLocation</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-</span><span id="line-26">        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;remote&quot;</span><span class="p">,</span>
-</span><span id="line-27">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicates via inet http server&quot;</span><span class="p">,</span>
-</span><span id="line-28">    <span class="p">)</span></div>
+</span><span id="line-14"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorSSHAirflowConfiguration</span><span class="p">(</span><span class="n">SupervisorAirflowConfiguration</span><span class="p">):</span>
+</span><span id="line-15">    <span class="n">command_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span id="line-16">
+</span><span id="line-17">    <span class="n">ssh_operator_args</span><span class="p">:</span> <span class="n">SSHOperatorArgs</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+</span><span id="line-18">        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="line-19">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;SSH Operator arguments to use for remote execution.&quot;</span><span class="p">,</span>
+</span><span id="line-20">    <span class="p">)</span>
+</span><span id="line-21">
+</span><span id="line-22">    <span class="c1"># NOTE: Override in base-base class</span>
+</span><span id="line-23">    <span class="n">local_or_remote</span><span class="p">:</span> <span class="n">SupervisorLocation</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+</span><span id="line-24">        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;remote&quot;</span><span class="p">,</span>
+</span><span id="line-25">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Location of supervisor, either local for same-machine or remote. If same-machine, communicates via Unix sockets by default, if remote, communicates via inet http server&quot;</span><span class="p">,</span>
+</span><span id="line-26">    <span class="p">)</span></div>
 
-</span><span id="line-29">
-</span><span id="line-30">
-</span><span id="line-31"><span class="n">load_airflow_ssh_config</span> <span class="o">=</span> <span class="n">SupervisorSSHAirflowConfiguration</span><span class="o">.</span><span class="n">load</span>
+</span><span id="line-27">
+</span><span id="line-28">
+</span><span id="line-29"><span class="n">load_airflow_ssh_config</span> <span class="o">=</span> <span class="n">SupervisorSSHAirflowConfiguration</span><span class="o">.</span><span class="n">load</span>
 </span></code></pre></div>
     </div></div>
           </main>
