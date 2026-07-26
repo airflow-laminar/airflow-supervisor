@@ -35,11 +35,11 @@ jobs:
         pydantic: ["<2.10", ">=2.11"]
 
     steps:
-    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         persist-credentials: false
 
-    - uses: actions-ext/python/setup@5f78fa2cadf4dad2a7cded3c72655bcdd3dda735
+    - uses: actions-ext/python/setup@6e1b91a408ea89f49bc8aff8724f83826f7b5446
       with:
         version: ${{ matrix.python-version }}
 
@@ -93,11 +93,11 @@ jobs:
       run: make dist
       if: ${{ matrix.pydantic == '>=2.11' && matrix.airflow == '2' }}
 
-    - uses: actions-ext/python/test-wheel@5f78fa2cadf4dad2a7cded3c72655bcdd3dda735
+    - uses: actions-ext/python/test-wheel@6e1b91a408ea89f49bc8aff8724f83826f7b5446
       with:
         module: airflow_supervisor
 
-    - uses: actions-ext/python/test-sdist@5f78fa2cadf4dad2a7cded3c72655bcdd3dda735
+    - uses: actions-ext/python/test-sdist@6e1b91a408ea89f49bc8aff8724f83826f7b5446
       with:
         module: airflow_supervisor
 
