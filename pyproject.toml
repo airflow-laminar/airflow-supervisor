@@ -12,7 +12,7 @@ authors = [
 description = "Supervisor operators and configuration for long-running tasks"
 readme = "README.md"
 license = { text = "Apache-2.0" }
-version = "1.10.2"
+version = "1.10.3"
 requires-python = ">=3.11"
 keywords = []
 
@@ -76,7 +76,7 @@ Repository = "https://github.com/airflow-laminar/airflow-supervisor"
 Homepage = "https://github.com/airflow-laminar/airflow-supervisor"
 
 [tool.bumpversion]
-current_version = "1.10.2"
+current_version = "1.10.3"
 commit = true
 tag = true
 commit_args = "-s"
