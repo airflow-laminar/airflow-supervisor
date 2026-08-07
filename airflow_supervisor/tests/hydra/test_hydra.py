@@ -233,7 +233,6 @@ def test_hydra_config_render_hosts_query():
     with (
         patch("supervisor_pydantic.config.supervisor.gettempdir") as p1,
         patch("supervisor_pydantic.config.supervisor.getuser") as p2,
-        patch("airflow_pydantic.extras.balancer.balancer.get_pool", return_value=None),
     ):
         with pools():
             pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
@@ -249,7 +248,6 @@ from datetime import datetime
 from pathlib import Path
 
 from airflow.models import DAG
-from airflow.models.pool import Pool
 from airflow_pydantic import Host, Port, Variable
 
 from airflow_supervisor.airflow.ssh import SupervisorSSH
@@ -292,9 +290,7 @@ with DAG(
             name="server2",
             username="user1",
             password=Variable(key="myvar", deserialize_json=True),
-            pool=Pool.create_or_update_pool(
-                name="server2", slots=8, description="Balancer pool for host(server2)", include_deferred=False
-            ).pool,
+            pool="server2",
             size=8,
             tags=["tag2"],
         ),
@@ -304,9 +300,7 @@ with DAG(
                 name="server2",
                 username="user1",
                 password=Variable(key="myvar", deserialize_json=True),
-                pool=Pool.create_or_update_pool(
-                    name="server2", slots=8, description="Balancer pool for host(server2)", include_deferred=False
-                ).pool,
+                pool="server2",
                 size=8,
                 tags=["tag2"],
             ),
