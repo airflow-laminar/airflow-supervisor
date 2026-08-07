@@ -1,12 +1,12 @@
 # airflow_supervisor.SupervisorRemoteXMLRPCClient
 
-### *class* airflow_supervisor.SupervisorRemoteXMLRPCClient(cfg: [SupervisorConvenienceConfiguration](airflow_supervisor.SupervisorConvenienceConfiguration.md#airflow_supervisor.SupervisorConvenienceConfiguration))
+### *class* airflow_supervisor.SupervisorRemoteXMLRPCClient(cfg: [SupervisorConvenienceConfiguration](airflow_supervisor.SupervisorConvenienceConfiguration.html.md#airflow_supervisor.SupervisorConvenienceConfiguration))[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#SupervisorRemoteXMLRPCClient)
 
 Bases: `object`
 
 A light wrapper over the supervisor xmlrpc api: [http://supervisord.org/api.html](http://supervisord.org/api.html)
 
-#### \_\_init_\_(cfg: [SupervisorConvenienceConfiguration](airflow_supervisor.SupervisorConvenienceConfiguration.md#airflow_supervisor.SupervisorConvenienceConfiguration))
+#### \_\_init_\_(cfg: [SupervisorConvenienceConfiguration](airflow_supervisor.SupervisorConvenienceConfiguration.html.md#airflow_supervisor.SupervisorConvenienceConfiguration))[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#SupervisorRemoteXMLRPCClient.__init__)
 
 ### Methods
 

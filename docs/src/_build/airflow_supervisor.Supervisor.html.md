@@ -1,10 +1,10 @@
 # airflow_supervisor.Supervisor
 
-### *class* airflow_supervisor.Supervisor(dag: DAG, cfg: [SupervisorAirflowConfiguration](airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration), \*\*kwargs)
+### *class* airflow_supervisor.Supervisor(dag: DAG, cfg: [SupervisorAirflowConfiguration](airflow_supervisor.SupervisorAirflowConfiguration.html.md#airflow_supervisor.SupervisorAirflowConfiguration), \*\*kwargs)[[source]](../../../_modules/airflow_supervisor/airflow/local.html.md#Supervisor)
 
 Bases: `object`
 
-#### \_\_init_\_(dag: DAG, cfg: [SupervisorAirflowConfiguration](airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration), \*\*kwargs)
+#### \_\_init_\_(dag: DAG, cfg: [SupervisorAirflowConfiguration](airflow_supervisor.SupervisorAirflowConfiguration.html.md#airflow_supervisor.SupervisorAirflowConfiguration), \*\*kwargs)[[source]](../../../_modules/airflow_supervisor/airflow/local.html.md#Supervisor.__init__)
 
 ### Methods
 

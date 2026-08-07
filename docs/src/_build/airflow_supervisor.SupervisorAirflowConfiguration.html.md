@@ -1,8 +1,8 @@
 # airflow_supervisor.SupervisorAirflowConfiguration
 
-### *pydantic model* airflow_supervisor.SupervisorAirflowConfiguration
+### *pydantic model* airflow_supervisor.SupervisorAirflowConfiguration[[source]](../../../_modules/airflow_supervisor/config/supervisor.html.md#SupervisorAirflowConfiguration)
 
-Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConvenienceConfiguration.md#airflow_supervisor.SupervisorConvenienceConfiguration)
+Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConvenienceConfiguration.html.md#airflow_supervisor.SupervisorConvenienceConfiguration)
 
 Settings that MUST be set when running in airflow
 

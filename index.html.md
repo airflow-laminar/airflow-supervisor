@@ -27,10 +27,10 @@ removes the instance. `SupervisorSSH` manages the same lifecycle remotely.
 
 ## Documentation
 
-- [Tutorial: run a supervised job from Airflow](docs/src/tutorial.md)
-- [How-to guides](docs/src/how-to.md)
-- [Why Airflow delegates process ownership](docs/src/explanation.md)
-- [API reference](docs/src/api.md)
+- [Tutorial: run a supervised job from Airflow](docs/src/tutorial.html.md)
+- [How-to guides](docs/src/how-to.html.md)
+- [Why Airflow delegates process ownership](docs/src/explanation.html.md)
+- [API reference](docs/src/api.html.md)
 
 Published documentation is available at
 [airflow-laminar.github.io/airflow-supervisor](https://airflow-laminar.github.io/airflow-supervisor/).

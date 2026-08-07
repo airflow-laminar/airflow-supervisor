@@ -1,8 +1,8 @@
 # airflow_supervisor.SupervisorConvenienceConfiguration
 
-### *pydantic model* airflow_supervisor.SupervisorConvenienceConfiguration
+### *pydantic model* airflow_supervisor.SupervisorConvenienceConfiguration[[source]](../../../_modules/supervisor_pydantic/config/convenience.html.md#SupervisorConvenienceConfiguration)
 
-Bases: [`SupervisorConfiguration`](airflow_supervisor.SupervisorConfiguration.md#airflow_supervisor.SupervisorConfiguration)
+Bases: [`SupervisorConfiguration`](airflow_supervisor.SupervisorConfiguration.html.md#airflow_supervisor.SupervisorConfiguration)
 
 Convenience layer, settings that MUST be set when running via convenience API
 

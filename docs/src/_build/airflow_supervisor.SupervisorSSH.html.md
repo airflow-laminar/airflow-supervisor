@@ -1,10 +1,10 @@
 # airflow_supervisor.SupervisorSSH
 
-### *class* airflow_supervisor.SupervisorSSH(dag: DAG, cfg: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.md#airflow_supervisor.SupervisorSSHAirflowConfiguration), host: Host = None, port: Port = None, \*\*kwargs)
+### *class* airflow_supervisor.SupervisorSSH(dag: DAG, cfg: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration), host: Host = None, port: Port = None, \*\*kwargs)[[source]](../../../_modules/airflow_supervisor/airflow/ssh.html.md#SupervisorSSH)
 
-Bases: [`Supervisor`](airflow_supervisor.Supervisor.md#airflow_supervisor.Supervisor)
+Bases: [`Supervisor`](airflow_supervisor.Supervisor.html.md#airflow_supervisor.Supervisor)
 
-#### \_\_init_\_(dag: DAG, cfg: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.md#airflow_supervisor.SupervisorSSHAirflowConfiguration), host: Host = None, port: Port = None, \*\*kwargs)
+#### \_\_init_\_(dag: DAG, cfg: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration), host: Host = None, port: Port = None, \*\*kwargs)[[source]](../../../_modules/airflow_supervisor/airflow/ssh.html.md#SupervisorSSH.__init__)
 
 ### Methods
 

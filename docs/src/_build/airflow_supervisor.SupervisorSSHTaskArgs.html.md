@@ -1,10 +1,10 @@
 # airflow_supervisor.SupervisorSSHTaskArgs
 
-### *pydantic model* airflow_supervisor.SupervisorSSHTaskArgs
+### *pydantic model* airflow_supervisor.SupervisorSSHTaskArgs[[source]](../../../_modules/airflow_supervisor/config/task_ssh.html.md#SupervisorSSHTaskArgs)
 
 Bases: `TaskArgs`
 
-#### *field* cfg *: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.md#airflow_supervisor.SupervisorSSHAirflowConfiguration)* *[Required]*
+#### *field* cfg *: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration)* *[Required]*
 
 #### *field* host *: Host | BalancerHostQueryConfiguration | Annotated[object, BeforeValidator(func=get_import_path, json_schema_input_type=PydanticUndefined), PlainSerializer(func=serialize_path_as_string, return_type=str, when_used=json)] | None* *= None*
 

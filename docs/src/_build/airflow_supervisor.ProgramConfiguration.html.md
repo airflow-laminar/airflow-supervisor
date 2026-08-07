@@ -1,10 +1,10 @@
 # airflow_supervisor.ProgramConfiguration
 
-### *pydantic model* airflow_supervisor.ProgramConfiguration
+### *pydantic model* airflow_supervisor.ProgramConfiguration[[source]](../../../_modules/supervisor_pydantic/config/program.html.md#ProgramConfiguration)
 
 Bases: `_BaseCfgModel`
 
-#### to_cfg(key: str) → str
+#### to_cfg(key: str) → str[[source]](../../../_modules/supervisor_pydantic/config/program.html.md#ProgramConfiguration.to_cfg)
 
 #### *field* command *: str* *[Required]*
 

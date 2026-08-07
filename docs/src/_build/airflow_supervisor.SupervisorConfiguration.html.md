@@ -1,10 +1,10 @@
 # airflow_supervisor.SupervisorConfiguration
 
-### *pydantic model* airflow_supervisor.SupervisorConfiguration
+### *pydantic model* airflow_supervisor.SupervisorConfiguration[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration)
 
 Bases: `BaseModel`
 
-#### to_cfg() → str
+#### to_cfg() → str[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.to_cfg)
 
 #### *field* unix_http_server *: UnixHttpServerConfiguration | None* *= None*
 
@@ -16,7 +16,7 @@ Bases: `BaseModel`
 
 #### *field* include *: IncludeConfiguration | None* *= None*
 
-#### *field* program *: Dict[str, [ProgramConfiguration](airflow_supervisor.ProgramConfiguration.md#airflow_supervisor.ProgramConfiguration)]* *[Required]*
+#### *field* program *: Dict[str, [ProgramConfiguration](airflow_supervisor.ProgramConfiguration.html.md#airflow_supervisor.ProgramConfiguration)]* *[Required]*
 
 #### *field* group *: Dict[str, GroupConfiguration] | None* *= None*
 
@@ -34,16 +34,16 @@ Path to supervisor configuration file, relative to working_dir
 
 Path to supervisor working directory
 
-#### *classmethod* load(config_dir: str = 'config', config_name: str = '', overrides: list[str] | None = None, , basepath: str = '', \_offset: int = 3) → [SupervisorConfiguration](#airflow_supervisor.SupervisorConfiguration)
+#### *classmethod* load(config_dir: str = 'config', config_name: str = '', overrides: list[str] | None = None, , basepath: str = '', \_offset: int = 3) → [SupervisorConfiguration](#airflow_supervisor.SupervisorConfiguration)[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.load)
 
-#### write()
+#### write()[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.write)
 
-#### rmdir()
+#### rmdir()[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.rmdir)
 
-#### start(daemon: bool = False)
+#### start(daemon: bool = False)[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.start)
 
-#### running()
+#### running()[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.running)
 
-#### stop()
+#### stop()[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.stop)
 
-#### kill()
+#### kill()[[source]](../../../_modules/supervisor_pydantic/config/supervisor.html.md#SupervisorConfiguration.kill)

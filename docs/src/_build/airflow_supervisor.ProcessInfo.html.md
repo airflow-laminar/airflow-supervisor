@@ -1,6 +1,6 @@
 # airflow_supervisor.ProcessInfo
 
-### *pydantic model* airflow_supervisor.ProcessInfo
+### *pydantic model* airflow_supervisor.ProcessInfo[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#ProcessInfo)
 
 Bases: `BaseModel`
 
@@ -30,12 +30,12 @@ Bases: `BaseModel`
 
 #### *field* pid *: int* *[Required]*
 
-#### running()
+#### running()[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#ProcessInfo.running)
 
-#### stopped()
+#### stopped()[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#ProcessInfo.stopped)
 
-#### done(ok_exitstatuses=None)
+#### done(ok_exitstatuses=None)[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#ProcessInfo.done)
 
-#### ok(ok_exitstatuses=None)
+#### ok(ok_exitstatuses=None)[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#ProcessInfo.ok)
 
-#### bad(ok_exitstatuses=None)
+#### bad(ok_exitstatuses=None)[[source]](../../../_modules/supervisor_pydantic/client/xmlrpc.html.md#ProcessInfo.bad)

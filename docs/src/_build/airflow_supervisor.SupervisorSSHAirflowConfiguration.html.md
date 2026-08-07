@@ -1,8 +1,8 @@
 # airflow_supervisor.SupervisorSSHAirflowConfiguration
 
-### *pydantic model* airflow_supervisor.SupervisorSSHAirflowConfiguration
+### *pydantic model* airflow_supervisor.SupervisorSSHAirflowConfiguration[[source]](../../../_modules/airflow_supervisor/config/supervisor_ssh.html.md#SupervisorSSHAirflowConfiguration)
 
-Bases: [`SupervisorAirflowConfiguration`](airflow_supervisor.SupervisorAirflowConfiguration.md#airflow_supervisor.SupervisorAirflowConfiguration)
+Bases: [`SupervisorAirflowConfiguration`](airflow_supervisor.SupervisorAirflowConfiguration.html.md#airflow_supervisor.SupervisorAirflowConfiguration)
 
 #### *field* command_prefix *: str | None* *= ''*
 
