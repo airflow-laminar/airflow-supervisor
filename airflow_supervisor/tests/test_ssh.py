@@ -20,7 +20,7 @@ class TestSSH:
             cfg=supervisor_airflow_ssh_configuration,
             host=Host(name="test-host"),
         )
-        assert inst._cfg.ssh_operator_args.ssh_hook.remote_host == "test-host"
+        assert inst._cfg.ssh_operator_args.ssh_hook.remote_host == "test-host.local"
 
         from airflow_pydantic.airflow import SSHHook
 

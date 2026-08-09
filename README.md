@@ -46,5 +46,3 @@ Published documentation is available at
 
 > [!NOTE]
 > This library was generated using [copier](https://copier.readthedocs.io/en/stable/) from the [Base Python Project Template repository](https://github.com/python-project-templates/base).
->
-> Install the [Python Templates Copier Update GitHub App](https://github.com/apps/python-templates-copier-update) to receive weekly template update pull requests.
