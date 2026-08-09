@@ -25,18 +25,11 @@ permissions:
 
 jobs:
   build:
-<<<<<<< before updating
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest]
-        python-version: ["3.11"]
         airflow: ["2", "3", ""]
         pydantic: ["<2.10", ">=2.11"]
-=======
-    runs-on: ubuntu-latest
->>>>>>> after updating
 
     steps:
       - name: Checkout
@@ -63,7 +56,6 @@ jobs:
       - name: Install Pydantic
         run: pip install "pydantic${{ matrix.pydantic }}"
         if: ${{ matrix.airflow == '2' }}
-  
 
       - name: Lint
         run: make lint
@@ -82,11 +74,7 @@ jobs:
         with:
           name: test-results
           path: junit.xml
-<<<<<<< before updating
         if: ${{ matrix.pydantic == '>=2.11' && matrix.airflow == '2' }}
-=======
-        if: always()
->>>>>>> after updating
 
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3  # v2.24.0
