@@ -23,9 +23,9 @@
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#030711" />
   
-  <title>supervisor_pydantic.config.convenience | airflow-supervisor &lt;code style=&#39;font-size: var(--font-size--small--4);color: var(--sd-color-primary);&#39;&gt;v1.10.3&lt;/code&gt;</title>
-  <meta property="og:title" content="supervisor_pydantic.config.convenience | airflow-supervisor &lt;code style=&#39;font-size: var(--font-size--small--4);color: var(--sd-color-primary);&#39;&gt;v1.10.3&lt;/code&gt;" />
-  <meta name="twitter:title" content="supervisor_pydantic.config.convenience | airflow-supervisor &lt;code style=&#39;font-size: var(--font-size--small--4);color: var(--sd-color-primary);&#39;&gt;v1.10.3&lt;/code&gt;" />
+  <title>supervisor_pydantic.config.convenience | airflow-supervisor &lt;code style=&#39;font-size: var(--font-size--small--4);color: var(--sd-color-primary);&#39;&gt;v1.10.4&lt;/code&gt;</title>
+  <meta property="og:title" content="supervisor_pydantic.config.convenience | airflow-supervisor &lt;code style=&#39;font-size: var(--font-size--small--4);color: var(--sd-color-primary);&#39;&gt;v1.10.4&lt;/code&gt;" />
+  <meta name="twitter:title" content="supervisor_pydantic.config.convenience | airflow-supervisor &lt;code style=&#39;font-size: var(--font-size--small--4);color: var(--sd-color-primary);&#39;&gt;v1.10.4&lt;/code&gt;" />
   <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
   <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=d6d7c91b" />
   <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -49,7 +49,7 @@
       Skip to content
     </a><header class="sticky top-0 z-40 w-full border-b shadow-xs border-border bg-background/90 backdrop-blur"><div class="container flex items-center h-14">
     <div class="hidden mr-4 md:flex">
-      <a href="../../../index.html" class="flex items-center mr-6"><span class="hidden font-bold sm:inline-block text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.3</code></span>
+      <a href="../../../index.html" class="flex items-center mr-6"><span class="hidden font-bold sm:inline-block text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.4</code></span>
       </a></div><button
       class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden"
       type="button" @click="showSidebar = true">
@@ -105,7 +105,7 @@
   class="fixed inset-y-0 left-0 md:top-14 z-50 md:z-30 bg-background md:bg-transparent transition-all duration-100 -translate-x-full md:translate-x-0 ml-0 p-6 md:p-0 md:-ml-2 md:h-[calc(100vh-3.5rem)] w-5/6 md:w-full overflow-y-auto border-r border-border md:sticky"
   :aria-hidden="!showSidebar" :class="{ 'translate-x-0': showSidebar }">
 
-    <a href="../../../index.html" class="justify-start text-sm md:!hidden bg-background"><span class="font-bold text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.3</code></span>
+    <a href="../../../index.html" class="justify-start text-sm md:!hidden bg-background"><span class="font-bold text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.4</code></span>
     </a>
 
     <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
@@ -152,7 +152,7 @@
      class="flex items-center mb-4 space-x-1 text-sm text-muted-foreground">
   <a class="overflow-hidden text-ellipsis whitespace-nowrap hover:text-foreground"
      href="../../../index.html">
-    <span class="hidden md:inline">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.3</code></span>
+    <span class="hidden md:inline">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.10.4</code></span>
     <svg xmlns="http://www.w3.org/2000/svg"
          height="18"
          width="18"
@@ -345,23 +345,24 @@
 </span><span id="line-167">            <span class="n">config</span><span class="o">.</span><span class="n">autostart</span> <span class="o">=</span> <span class="kc">False</span>
 </span><span id="line-168">            <span class="n">config</span><span class="o">.</span><span class="n">autorestart</span> <span class="o">=</span> <span class="kc">False</span>
 </span><span id="line-169">            <span class="n">config</span><span class="o">.</span><span class="n">startsecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startsecs</span>
-</span><span id="line-170">            <span class="n">config</span><span class="o">.</span><span class="n">startretries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startretries</span>
-</span><span id="line-171">            <span class="n">config</span><span class="o">.</span><span class="n">exitcodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcodes</span>
-</span><span id="line-172">            <span class="n">config</span><span class="o">.</span><span class="n">stopsignal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopsignal</span>
-</span><span id="line-173">            <span class="n">config</span><span class="o">.</span><span class="n">stopwaitsecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopwaitsecs</span>
-</span><span id="line-174">            <span class="n">config</span><span class="o">.</span><span class="n">stopasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopasgroup</span>
-</span><span id="line-175">            <span class="n">config</span><span class="o">.</span><span class="n">killasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">killasgroup</span>
-</span><span id="line-176">            <span class="n">config</span><span class="o">.</span><span class="n">stdout_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">&quot;output.log&quot;</span>
-</span><span id="line-177">            <span class="n">config</span><span class="o">.</span><span class="n">stderr_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">&quot;error.log&quot;</span>
-</span><span id="line-178">
-</span><span id="line-179">        <span class="c1"># other</span>
-</span><span id="line-180">        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">):</span>
-</span><span id="line-181">            <span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="s2">&quot;pydantic.json&quot;</span>
-</span><span id="line-182">        <span class="k">return</span> <span class="bp">self</span></div>
+</span><span id="line-170">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">startretries</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-171">                <span class="n">config</span><span class="o">.</span><span class="n">startretries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startretries</span>
+</span><span id="line-172">            <span class="n">config</span><span class="o">.</span><span class="n">exitcodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcodes</span>
+</span><span id="line-173">            <span class="n">config</span><span class="o">.</span><span class="n">stopsignal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopsignal</span>
+</span><span id="line-174">            <span class="n">config</span><span class="o">.</span><span class="n">stopwaitsecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopwaitsecs</span>
+</span><span id="line-175">            <span class="n">config</span><span class="o">.</span><span class="n">stopasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopasgroup</span>
+</span><span id="line-176">            <span class="n">config</span><span class="o">.</span><span class="n">killasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">killasgroup</span>
+</span><span id="line-177">            <span class="n">config</span><span class="o">.</span><span class="n">stdout_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">&quot;output.log&quot;</span>
+</span><span id="line-178">            <span class="n">config</span><span class="o">.</span><span class="n">stderr_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">&quot;error.log&quot;</span>
+</span><span id="line-179">
+</span><span id="line-180">        <span class="c1"># other</span>
+</span><span id="line-181">        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">):</span>
+</span><span id="line-182">            <span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="s2">&quot;pydantic.json&quot;</span>
+</span><span id="line-183">        <span class="k">return</span> <span class="bp">self</span></div>
 
-</span><span id="line-183">
 </span><span id="line-184">
-</span><span id="line-185"><span class="n">load_convenience_config</span> <span class="o">=</span> <span class="n">SupervisorConvenienceConfiguration</span><span class="o">.</span><span class="n">load</span>
+</span><span id="line-185">
+</span><span id="line-186"><span class="n">load_convenience_config</span> <span class="o">=</span> <span class="n">SupervisorConvenienceConfiguration</span><span class="o">.</span><span class="n">load</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -377,7 +378,7 @@
 </footer>
     </div>
     
-    <script src="../../../_static/documentation_options.js?v=2adc3bb3"></script>
+    <script src="../../../_static/documentation_options.js?v=e155ab7e"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
