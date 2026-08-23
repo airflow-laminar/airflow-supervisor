@@ -182,14 +182,14 @@
 </span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">supervisor_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorConvenienceConfiguration</span>
 </span><span id="line-7">
 </span><span id="line-8"><span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="line-9">    <span class="s2">&quot;SupervisorAirflowConfiguration&quot;</span><span class="p">,</span>
-</span><span id="line-10">    <span class="s2">&quot;load_airflow_config&quot;</span><span class="p">,</span>
+</span><span id="line-9">    <span class="s2">"SupervisorAirflowConfiguration"</span><span class="p">,</span>
+</span><span id="line-10">    <span class="s2">"load_airflow_config"</span><span class="p">,</span>
 </span><span id="line-11"><span class="p">)</span>
 </span><span id="line-12">
 </span><span id="line-13">
 </span><span id="line-14"><span class="c1"># PredefinedTemplates = Literal[</span>
-</span><span id="line-15"><span class="c1">#     &quot;always_on&quot;,</span>
-</span><span id="line-16"><span class="c1">#     &quot;half_day&quot;,</span>
+</span><span id="line-15"><span class="c1">#     "always_on",</span>
+</span><span id="line-16"><span class="c1">#     "half_day",</span>
 </span><span id="line-17"><span class="c1">#     # TODO add more</span>
 </span><span id="line-18"><span class="c1"># ]</span>
 </span><span id="line-19">
@@ -197,70 +197,70 @@
 <div class="viewcode-block" id="SupervisorAirflowConfiguration">
 <a class="viewcode-back" href="../../../docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html#airflow_supervisor.SupervisorAirflowConfiguration">[docs]</a>
 </span><span id="line-21"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorAirflowConfiguration</span><span class="p">(</span><span class="n">SupervisorConvenienceConfiguration</span><span class="p">):</span>
-</span><span id="line-22"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Settings that MUST be set when running in airflow&quot;&quot;&quot;</span>
+</span><span id="line-22"><span class="w">    </span><span class="sd">"""Settings that MUST be set when running in airflow"""</span>
 </span><span id="line-23">
 </span><span id="line-24">    <span class="c1"># Passthrough to PythonSensor in airflow-ha</span>
 </span><span id="line-25">    <span class="n">check_interval</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-</span><span id="line-26">        <span class="n">default</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Interval between supervisor program status checks&quot;</span>
+</span><span id="line-26">        <span class="n">default</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Interval between supervisor program status checks"</span>
 </span><span id="line-27">    <span class="p">)</span>
 </span><span id="line-28">    <span class="n">check_timeout</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-</span><span id="line-29">        <span class="n">default</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Timeout to wait for supervisor program status checks&quot;</span>
+</span><span id="line-29">        <span class="n">default</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Timeout to wait for supervisor program status checks"</span>
 </span><span id="line-30">    <span class="p">)</span>
 </span><span id="line-31">
 </span><span id="line-32">    <span class="c1"># HighAvailabilityOperator custom args</span>
-</span><span id="line-33">    <span class="n">runtime</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Max runtime of Supervisor job&quot;</span><span class="p">)</span>
-</span><span id="line-34">    <span class="n">endtime</span><span class="p">:</span> <span class="n">time</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;End time of Supervisor job&quot;</span><span class="p">)</span>
+</span><span id="line-33">    <span class="n">runtime</span><span class="p">:</span> <span class="n">timedelta</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Max runtime of Supervisor job"</span><span class="p">)</span>
+</span><span id="line-34">    <span class="n">endtime</span><span class="p">:</span> <span class="n">time</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"End time of Supervisor job"</span><span class="p">)</span>
 </span><span id="line-35">    <span class="n">maxretrigger</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
 </span><span id="line-36">        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="line-37">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Max number of retriggers of Supervisor job (e.g. max number of checks separated by `check_interval`)&quot;</span><span class="p">,</span>
+</span><span id="line-37">        <span class="n">description</span><span class="o">=</span><span class="s2">"Max number of retriggers of Supervisor job (e.g. max number of checks separated by `check_interval`)"</span><span class="p">,</span>
 </span><span id="line-38">    <span class="p">)</span>
 </span><span id="line-39">
-</span><span id="line-40">    <span class="n">reference_date</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;start_date&quot;</span><span class="p">,</span> <span class="s2">&quot;logical_date&quot;</span><span class="p">,</span> <span class="s2">&quot;data_interval_end&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-</span><span id="line-41">        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;data_interval_end&quot;</span><span class="p">,</span>
-</span><span id="line-42">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Reference date for the job. NOTE: Airflow schedules after end of date interval, so `data_interval_end` is the default&quot;</span><span class="p">,</span>
+</span><span id="line-40">    <span class="n">reference_date</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"start_date"</span><span class="p">,</span> <span class="s2">"logical_date"</span><span class="p">,</span> <span class="s2">"data_interval_end"</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+</span><span id="line-41">        <span class="n">default</span><span class="o">=</span><span class="s2">"data_interval_end"</span><span class="p">,</span>
+</span><span id="line-42">        <span class="n">description</span><span class="o">=</span><span class="s2">"Reference date for the job. NOTE: Airflow schedules after end of date interval, so `data_interval_end` is the default"</span><span class="p">,</span>
 </span><span id="line-43">    <span class="p">)</span>
 </span><span id="line-44">
 </span><span id="line-45">    <span class="c1"># Airflow-specific settings</span>
 </span><span id="line-46">    <span class="n">pool</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="n">Pool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
 </span><span id="line-47">        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-</span><span id="line-48">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Airflow pool to use for the job. If not set, the job will use the default pool, or the pool from a balancer host.&quot;</span><span class="p">,</span>
+</span><span id="line-48">        <span class="n">description</span><span class="o">=</span><span class="s2">"Airflow pool to use for the job. If not set, the job will use the default pool, or the pool from a balancer host."</span><span class="p">,</span>
 </span><span id="line-49">    <span class="p">)</span>
 </span><span id="line-50">
-</span><span id="line-51"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Other Airflow Configuration&quot;&quot;&quot;</span>
+</span><span id="line-51"><span class="w">    </span><span class="sd">"""Other Airflow Configuration"""</span>
 </span><span id="line-52">    <span class="c1"># Should the programs be stopped when the DAG finishes?</span>
-</span><span id="line-53">    <span class="n">stop_on_exit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Stop supervisor on dag completion&quot;</span><span class="p">)</span>
+</span><span id="line-53">    <span class="n">stop_on_exit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Stop supervisor on dag completion"</span><span class="p">)</span>
 </span><span id="line-54">
 </span><span id="line-55">    <span class="c1"># Should the supervisor folder be removed on dag completion?</span>
 </span><span id="line-56">    <span class="n">cleanup</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
-</span><span id="line-57">        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True&quot;</span>
+</span><span id="line-57">        <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Cleanup supervisor folder on dag completion. Note: stop_on_exit must be True"</span>
 </span><span id="line-58">    <span class="p">)</span>
 </span><span id="line-59">
 </span><span id="line-60">    <span class="c1"># For Jobs that do not shutdown, e.g. stop_on_exit=False, one might want to configure them to</span>
 </span><span id="line-61">    <span class="c1"># restart when the DAG is rescheduled by airflow or retriggered by airflow-ha</span>
 </span><span id="line-62">    <span class="n">restart_on_initial</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
 </span><span id="line-63">        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="line-64">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Restart the job when the DAG is run directly via airflow (NOT retriggered). This is useful for jobs that do not shutdown&quot;</span><span class="p">,</span>
+</span><span id="line-64">        <span class="n">description</span><span class="o">=</span><span class="s2">"Restart the job when the DAG is run directly via airflow (NOT retriggered). This is useful for jobs that do not shutdown"</span><span class="p">,</span>
 </span><span id="line-65">    <span class="p">)</span>
 </span><span id="line-66">    <span class="n">restart_on_retrigger</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
 </span><span id="line-67">        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span id="line-68">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown&quot;</span><span class="p">,</span>
+</span><span id="line-68">        <span class="n">description</span><span class="o">=</span><span class="s2">"Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown"</span><span class="p">,</span>
 </span><span id="line-69">    <span class="p">)</span></div>
 
 </span><span id="line-70">
 </span><span id="line-71">    <span class="c1"># template: Optional[PredefinedTemplates] = Field(</span>
 </span><span id="line-72">    <span class="c1">#     default=None,</span>
-</span><span id="line-73">    <span class="c1">#     description=&quot;A template of settings to use. This is a convenience for common settings. Individual settings will override the template.&quot;,</span>
+</span><span id="line-73">    <span class="c1">#     description="A template of settings to use. This is a convenience for common settings. Individual settings will override the template.",</span>
 </span><span id="line-74">    <span class="c1"># )</span>
 </span><span id="line-75">
-</span><span id="line-76">    <span class="c1"># @model_validator(mode=&quot;after&quot;)</span>
+</span><span id="line-76">    <span class="c1"># @model_validator(mode="after")</span>
 </span><span id="line-77">    <span class="c1"># def _set_fields_from_template(self):</span>
-</span><span id="line-78">    <span class="c1">#     if self.template == &quot;always_on&quot;:</span>
+</span><span id="line-78">    <span class="c1">#     if self.template == "always_on":</span>
 </span><span id="line-79">
 </span><span id="line-80">    <span class="c1">#         self.stop_on_exit = False</span>
 </span><span id="line-81">    <span class="c1">#         self.cleanup = False</span>
 </span><span id="line-82">    <span class="c1">#         self.restart_on_initial = True</span>
 </span><span id="line-83">    <span class="c1">#         self.restart_on_retrigger = True</span>
-</span><span id="line-84">    <span class="c1">#     elif self.template == &quot;half_day&quot;:</span>
+</span><span id="line-84">    <span class="c1">#     elif self.template == "half_day":</span>
 </span><span id="line-85">    <span class="c1">#         self.runtime = self.runtime or self.timedelta(hours=12)</span>
 </span><span id="line-86">    <span class="c1">#         self.stop_on_exit = True</span>
 </span><span id="line-87">    <span class="c1">#         self.cleanup = True</span>
