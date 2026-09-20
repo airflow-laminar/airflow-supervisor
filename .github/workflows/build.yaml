@@ -25,15 +25,11 @@ permissions:
 
 jobs:
   build:
-<<<<<<< before updating
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         airflow: ["2", "3", ""]
         pydantic: ["<2.10", ">=2.11"]
-=======
-    runs-on: ubuntu-24.04
->>>>>>> after updating
 
     steps:
       - name: Checkout
