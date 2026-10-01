@@ -67,6 +67,8 @@ airflow3 = [
     "apache-airflow>=3,<3.2",
     "apache-airflow-providers-ssh",
     "apache-airflow-providers-standard",
+    # SQLAlchemy 2.1 removes ScalarAttributeImpl, used by sqlalchemy-utils.
+    "sqlalchemy<2.1",
 ]
 
 [project.scripts]
