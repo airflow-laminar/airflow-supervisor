@@ -16,8 +16,8 @@ A light wrapper over the supervisor xmlrpc api: [http://supervisord.org/api.html
 | `getProcessInfo`(name)                                                         |    |
 | `getState`()                                                                   |    |
 | `readProcessLog`(name)                                                         |    |
-| `readProcessStderrLog`(name)                                                   |    |
-| `readProcessStdoutLog`(name)                                                   |    |
+| `readProcessStderrLog`(name[, offset, length])                                 |    |
+| `readProcessStdoutLog`(name[, offset, length])                                 |    |
 | `reloadConfig`([start_new])                                                    |    |
 | `restart`()                                                                    |    |
 | `shutdown`()                                                                   |    |

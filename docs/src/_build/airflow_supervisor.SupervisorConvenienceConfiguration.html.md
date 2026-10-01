@@ -14,7 +14,7 @@ The total number of seconds which the program needs to stay running after a star
 
 The number of serial failure attempts that supervisord will allow when attempting to start the program before giving up and putting the process into an FATAL state. After each failed restart, process will be put in BACKOFF state and each retry attempt will take increasingly more time.
 
-#### *field* exitcodes *: List[int] | None* *= [0]*
+#### *field* exitcodes *: list[int] | None* *= [0]*
 
 The list of “expected” exit codes for this program used with autorestart. If the autorestart parameter is set to unexpected, and the process exits in any other way than as a result of a supervisor stop request, supervisord will restart the process if it exits with an exit code that is not defined in this list.
 

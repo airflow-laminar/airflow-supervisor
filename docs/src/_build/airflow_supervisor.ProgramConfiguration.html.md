@@ -48,7 +48,7 @@ The number of serial failure attempts that supervisord will allow when attemptin
 
 Specifies if supervisord should automatically restart a process if it exits when it is in the RUNNING state. May be one of false, unexpected, or true. If false, the process will not be autorestarted. If unexpected, the process will be restarted when the program exits with an exit code that is not one of the exit codes associated with this process’ configuration (see exitcodes). If true, the process will be unconditionally restarted when it exits, without regard to its exit code. autorestart controls whether supervisord will autorestart a program if it exits after it has successfully started up (the process is in the RUNNING state). supervisord has a different restart mechanism for when the process is starting up (the process is in the STARTING state). Retries during process startup are controlled by startsecs and startretries.
 
-#### *field* exitcodes *: List[int] | None* *= None*
+#### *field* exitcodes *: list[int] | None* *= None*
 
 The list of “expected” exit codes for this program used with autorestart. If the autorestart parameter is set to unexpected, and the process exits in any other way than as a result of a supervisor stop request, supervisord will restart the process if it exits with an exit code that is not defined in this list.
 
@@ -124,7 +124,7 @@ If true, PROCESS_LOG_STDERR events will be emitted when the process writes to it
 
 If true, stderr will be directed to syslog along with the process name.
 
-#### *field* environment *: Dict[str, str] | None* *= None*
+#### *field* environment *: dict[str, str] | None* *= None*
 
 A list of key/value pairs in the form KEY=”val”,KEY2=”val2” that will be placed in the child process’ environment. The environment string may contain Python string expressions that will be evaluated against a dictionary containing group_name, host_node_name, process_num, program_name, and here (the directory of the supervisord config file). Values containing non-alphanumeric characters should be quoted (e.g. KEY=”val:123”,KEY2=”val,456”). Otherwise, quoting the values is optional but recommended. Note that the subprocess will inherit the environment variables of the shell used to start “supervisord” except for the ones overridden here. See Subprocess Environment.
 

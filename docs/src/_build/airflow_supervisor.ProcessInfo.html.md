@@ -18,7 +18,7 @@ Bases: `BaseModel`
 
 #### *field* now *: datetime* *[Required]*
 
-#### *field* spawner *: str* *= ''*
+#### *field* spawnerr *: str* *= ''*
 
 #### *field* exitstatus *: int* *[Required]*
 

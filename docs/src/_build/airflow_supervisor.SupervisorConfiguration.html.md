@@ -16,15 +16,15 @@ Bases: `BaseModel`
 
 #### *field* include *: IncludeConfiguration | None* *= None*
 
-#### *field* program *: Dict[str, [ProgramConfiguration](airflow_supervisor.ProgramConfiguration.html.md#airflow_supervisor.ProgramConfiguration)]* *[Required]*
+#### *field* program *: dict[str, [ProgramConfiguration](airflow_supervisor.ProgramConfiguration.html.md#airflow_supervisor.ProgramConfiguration)]* *[Required]*
 
-#### *field* group *: Dict[str, GroupConfiguration] | None* *= None*
+#### *field* group *: dict[str, GroupConfiguration] | None* *= None*
 
-#### *field* fcgiprogram *: Dict[str, FcgiProgramConfiguration] | None* *= None*
+#### *field* fcgiprogram *: dict[str, FcgiProgramConfiguration] | None* *= None*
 
-#### *field* eventlistener *: Dict[str, EventListenerConfiguration] | None* *= None*
+#### *field* eventlistener *: dict[str, EventListenerConfiguration] | None* *= None*
 
-#### *field* rpcinterface *: Dict[str, RpcInterfaceConfiguration] | None* *= None*
+#### *field* rpcinterface *: dict[str, RpcInterfaceConfiguration] | None* *= None*
 
 #### *field* config_path *: Path | None* *= 'supervisord.conf'*
 
