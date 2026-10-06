@@ -5,10 +5,10 @@
 ## Pages
 
 - [airflow-supervisor](index.html.md): Run and monitor supervisord-managed jobs from Apache Airflow.
-- [Tutorial: run a supervised job from Airflow](docs/src/tutorial.html.md): In this tutorial, we will define a supervisord-managed job in airflow-config YAML and load it as an Airflow DAG.
-- [How-to guides](docs/src/how-to.html.md): These guides cover persistent services, monitoring, remote hosts, and task composition.
-- [Why Airflow delegates process ownership](docs/src/explanation.html.md): Airflow is effective at scheduling and coordinating finite task instances, but its worker process is not always the right owner for a long-running service or...
-- [API reference](docs/src/api.html.md): Supervisor(dag, cfg, **kwargs)
+- [Tutorial: run your first supervised job](docs/src/tutorial.html.md): We will run a five-second job under supervisord, monitor it from Airflow, and remove its configuration when it finishes.
+- [How-to guides](docs/src/how-to.html.md): Run jobs on an Airflow worker or a remote SSH host, with configuration in Python or airflow-config YAML.
+- [Why Airflow delegates process ownership](docs/src/explanation.html.md): An Airflow task instance owns a worker process for part of a workflow. A job that spawns children or keeps running between DAG runs needs a process manager w...
+- [API reference](docs/src/api.html.md): All names below are exported from airflow_supervisor.
 - [airflow_supervisor.Supervisor](docs/src/_build/airflow_supervisor.Supervisor.html.md): Bases: object
 - [airflow_supervisor.SupervisorSSH](docs/src/_build/airflow_supervisor.SupervisorSSH.html.md): Bases: Supervisor
 - [airflow_supervisor.SupervisorAirflowConfiguration](docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html.md): Bases: SupervisorConvenienceConfiguration

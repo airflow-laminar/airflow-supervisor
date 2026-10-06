@@ -80,7 +80,7 @@
 <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
 <div class="overflow-y-auto h-full w-full relative pr-6"><nav class="table w-full min-w-full my-6 lg:my-8">
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: run a supervised job from Airflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: run your first supervised job</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to.html">How-to guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="explanation.html">Why Airflow delegates process ownership</a></li>
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="current reference internal expandable" href="#">API reference<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
@@ -125,8 +125,244 @@
 <div id="content" role="main">
 <section class="tex2jax_ignore mathjax_ignore" id="api-reference">
 <h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h1>
-<section id="airflow-lifecycle">
-<h2>Airflow lifecycle<a class="headerlink" href="#airflow-lifecycle" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#airflow-lifecycle'">¶</a></h2>
+<section id="lifecycle-classes-and-task-models">
+<h2>Lifecycle classes and task models<a class="headerlink" href="#lifecycle-classes-and-task-models" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#lifecycle-classes-and-task-models'">¶</a></h2>
+<p>All names below are exported from <code class="docutils literal notranslate"><span class="pre">airflow_supervisor</span></code>.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Execution</p></th>
+<th class="head"><p>Lifecycle class</p></th>
+<th class="head"><p>Configuration model</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">airflow-config</span></code> task model</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Local</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Supervisor</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SupervisorTask</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>SSH</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SupervisorSSH</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">Supervisor(dag,</span> <span class="pre">cfg,</span> <span class="pre">**kwargs)</span></code> adds lifecycle tasks to an existing Airflow DAG.
+<code class="docutils literal notranslate"><span class="pre">cfg</span></code> accepts a configuration model or a dictionary validated as that model.
+Construction requires an active DAG context for internally created tasks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SupervisorSSH(dag,</span> <span class="pre">cfg,</span> <span class="pre">host=None,</span> <span class="pre">port=None,</span> <span class="pre">**kwargs)</span></code> adds the same lifecycle
+with SSH operators for remote configuration and daemon commands. Program
+operations and checks use XML-RPC. A supplied <code class="docutils literal notranslate"><span class="pre">Host</span></code> overrides the SSH target
+and XML-RPC host; a supplied <code class="docutils literal notranslate"><span class="pre">Port</span></code> overrides the supervisord listen port. A
+host’s pool is used when <code class="docutils literal notranslate"><span class="pre">cfg.pool</span></code> is unset. <code class="docutils literal notranslate"><span class="pre">command_prefix</span></code> can also be passed
+as a constructor keyword.</p>
+<p><code class="docutils literal notranslate"><span class="pre">SupervisorTaskArgs</span></code> contains <code class="docutils literal notranslate"><span class="pre">cfg</span></code> and inherited Airflow task arguments.
+<code class="docutils literal notranslate"><span class="pre">SupervisorSSHTaskArgs</span></code> adds <code class="docutils literal notranslate"><span class="pre">host</span></code> and <code class="docutils literal notranslate"><span class="pre">port</span></code>, accepting <code class="docutils literal notranslate"><span class="pre">Host</span></code>/<code class="docutils literal notranslate"><span class="pre">Port</span></code> models,
+queries of kind <code class="docutils literal notranslate"><span class="pre">select</span></code>, or callables and their import paths. <code class="docutils literal notranslate"><span class="pre">SupervisorTask</span></code>
+and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> resolve their default <code class="docutils literal notranslate"><span class="pre">operator</span></code> to the corresponding
+lifecycle class.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">SupervisorOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">SupervisorOperatorArgs</span></code>, <code class="docutils literal notranslate"><span class="pre">SupervisorSSHOperator</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">SupervisorSSHOperatorArgs</span></code> names are aliases for the corresponding task models.</p>
+<section id="dag-constraints-and-boundaries">
+<h3>DAG constraints and boundaries<a class="headerlink" href="#dag-constraints-and-boundaries" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#dag-constraints-and-boundaries'">¶</a></h3>
+<p>Both lifecycle classes set <code class="docutils literal notranslate"><span class="pre">catchup=False</span></code>, <code class="docutils literal notranslate"><span class="pre">concurrency=1</span></code>,
+<code class="docutils literal notranslate"><span class="pre">max_active_tasks=1</span></code>, and <code class="docutils literal notranslate"><span class="pre">max_active_runs=1</span></code> on their DAG.
+Generated task IDs use <code class="docutils literal notranslate"><span class="pre">&lt;dag_id&gt;-&lt;step&gt;</span></code>, independent of a task model’s <code class="docutils literal notranslate"><span class="pre">task_id</span></code>.
+A DAG supports one supervisor lifecycle; multiple programs belong in its
+<code class="docutils literal notranslate"><span class="pre">cfg.program</span></code> mapping.</p>
+<p>The exposed boundaries are <code class="docutils literal notranslate"><span class="pre">configure_supervisor</span></code>, <code class="docutils literal notranslate"><span class="pre">start_supervisor</span></code>,
+<code class="docutils literal notranslate"><span class="pre">start_programs</span></code>, <code class="docutils literal notranslate"><span class="pre">check_programs</span></code>, <code class="docutils literal notranslate"><span class="pre">restart_programs</span></code>, <code class="docutils literal notranslate"><span class="pre">stop_programs</span></code>,
+<code class="docutils literal notranslate"><span class="pre">stop_supervisor</span></code>, and <code class="docutils literal notranslate"><span class="pre">unconfigure_supervisor</span></code>. Dependency operators connect
+upstream tasks to configuration and downstream tasks to unconfiguration.
+<code class="docutils literal notranslate"><span class="pre">supervisor_client</span></code> returns an XML-RPC client for the lifecycle’s configuration.</p>
+<p>Stop and cleanup steps follow the successful monitoring branch. They are not a
+general failure finalizer. With <code class="docutils literal notranslate"><span class="pre">cleanup=False</span></code>, unconfiguration is a skipped
+task. With <code class="docutils literal notranslate"><span class="pre">stop_on_exit=False</span></code>, both program stop and unconfiguration are
+skipped, and the default downstream trigger rules skip daemon shutdown.</p>
+</section>
+</section>
+<section id="configuration-models">
+<h2>Configuration models<a class="headerlink" href="#configuration-models" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#configuration-models'">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code> extends the re-exported
+<code class="docutils literal notranslate"><span class="pre">SupervisorConvenienceConfiguration</span></code>. <code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code>
+extends it with SSH settings.</p>
+<section id="supervisor-fields">
+<h3>Supervisor fields<a class="headerlink" href="#supervisor-fields" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#supervisor-fields'">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">program</span></code></p></td>
+<td><p>Required</p></td>
+<td><p>Mapping of program names to <code class="docutils literal notranslate"><span class="pre">ProgramConfiguration</span></code> models.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">working_dir</span></code></p></td>
+<td><p>Derived temporary directory</p></td>
+<td><p>Instance directory on the worker or SSH host.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">config_path</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">supervisord.conf</span></code></p></td>
+<td><p>Configuration path resolved under <code class="docutils literal notranslate"><span class="pre">working_dir</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">host</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">localhost</span></code></p></td>
+<td><p>Host used by the XML-RPC client.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">port</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">*:9001</span></code></p></td>
+<td><p>Supervisord HTTP/XML-RPC listen address. Integer ports normalize to <code class="docutils literal notranslate"><span class="pre">*:&lt;port&gt;</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">username</span></code>, <code class="docutils literal notranslate"><span class="pre">password</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Supervisord HTTP/XML-RPC credentials.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">protocol</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">http</span></code></p></td>
+<td><p>XML-RPC protocol; client ports 80 and 443 select HTTP and HTTPS respectively.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rpcpath</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/RPC2</span></code></p></td>
+<td><p>XML-RPC request path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">startsecs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Required startup duration, applied to all programs. <code class="docutils literal notranslate"><span class="pre">0</span></code> permits immediate exits.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">startretries</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Startup retries; when set, overrides each program’s value.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">exitcodes</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0]</span></code></p></td>
+<td><p>Accepted program exit statuses, applied to all programs.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stopsignal</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">TERM</span></code></p></td>
+<td><p>Stop signal, applied to all programs.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stopwaitsecs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">30</span></code></p></td>
+<td><p>Wait before forced termination.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stopasgroup</span></code>, <code class="docutils literal notranslate"><span class="pre">killasgroup</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Stop and kill the process group.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">command_timeout</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">60</span></code></p></td>
+<td><p>Convenience-command timeout in seconds.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The convenience model forces program <code class="docutils literal notranslate"><span class="pre">autostart=False</span></code> and <code class="docutils literal notranslate"><span class="pre">autorestart=False</span></code>.
+Program stdout and stderr files are <code class="docutils literal notranslate"><span class="pre">&lt;working_dir&gt;/&lt;program&gt;/output.log</span></code> and
+<code class="docutils literal notranslate"><span class="pre">error.log</span></code>. The daemon log and PID file default to <code class="docutils literal notranslate"><span class="pre">supervisord.log</span></code> and
+<code class="docutils literal notranslate"><span class="pre">supervisord.pid</span></code> in the working directory. Serialized configuration is stored
+as <code class="docutils literal notranslate"><span class="pre">pydantic.json</span></code>; cleanup removes the working directory, including logs.</p>
+</section>
+<section id="monitoring-and-lifecycle-fields">
+<h3>Monitoring and lifecycle fields<a class="headerlink" href="#monitoring-and-lifecycle-fields" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#monitoring-and-lifecycle-fields'">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_interval</span></code></p></td>
+<td><p>5 seconds</p></td>
+<td><p>Polling interval for the <code class="docutils literal notranslate"><span class="pre">airflow-ha</span></code> sensor.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">check_timeout</span></code></p></td>
+<td><p>8 hours</p></td>
+<td><p>Sensor timeout.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runtime</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Monitoring end condition relative to <code class="docutils literal notranslate"><span class="pre">reference_date</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">endtime</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Time-of-day end condition passed to <code class="docutils literal notranslate"><span class="pre">airflow-ha</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maxretrigger</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Retrigger limit passed to <code class="docutils literal notranslate"><span class="pre">airflow-ha</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">reference_date</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">data_interval_end</span></code></p></td>
+<td><p>Reference for end conditions; also accepts <code class="docutils literal notranslate"><span class="pre">start_date</span></code> or <code class="docutils literal notranslate"><span class="pre">logical_date</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Airflow pool name or <code class="docutils literal notranslate"><span class="pre">airflow-pydantic</span></code> <code class="docutils literal notranslate"><span class="pre">Pool</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stop_on_exit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Enables program stop on the success path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cleanup</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Enables directory removal when <code class="docutils literal notranslate"><span class="pre">stop_on_exit</span></code> is also true.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">restart_on_initial</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Restarts existing programs on an initial Airflow run.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">restart_on_retrigger</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Restarts programs in the startup step on retriggered runs; takes precedence over <code class="docutils literal notranslate"><span class="pre">restart_on_initial</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Duration fields accept Python <code class="docutils literal notranslate"><span class="pre">timedelta</span></code> values or numeric seconds and duration
+strings in YAML. These fields are passed to <code class="docutils literal notranslate"><span class="pre">HighAvailabilityOperator</span></code> as
+<code class="docutils literal notranslate"><span class="pre">poke_interval</span></code>, <code class="docutils literal notranslate"><span class="pre">timeout</span></code>, <code class="docutils literal notranslate"><span class="pre">runtime</span></code>, <code class="docutils literal notranslate"><span class="pre">endtime</span></code>, <code class="docutils literal notranslate"><span class="pre">maxretrigger</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">reference_date</span></code>. The sensor uses <code class="docutils literal notranslate"><span class="pre">mode="poke"</span></code>.</p>
+</section>
+<section id="ssh-fields">
+<h3>SSH fields<a class="headerlink" href="#ssh-fields" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#ssh-fields'">¶</a></h3>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">command_prefix</span></code></p></td>
+<td><p>Empty string</p></td>
+<td><p>Shell commands prepended to remote lifecycle commands.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ssh_operator_args</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">airflow-pydantic</span></code> <code class="docutils literal notranslate"><span class="pre">SSHOperatorArgs</span></code>, including <code class="docutils literal notranslate"><span class="pre">ssh_conn_id</span></code>, <code class="docutils literal notranslate"><span class="pre">remote_host</span></code>, and command timeouts.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">local_or_remote</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">remote</span></code></p></td>
+<td><p>Overrides the local model’s <code class="docutils literal notranslate"><span class="pre">local</span></code> default.</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">ssh_operator_args.ssh_conn_id</span></code> selects an Airflow SSH connection. Its port is
+the SSH port; <code class="docutils literal notranslate"><span class="pre">cfg.port</span></code> remains the supervisord listen port. <code class="docutils literal notranslate"><span class="pre">cfg.host</span></code> sets the
+XML-RPC target and does not by itself select an SSH connection.</p>
+<p><code class="docutils literal notranslate"><span class="pre">load_airflow_config</span></code> aliases <code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.load</span></code>.
+<code class="docutils literal notranslate"><span class="pre">load_airflow_ssh_config</span></code> aliases <code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration.load</span></code>.
+These load supervisor configuration models. The <code class="docutils literal notranslate"><span class="pre">airflow_config.load_config</span></code>
+function loads a collection of declarative DAGs; the
+<a class="reference internal" href="how-to.html"><span class="std std-doc">how-to guides</span></a> show that workflow.</p>
+</section>
+</section>
+<section id="generated-api">
+<h2>Generated API<a class="headerlink" href="#generated-api" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#generated-api'">¶</a></h2>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_build/airflow_supervisor.Supervisor.html#airflow_supervisor.Supervisor" title="airflow_supervisor.Supervisor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Supervisor</span></code></a>(dag, cfg, **kwargs)</p></td>
@@ -161,9 +397,8 @@
 </tr>
 </tbody>
 </table>
-</section>
 <section id="re-exported-supervisor-models">
-<h2>Re-exported supervisor models<a class="headerlink" href="#re-exported-supervisor-models" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#re-exported-supervisor-models'">¶</a></h2>
+<h3>Re-exported supervisor models<a class="headerlink" href="#re-exported-supervisor-models" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#re-exported-supervisor-models'">¶</a></h3>
 <table class="autosummary longtable docutils align-default">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="_build/airflow_supervisor.SupervisorConfiguration.html#airflow_supervisor.SupervisorConfiguration" title="airflow_supervisor.SupervisorConfiguration"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SupervisorConfiguration</span></code></a></p></td>
@@ -185,11 +420,24 @@
 </table>
 </section>
 </section>
+</section>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
-<li><a :data-current="activeSection === '#airflow-lifecycle'" class="reference internal" href="#airflow-lifecycle">Airflow lifecycle</a></li>
+<li><a :data-current="activeSection === '#lifecycle-classes-and-task-models'" class="reference internal" href="#lifecycle-classes-and-task-models">Lifecycle classes and task models</a><ul>
+<li><a :data-current="activeSection === '#dag-constraints-and-boundaries'" class="reference internal" href="#dag-constraints-and-boundaries">DAG constraints and boundaries</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#configuration-models'" class="reference internal" href="#configuration-models">Configuration models</a><ul>
+<li><a :data-current="activeSection === '#supervisor-fields'" class="reference internal" href="#supervisor-fields">Supervisor fields</a></li>
+<li><a :data-current="activeSection === '#monitoring-and-lifecycle-fields'" class="reference internal" href="#monitoring-and-lifecycle-fields">Monitoring and lifecycle fields</a></li>
+<li><a :data-current="activeSection === '#ssh-fields'" class="reference internal" href="#ssh-fields">SSH fields</a></li>
+</ul>
+</li>
+<li><a :data-current="activeSection === '#generated-api'" class="reference internal" href="#generated-api">Generated API</a><ul>
 <li><a :data-current="activeSection === '#re-exported-supervisor-models'" class="reference internal" href="#re-exported-supervisor-models">Re-exported supervisor models</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </aside>

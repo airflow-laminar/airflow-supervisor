@@ -1,67 +1,85 @@
-# Tutorial: run a supervised job from Airflow
+# Tutorial: run your first supervised job
 
-In this tutorial, we will define a supervisord-managed job in `airflow-config`
-YAML and load it as an Airflow DAG.
+We will run a five-second job under supervisord, monitor it from Airflow, and
+remove its configuration when it finishes.
 
-## Install the packages
+Use an initialized Airflow 2 environment on a Unix host, with all tasks
+running on that host. Port 9001 must be available, and the Airflow user must be
+able to write `/var/tmp/airflow-supervisor-demo`.
 
-For Airflow 3, run:
+## Install the integration
+
+In the Airflow environment, run:
 
 ```bash
-pip install 'airflow-supervisor[airflow3]' airflow-config supervisor
+pip install 'airflow-supervisor[airflow]' supervisor
 ```
 
-Use the `airflow` extra instead when running Airflow 2. The Airflow worker must
-be allowed to launch the configured command and write the working directory.
+Check that the daemon is available:
 
-## Define the DAG
-
-Create `config/supervisor.yaml`:
-
-```yaml
-dags:
-  nightly-supervisor:
-    schedule: "@daily"
-    start_date: "2024-01-01"
-    catchup: false
-    tasks:
-      run-nightly:
-        _target_: airflow_supervisor.SupervisorTask
-        cfg:
-          working_dir: /var/tmp/nightly-supervisor
-          port: "127.0.0.1:9001"
-          stop_on_exit: true
-          cleanup: true
-          program:
-            nightly:
-              command: python /opt/jobs/nightly.py
+```bash
+supervisord --version
 ```
 
-## Load the configuration
+The command prints the installed Supervisor version.
 
-Create `nightly_supervisor.py` in the DAG folder:
+## Create the DAG
+
+Save this as `supervisor_demo.py` in your Airflow DAG folder:
 
 ```python
-from airflow_config import load_config
+from datetime import datetime, timezone
 
-config = load_config("config", "supervisor")
-config.generate_in_mem()
+from airflow import DAG
+from airflow_supervisor import ProgramConfiguration, Supervisor, SupervisorAirflowConfiguration
+
+with DAG(
+    dag_id="supervisor-demo",
+    schedule=None,
+    start_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+    catchup=False,
+) as dag:
+    supervisor = Supervisor(
+        dag=dag,
+        cfg=SupervisorAirflowConfiguration(
+            working_dir="/var/tmp/airflow-supervisor-demo",
+            port="127.0.0.1:9001",
+            program={"demo": ProgramConfiguration(command="/bin/sleep 5")},
+        ),
+    )
 ```
 
-## Inspect the lifecycle
-
-Parse the DAG folder:
+List the generated tasks:
 
 ```bash
-airflow dags list | grep nightly-supervisor
-airflow tasks list nightly-supervisor
+airflow tasks list supervisor-demo
 ```
 
-The task list includes configure, daemon start, program start, check, restart,
-program stop, daemon stop, and unconfigure steps.
+Look for `supervisor-demo-configure-supervisor`,
+`supervisor-demo-start-programs`, and `supervisor-demo-check-programs`.
+The DAG also contains restart, shutdown, cleanup, and failure-handling tasks.
 
-Trigger the DAG in a test environment containing `/opt/jobs/nightly.py`. The
-check step remains active while the program runs and completes after supervisord
-reports an accepted exit status.
+## Run the job
 
-You have now connected a declarative Airflow DAG to a dedicated process manager.
+Execute one DAG run locally:
+
+```bash
+airflow dags test supervisor-demo 2025-01-01
+```
+
+The configure task writes `supervisord.conf` and `pydantic.json`. The startup
+tasks launch supervisord and `/bin/sleep`. After the program exits with status 0,
+the check task takes its success branch. The shutdown tasks stop the daemon and
+remove the working directory. The DAG run finishes with state `success`;
+restart and force-kill branches are skipped during this run.
+
+Check that cleanup completed:
+
+```bash
+test ! -d /var/tmp/airflow-supervisor-demo && echo "Cleanup complete"
+```
+
+You should see `Cleanup complete`.
+
+For your own jobs, follow the [local and SSH guides](how-to.html.md). The
+[configuration reference](api.html.md) lists lifecycle and monitoring settings.
