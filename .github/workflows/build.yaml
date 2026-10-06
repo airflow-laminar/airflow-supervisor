@@ -68,6 +68,11 @@ jobs:
 
       - name: Test
         run: make coverage
+        if: ${{ matrix.airflow != '' }}
+
+      - name: Test without Airflow
+        run: make test
+        if: ${{ matrix.airflow == '' }}
 
       - name: Upload test results (Python)
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1

@@ -29,9 +29,9 @@ classifiers = [
 ]
 
 dependencies = [
-    "airflow-ha>=1.6.3,<1.7",
-    "airflow-pydantic>=1.6,<1.8",
-    "supervisor-pydantic>=1.3,<1.5",
+    "airflow-ha>=1.6.5,<1.7",
+    "airflow-pydantic>=1.7.0,<1.8",
+    "supervisor-pydantic>=1.5.1,<1.6",
 ]
 
 [project.optional-dependencies]
@@ -57,7 +57,7 @@ develop = [
     # airflow-balancer integration
     "airflow-balancer>=0.3.1",
     # temp
-    "supervisor-pydantic>=1.3.3,<1.5",
+    "supervisor-pydantic>=1.5.1,<1.6",
 ]
 airflow = [
     "apache-airflow>=2.8,<3",
@@ -167,6 +167,7 @@ theme = "sphinxawesome_theme"
 pages = [
     "docs/src/tutorial.md",
     "docs/src/how-to.md",
+    "docs/src/observability.md",
     "docs/src/explanation.md",
     "docs/src/api.md",
 ]
