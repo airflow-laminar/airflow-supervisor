@@ -5,7 +5,6 @@ from airflow_pydantic import Pool, fail, skip
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
 from supervisor_pydantic.convenience import (
     SupervisorTaskStep,
-    check_programs,
     kill_supervisor,
     remove_supervisor_config,
     restart_programs,
@@ -18,10 +17,12 @@ from supervisor_pydantic.convenience import (
 
 from airflow_supervisor.config import SupervisorAirflowConfiguration
 
+from .observability import _RPC_ERRORS, _failure_details, _LogForwarder, _publish_status
+
 if TYPE_CHECKING:
     from airflow.models.dag import DAG
     from airflow.models.operator import Operator
-    from airflow_ha import CheckResult, HighAvailabilityOperator
+    from airflow_ha import HighAvailabilityOperator
 
 __all__ = ("Supervisor",)
 
@@ -49,8 +50,30 @@ class Supervisor:
         # store or create client
         self._xmlrpc_client = kwargs.pop("xmlrpc_client", SupervisorRemoteXMLRPCClient(self._cfg))
 
+        self._callbacks = {
+            name: kwargs.pop(name)
+            for name in (
+                "on_failure_callback",
+                "on_retry_callback",
+                "on_success_callback",
+                "on_execute_callback",
+                "on_skipped_callback",
+            )
+            if name in kwargs
+        }
+        self._log_forwarder = _LogForwarder(
+            cfg,
+            self._xmlrpc_client,
+            (
+                f"{dag.dag_id}-check-programs",
+                f"{dag.dag_id}-start-programs",
+                f"{dag.dag_id}-restart-programs",
+            ),
+        )
+
         # store dag
         self._dag = dag
+        existing_tasks = set(dag.task_ids)
 
         self.setup_dag()
 
@@ -72,7 +95,9 @@ class Supervisor:
         from airflow.operators.python import PythonOperator
 
         (
-            PythonOperator(task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, pool=self._pool)
+            PythonOperator(
+                task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, **self.get_base_operator_kwargs()
+            )
             >> self._force_kill
         )
 
@@ -81,13 +106,18 @@ class Supervisor:
             task_id=f"{self._dag.dag_id}-check-config-failed",
             python_callable=fail,
             trigger_rule="one_failed",
-            pool=self._pool,
+            **self.get_base_operator_kwargs(),
         )
         self.configure_supervisor >> any_config_fail
         self.start_supervisor >> any_config_fail
         self.start_programs >> any_config_fail
         self.stop_programs >> any_config_fail
         self.unconfigure_supervisor >> any_config_fail
+
+        for task in self._dag.tasks:
+            if task.task_id not in existing_tasks:
+                for name, callback in self._callbacks.items():
+                    setattr(task, name, callback)
 
     def setup_dag(self):
         # override dag kwargs that dont make sense
@@ -115,14 +145,20 @@ class Supervisor:
             else:
                 _log.info("Skipping cleanup of supervisor config on exit")
                 self._unconfigure_supervisor = PythonOperator(
-                    task_id=f"{self._dag.dag_id}-unconfigure-supervisor", python_callable=skip
+                    task_id=f"{self._dag.dag_id}-unconfigure-supervisor",
+                    python_callable=skip,
+                    **self.get_base_operator_kwargs(),
                 )
         else:
             _log.info("Not stopping programs on exit")
             _log.info("Skipping cleanup of supervisor config on exit")
-            self._stop_programs = PythonOperator(task_id=f"{self._dag.dag_id}-stop-programs", python_callable=skip)
+            self._stop_programs = PythonOperator(
+                task_id=f"{self._dag.dag_id}-stop-programs", python_callable=skip, **self.get_base_operator_kwargs()
+            )
             self._unconfigure_supervisor = PythonOperator(
-                task_id=f"{self._dag.dag_id}-unconfigure-supervisor", python_callable=skip
+                task_id=f"{self._dag.dag_id}-unconfigure-supervisor",
+                python_callable=skip,
+                **self.get_base_operator_kwargs(),
             )
 
         self._restart_programs = self.get_step_operator("restart-programs")
@@ -162,93 +198,103 @@ class Supervisor:
 
     @property
     def supervisor_client(self) -> SupervisorRemoteXMLRPCClient:
-        return SupervisorRemoteXMLRPCClient(self._cfg)
+        return self._xmlrpc_client
 
     def get_base_operator_kwargs(self) -> dict:
-        return {"dag": self._dag, "pool": self._pool}
+        return {"dag": self._dag, "pool": self._pool, **self._callbacks}
+
+    def _inspect_programs(self, context, flush=False):
+        infos = self._xmlrpc_client.getProgramProcessInfo()
+        self._log_forwarder.forward(infos, context, flush=flush)
+        _publish_status(infos, context, self._cfg.exitcodes)
+        return infos
+
+    def _diagnose(self, context):
+        try:
+            infos = self._inspect_programs(context, flush=True)
+            _publish_status(infos, context, self._cfg.exitcodes, failed=True)
+            details = _failure_details(infos)
+            _log.error("Supervisor diagnostics: %s", details)
+            return details
+        except _RPC_ERRORS as error:
+            _log.warning("Cannot collect supervisor diagnostics: %s", error)
+            return str(error)
+
+    def _run_step(self, step, context):
+        from airflow.exceptions import AirflowException
+
+        if (
+            step in ("configure-supervisor", "start-supervisor", "start-programs")
+            and self.check_programs.check_end_conditions(**context) is not None
+        ):
+            return False
+        if step == "start-programs" and self._cfg.forward_logs:
+            try:
+                self._log_forwarder.baseline(self._xmlrpc_client.getProgramProcessInfo(), context)
+            except _RPC_ERRORS as error:
+                _log.warning("Cannot establish supervisor log cursors: %s", error)
+        if (
+            step in ("restart-programs", "stop-programs", "stop-supervisor", "unconfigure-supervisor", "force-kill")
+            and self._cfg.forward_logs
+        ):
+            try:
+                self._inspect_programs(context, flush=True)
+            except _RPC_ERRORS as error:
+                _log.warning("Cannot collect final supervisor logs: %s", error)
+        cfg = self._cfg
+        commands = {
+            "configure-supervisor": lambda: write_supervisor_config(cfg, _exit=False),
+            "start-supervisor": lambda: start_supervisor(cfg._pydantic_path, _exit=False),
+            "start-programs": lambda: start_programs(
+                cfg,
+                restart=bool(
+                    cfg.restart_on_retrigger
+                    or (cfg.restart_on_initial and self.check_programs.is_initial_run(**context))
+                ),
+                _exit=False,
+            ),
+            "restart-programs": lambda: restart_programs(cfg, _exit=False),
+            "stop-programs": lambda: stop_programs(cfg, _exit=False),
+            "stop-supervisor": lambda: stop_supervisor(cfg, _exit=False),
+            "unconfigure-supervisor": lambda: remove_supervisor_config(cfg, _exit=False),
+            "force-kill": lambda: kill_supervisor(cfg, _exit=False),
+        }
+        if step not in commands:
+            raise NotImplementedError(f"Unknown step: {step}")
+        try:
+            result = commands[step]()
+        except Exception:
+            self._diagnose(context)
+            raise
+        if result is False:
+            details = self._diagnose(context)
+            raise AirflowException(f"Supervisor {step} failed: {details}")
+        if step in ("restart-programs", "stop-programs") and self._cfg.forward_logs:
+            try:
+                self._inspect_programs(context, flush=True)
+            except _RPC_ERRORS as error:
+                _log.warning("Cannot collect supervisor command output: %s", error)
+        return result
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> dict:
-        if step == "configure-supervisor":
-            return {
-                "python_callable": lambda **kwargs: (
-                    self.check_programs.check_end_conditions(**kwargs) is None
-                    and write_supervisor_config(self._cfg, _exit=False)
-                ),
-                "do_xcom_push": True,
-            }
-        elif step == "start-supervisor":
-            return {
-                "python_callable": lambda **kwargs: (
-                    self.check_programs.check_end_conditions(**kwargs) is None
-                    and start_supervisor(self._cfg._pydantic_path, _exit=False)
-                ),
-                "do_xcom_push": True,
-            }
-        elif step == "start-programs":
-            if self._cfg.restart_on_retrigger:
-                _log.info("Restarting programs on retrigger")
-                return {
-                    "python_callable": lambda **kwargs: (
-                        self.check_programs.check_end_conditions(**kwargs) is None
-                        and start_programs(
-                            self._cfg,
-                            # Always restart programs
-                            restart=True,
-                            _exit=False,
-                        )
-                    ),
-                    "do_xcom_push": True,
-                }
-            if self._cfg.restart_on_initial:
-                _log.info("Restarting programs on initial run")
-                return {
-                    "python_callable": lambda **kwargs: (
-                        self.check_programs.check_end_conditions(**kwargs) is None
-                        and start_programs(
-                            self._cfg,
-                            # Restart programs if initial run
-                            restart=self.check_programs.is_initial_run(**kwargs),
-                            _exit=False,
-                        )
-                    ),
-                    "do_xcom_push": True,
-                }
-            _log.info("Starting programs as normal on initial run")
-            return {
-                "python_callable": lambda **kwargs: (
-                    self.check_programs.check_end_conditions(**kwargs) is None
-                    # Don't restart programs
-                    and start_programs(self._cfg, _exit=False)
-                ),
-                "do_xcom_push": True,
-            }
-        elif step == "stop-programs":
-            return {"python_callable": lambda: stop_programs(self._cfg, _exit=False), "do_xcom_push": True}
-        elif step == "check-programs":
+        if step == "check-programs":
 
-            def _check_programs(supervisor_cfg=self._cfg, **kwargs) -> "CheckResult":
+            def _check_programs(**context):
                 from airflow_ha import Action, Result
 
-                # TODO formalize
-                if check_programs(supervisor_cfg, check_done=True, _exit=False):
-                    # finish
+                infos = self._inspect_programs(context)
+                if infos and all(info.done(self._cfg.exitcodes) for info in infos):
+                    self._log_forwarder.forward(infos, context, flush=True)
                     return Result.PASS, Action.STOP
-                if check_programs(supervisor_cfg, check_running=True, _exit=False):
+                if infos and all(info.ok(self._cfg.exitcodes) for info in infos):
                     return Result.PASS, Action.CONTINUE
-                if check_programs(supervisor_cfg, _exit=False):
-                    return Result.PASS, Action.CONTINUE
+                self._log_forwarder.forward(infos, context, flush=True)
+                _publish_status(infos, context, self._cfg.exitcodes, failed=True)
+                _log.error("Supervisor workload failed: %s", _failure_details(infos))
                 return Result.FAIL, Action.RETRIGGER
 
             return {"python_callable": _check_programs, "do_xcom_push": True}
-        elif step == "restart-programs":
-            return {"python_callable": lambda: restart_programs(self._cfg, _exit=False), "do_xcom_push": True}
-        elif step == "stop-supervisor":
-            return {"python_callable": lambda: stop_supervisor(self._cfg, _exit=False), "do_xcom_push": True}
-        elif step == "unconfigure-supervisor":
-            return {"python_callable": lambda: remove_supervisor_config(self._cfg, _exit=False), "do_xcom_push": True}
-        elif step == "force-kill":
-            return {"python_callable": lambda: kill_supervisor(self._cfg, _exit=False), "do_xcom_push": True}
-        raise NotImplementedError(f"Unknown step: {step}")
+        return {"python_callable": lambda **context: self._run_step(step, context), "do_xcom_push": True}
 
     def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
         from airflow.operators.python import PythonOperator
