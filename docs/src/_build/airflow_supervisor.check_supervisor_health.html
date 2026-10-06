@@ -21,9 +21,9 @@
 <meta content="#ffffff" media="(prefers-color-scheme: light)" name="theme-color"/>
 <meta content="#030711" media="(prefers-color-scheme: dark)" name="theme-color"/>
 <meta content="width=device-width, initial-scale=1" name="viewport"/>
-<title>airflow_supervisor.SupervisorSSH | airflow-supervisor v1.10.5</title>
-<meta content="airflow_supervisor.SupervisorSSH | airflow-supervisor v1.10.5" property="og:title"/>
-<meta content="airflow_supervisor.SupervisorSSH | airflow-supervisor v1.10.5" name="twitter:title"/>
+<title>airflow_supervisor.check_supervisor_health | airflow-supervisor v1.10.5</title>
+<meta content="airflow_supervisor.check_supervisor_health | airflow-supervisor v1.10.5" property="og:title"/>
+<meta content="airflow_supervisor.check_supervisor_health | airflow-supervisor v1.10.5" name="twitter:title"/>
 <link href="../../../_static/pygments.css?v=03e43079" rel="stylesheet" type="text/css"/>
 <link href="../../../_static/theme.css?v=d6d7c91b" rel="stylesheet" type="text/css"/>
 <link href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" rel="stylesheet" type="text/css"/>
@@ -37,8 +37,8 @@
 <link href="../../../_static/awesome-myst-nb.css?v=7c7ea10c" rel="stylesheet" type="text/css"/>
 <link href="../../../search.html" rel="search" title="Search"/>
 <link href="../../../genindex.html" rel="index" title="Index"/>
-<link href="airflow_supervisor.SupervisorAirflowConfiguration.html" rel="next" title="airflow_supervisor.SupervisorAirflowConfiguration"/>
-<link href="airflow_supervisor.Supervisor.html" rel="prev" title="airflow_supervisor.Supervisor"/>
+<link href="airflow_supervisor.SupervisorConfiguration.html" rel="next" title="airflow_supervisor.SupervisorConfiguration"/>
+<link href="airflow_supervisor.load_airflow_ssh_config.html" rel="prev" title="airflow_supervisor.load_airflow_ssh_config"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -86,7 +86,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../explanation.html">Why Airflow delegates process ownership</a></li>
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="../api.html">API reference<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul class="current" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_supervisor.SupervisorSSH</a></li>
+<li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.SupervisorSSH.html">airflow_supervisor.SupervisorSSH</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.SupervisorAirflowConfiguration.html">airflow_supervisor.SupervisorAirflowConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.SupervisorSSHAirflowConfiguration.html">airflow_supervisor.SupervisorSSHAirflowConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.SupervisorTask.html">airflow_supervisor.SupervisorTask</a></li>
@@ -95,7 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.SupervisorSSHTaskArgs.html">airflow_supervisor.SupervisorSSHTaskArgs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.load_airflow_config.html">airflow_supervisor.load_airflow_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.load_airflow_ssh_config.html">airflow_supervisor.load_airflow_ssh_config</a></li>
-<li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.check_supervisor_health.html">airflow_supervisor.check_supervisor_health</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">airflow_supervisor.check_supervisor_health</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.SupervisorConfiguration.html">airflow_supervisor.SupervisorConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.SupervisorConvenienceConfiguration.html">airflow_supervisor.SupervisorConvenienceConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="airflow_supervisor.ProgramConfiguration.html">airflow_supervisor.ProgramConfiguration</a></li>
@@ -123,98 +123,21 @@
 </svg>
 </a>
 <div class="mr-1">/</div><a class="hover:text-foreground overflow-hidden text-ellipsis whitespace-nowrap" href="../api.html">API reference</a>
-<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">airflow_supervisor.SupervisorSSH</span>
+<div class="mr-1">/</div><span aria-current="page" class="font-medium text-foreground overflow-hidden text-ellipsis whitespace-nowrap">airflow_supervisor.check_supervisor_health</span>
 </nav>
 <div id="content" role="main">
-<section id="airflow-supervisor-supervisorssh">
-<h1>airflow_supervisor.SupervisorSSH<a class="headerlink" href="#airflow-supervisor-supervisorssh" title="Link to this heading">¶</a></h1>
-<dl class="py class">
-<dt class="sig sig-object py" id="airflow_supervisor.SupervisorSSH">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">airflow_supervisor.</span></span><span class="sig-name descname"><span class="pre">SupervisorSSH</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DAG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="airflow_supervisor.SupervisorSSHAirflowConfiguration.html#airflow_supervisor.SupervisorSSHAirflowConfiguration" title="airflow_supervisor.config.supervisor_ssh.SupervisorSSHAirflowConfiguration"><span class="pre">SupervisorSSHAirflowConfiguration</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Host</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Port</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/airflow_supervisor/airflow/ssh.html#SupervisorSSH"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_supervisor.SupervisorSSH" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#airflow_supervisor.SupervisorSSH'">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="airflow_supervisor.Supervisor.html#airflow_supervisor.Supervisor" title="airflow_supervisor.airflow.local.Supervisor"><code class="xref py py-class docutils literal notranslate"><span class="pre">Supervisor</span></code></a></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="airflow_supervisor.SupervisorSSH.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DAG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="airflow_supervisor.SupervisorSSHAirflowConfiguration.html#airflow_supervisor.SupervisorSSHAirflowConfiguration" title="airflow_supervisor.config.supervisor_ssh.SupervisorSSHAirflowConfiguration"><span class="pre">SupervisorSSHAirflowConfiguration</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">host</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Host</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">port</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Port</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/airflow_supervisor/airflow/ssh.html#SupervisorSSH.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_supervisor.SupervisorSSH.__init__" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#airflow_supervisor.SupervisorSSH.__init__'">¶</a></dt>
-<dd></dd></dl>
-<p class="rubric">Methods</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#airflow_supervisor.SupervisorSSH.__init__" title="airflow_supervisor.SupervisorSSH.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(dag, cfg[, host, port])</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_base_operator_kwargs</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_step_kwargs</span></code>(step)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_step_operator</span></code>(step)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">initialize_tasks</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_downstream</span></code>(other)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_upstream</span></code>(other)</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_dag</span></code>()</p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_relative</span></code>(other[, upstream, edge_modifier])</p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
-<p class="rubric">Attributes</p>
-<table class="autosummary longtable docutils align-default">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_programs</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">configure_supervisor</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">leaves</span></code></p></td>
-<td><p>Return the leaves of the DAG.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">restart_programs</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">roots</span></code></p></td>
-<td><p>Return the roots of the DAG.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_programs</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_supervisor</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_programs</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">stop_supervisor</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">supervisor_client</span></code></p></td>
-<td><p></p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unconfigure_supervisor</span></code></p></td>
-<td><p></p></td>
-</tr>
-</tbody>
-</table>
+<section id="airflow-supervisor-check-supervisor-health">
+<h1>airflow_supervisor.check_supervisor_health<a class="headerlink" href="#airflow-supervisor-check-supervisor-health" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="airflow_supervisor.check_supervisor_health">
+<span class="sig-prename descclassname"><span class="pre">airflow_supervisor.</span></span><span class="sig-name descname"><span class="pre">check_supervisor_health</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_running</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supervisor_client</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">context</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../../_modules/airflow_supervisor/airflow/observability.html#check_supervisor_health"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#airflow_supervisor.check_supervisor_health" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#airflow_supervisor.check_supervisor_health'">¶</a></dt>
+<dd><p>Check an existing instance without starting, stopping, or reconfiguring it.</p>
 </dd></dl>
 </section>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
-<li><a :data-current="activeSection === '#airflow_supervisor.SupervisorSSH'" class="reference internal" href="#airflow_supervisor.SupervisorSSH"><code class="docutils literal notranslate"><span class="pre">SupervisorSSH</span></code></a><ul>
-<li><a :data-current="activeSection === '#airflow_supervisor.SupervisorSSH.__init__'" class="reference internal" href="#airflow_supervisor.SupervisorSSH.__init__"><code class="docutils literal notranslate"><span class="pre">SupervisorSSH.__init__()</span></code></a></li>
-</ul>
-</li>
+<li><a :data-current="activeSection === '#airflow_supervisor.check_supervisor_health'" class="reference internal" href="#airflow_supervisor.check_supervisor_health"><code class="docutils literal notranslate"><span class="pre">check_supervisor_health()</span></code></a></li>
 </ul>
 </div>
 </aside>

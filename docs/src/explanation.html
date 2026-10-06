@@ -38,7 +38,7 @@
 <link href="../../search.html" rel="search" title="Search"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="api.html" rel="next" title="API reference"/>
-<link href="how-to.html" rel="prev" title="How-to guides"/>
+<link href="observability.html" rel="prev" title="How to forward program logs and check retained services"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -82,6 +82,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: run your first supervised job</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to.html">How-to guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">How to forward program logs and check retained services</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Why Airflow delegates process ownership</a></li>
 <li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="api.html">API reference<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
@@ -94,6 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorSSHTaskArgs.html">airflow_supervisor.SupervisorSSHTaskArgs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.load_airflow_config.html">airflow_supervisor.load_airflow_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.load_airflow_ssh_config.html">airflow_supervisor.load_airflow_ssh_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.check_supervisor_health.html">airflow_supervisor.check_supervisor_health</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorConfiguration.html">airflow_supervisor.SupervisorConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorConvenienceConfiguration.html">airflow_supervisor.SupervisorConvenienceConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.ProgramConfiguration.html">airflow_supervisor.ProgramConfiguration</a></li>

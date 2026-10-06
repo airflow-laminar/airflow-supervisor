@@ -54,6 +54,9 @@ and DAG constraints. [Why Airflow delegates process ownership](docs/src/explanat
 explains worker placement, SSH and XML-RPC, and the Python/YAML configuration
 choices.
 
+Use the [log forwarding and health-check guide](docs/src/observability.html.md) to
+collect program output in task logs and monitor retained services between runs.
+
 Published documentation is available at
 [airflow-laminar.github.io/airflow-supervisor](https://airflow-laminar.github.io/airflow-supervisor/).
 
@@ -239,6 +242,8 @@ dags:
 Save `local_supervisor.py` in the DAG folder:
 
 ```python
+"""Generate Airflow DAGs from the local supervisor configuration."""
+
 from airflow_config import load_config
 
 config = load_config("config", "local_supervisor")
@@ -343,6 +348,8 @@ If the remote tools are in a virtual environment, add
 Save `ssh_supervisor.py` in the DAG folder:
 
 ```python
+"""Generate Airflow DAGs from the SSH supervisor configuration."""
+
 from airflow_config import load_config
 
 config = load_config("config", "ssh_supervisor")
@@ -434,6 +441,257 @@ tasks:
 Upstream tasks precede configuration; downstream tasks follow unconfiguration.
 Keep stop and cleanup enabled if downstream tasks should run with the default
 `all_success` trigger rule. Disabling cleanup creates a skipped boundary task.
+
+<!-- docs/src/observability.html.md -->
+
+# How to forward program logs and check retained services
+
+Forward a program’s stdout and stderr into Airflow task logs during its lifecycle.
+For services retained between DAG runs, use a separate scheduled health task to
+check the existing supervisord instance and run Airflow’s failure callbacks.
+
+## Forward logs in an inline Python DAG
+
+Complete the [local worker setup](how-to.html.md#how-to-run-a-local-job-in-python).
+Save this DAG in the DAG folder, choosing a writable directory and unused port:
+
+```python
+import logging
+from datetime import datetime, timezone
+
+from airflow import DAG
+from airflow_supervisor import ProgramConfiguration, Supervisor, SupervisorAirflowConfiguration
+
+
+def report_failure(context):
+    ti = context["task_instance"]
+    failure = ti.xcom_pull(key="supervisor_failure", task_ids=ti.task_id)
+    if failure is None:
+        failure = ti.xcom_pull(key="supervisor_failure", task_ids=f"{ti.dag_id}-check-programs")
+    logging.getLogger(__name__).error("Supervisor task %s failed: %s", ti.task_id, failure)
+
+
+with DAG(
+    dag_id="logged-supervisor",
+    schedule=None,
+    start_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+    catchup=False,
+) as dag:
+    supervisor = Supervisor(
+        dag=dag,
+        on_failure_callback=report_failure,
+        cfg=SupervisorAirflowConfiguration(
+            working_dir="/var/tmp/logged-supervisor",
+            port="127.0.0.1:9010",
+            forward_logs=True,
+            program={
+                "batch": ProgramConfiguration(
+                    command="/bin/sh -c 'echo batch-started; echo diagnostic >&2; sleep 2'",
+                ),
+            },
+        ),
+    )
+```
+
+Trigger `logged-supervisor`. Open its check task’s log and look for lines like
+`[supervisor batch:batch stdout] batch-started` and
+`[supervisor batch:batch stderr] diagnostic`. Program output is also drained
+around restart, stop, and cleanup, so inspect the relevant lifecycle task’s log
+when diagnosing those operations.
+
+Replace `report_failure` with your existing alert callback or call your alert
+transport from that function. Direct callbacks on `Supervisor` and
+`SupervisorSSH` apply to their generated tasks. DAG `default_args` callbacks
+also work. An alert runs when its Airflow task fails; a failed workload can first
+take the configured retrigger path before an Airflow failure occurs.
+
+## Forward logs with airflow-config
+
+Install `airflow-config` in the DAG parsing environment. Create
+`config/logged_supervisor.yaml` beside the loader:
+
+```yaml
+# @package _global_
+_target_: airflow_config.Configuration
+
+dags:
+  logged-supervisor:
+    schedule: null
+    start_date: "2025-01-01"
+    catchup: false
+    tasks:
+      run:
+        _target_: airflow_supervisor.SupervisorTask
+        cfg:
+          working_dir: /var/tmp/logged-supervisor
+          port: "127.0.0.1:9010"
+          forward_logs: true
+          program:
+            batch:
+              command: "/bin/sh -c 'echo batch-started; echo diagnostic >&2; sleep 2'"
+```
+
+Save `logged_supervisor.py` in the DAG folder:
+
+```python
+"""Generate Airflow DAGs from the logged supervisor configuration."""
+
+from airflow_config import load_config
+
+config = load_config("config", "logged_supervisor")
+config.generate_in_mem()
+```
+
+Deploy either this loader or the inline DAG for that DAG ID. Run
+`airflow tasks list logged-supervisor` to check discovery, then trigger the DAG
+and inspect its task logs.
+
+For SSH, enable the same `forward_logs` field on
+`SupervisorSSHAirflowConfiguration` or on `SupervisorSSHTask.cfg`. Follow the
+[SSH setup](how-to.html.md#how-to-run-a-job-over-ssh-in-python), including direct
+worker access to the authenticated XML-RPC endpoint. Both execution modes read
+program logs through XML-RPC; SSH handles the remote lifecycle commands.
+
+## Schedule a health check between runs
+
+First deploy a persistent service using the
+[retained-service settings](how-to.html.md#how-to-keep-a-service-running-between-dag-runs).
+Keep its endpoint and program names stable. A watchdog needs the same connection
+and workload configuration, but never starts, stops, or removes that instance.
+
+For an existing local instance with a program named `api` on port 9011, save this
+DAG. Replace the connection, directory, and command with the retained service’s
+configuration, and connect `report_failure` to your alert transport:
+
+```python
+import logging
+from datetime import datetime, timezone
+
+from airflow import DAG
+from airflow_pydantic.airflow import PythonOperator
+from airflow_supervisor import ProgramConfiguration, SupervisorAirflowConfiguration, check_supervisor_health
+
+
+def report_failure(context):
+    ti = context["task_instance"]
+    status = ti.xcom_pull(key="supervisor_process_status", task_ids=ti.task_id)
+    logging.getLogger(__name__).error("Supervisor health task failed: %s; status=%s", context.get("exception"), status)
+
+
+with DAG(
+    dag_id="supervisor-watchdog",
+    schedule="*/5 * * * *",
+    start_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+    catchup=False,
+    max_active_runs=1,
+) as dag:
+    health = PythonOperator(
+        task_id="health",
+        python_callable=check_supervisor_health,
+        on_failure_callback=report_failure,
+        op_kwargs={
+            "cfg": SupervisorAirflowConfiguration(
+                working_dir="/var/tmp/retained-supervisor",
+                port="127.0.0.1:9011",
+                forward_logs=True,
+                program={"api": ProgramConfiguration(command="/opt/services/api")},
+            ),
+        },
+    )
+```
+
+By default, every workload must be `STARTING` or `RUNNING`. Empty, stopped,
+failed, and unreachable instances fail the health task. For a finite job whose
+successful completion is healthy, add `"require_running": False` to
+`op_kwargs`; this accepts states allowed by the configured exit codes.
+
+Use `host`, `port`, `username`, and `password` matching the remote XML-RPC
+endpoint to monitor an SSH-managed instance. The watchdog only needs XML-RPC
+access; it does not open an SSH session or reconfigure the manager.
+
+## Define the watchdog in airflow-config
+
+Create `config/supervisor_watchdog.yaml` beside the loader. Adapt `cfg` to the
+existing instance:
+
+```yaml
+# @package _global_
+_target_: airflow_config.Configuration
+_convert_: all
+
+dags:
+  supervisor-watchdog:
+    schedule: "*/5 * * * *"
+    start_date: "2025-01-01"
+    catchup: false
+    max_active_runs: 1
+    tasks:
+      health:
+        _target_: airflow_pydantic.PythonTask
+        python_callable: airflow_supervisor.check_supervisor_health
+        op_kwargs:
+          cfg:
+            working_dir: /var/tmp/retained-supervisor
+            port: "127.0.0.1:9011"
+            forward_logs: true
+            program:
+              api:
+                command: /opt/services/api
+```
+
+Save `supervisor_watchdog.py` in the DAG folder:
+
+```python
+"""Generate Airflow DAGs for the supervisor watchdog."""
+
+from airflow_config import load_config
+
+config = load_config("config", "supervisor_watchdog")
+config.generate_in_mem()
+```
+
+Use your existing Airflow failure callback configuration on the `health` task
+or DAG `default_args`. To use the callback from the Python example, save its
+function and `logging` import in an importable `alerts.py` module and add this
+field to the `health` task:
+
+```yaml
+on_failure_callback: alerts.report_failure
+```
+
+The same field can be set on the active lifecycle’s `run` task. Make the module
+available in the DAG parsing and worker environments. For completed finite jobs, add
+`require_running: false` alongside `cfg` under `op_kwargs`.
+
+## Set read limits and inspect diagnostics
+
+Log forwarding is opt-in: `forward_logs` defaults to `False`. Each poll reads
+`log_chunk_size` bytes per program stream, defaulting to 65,536 bytes, with up to
+three extra bytes to finish a UTF-8 character at the boundary. Set
+it on `cfg` in Python or YAML; accepted values are 1 through 1,048,576. Final
+drains read at most 16 chunks per stream and warn when they reach that bound.
+Log read failures warn without changing an otherwise healthy task’s result;
+status and lifecycle failures still fail through their existing paths.
+
+XCom stores cursors and compact process metadata, rather than log contents.
+`supervisor_log_offsets` tracks stream positions. Watchdog runs reuse cursors
+from earlier runs so a scheduled check can collect new output. If a log file
+shrinks below its stored cursor, forwarding resets that cursor and warns.
+XML-RPC does not identify file replacements; rotation to a file of the same
+size or larger can go undetected and omit output. Forwarding does
+not guarantee complete delivery after large output bursts or between checks;
+retain Supervisor logs according to your operational needs.
+
+Inspect `supervisor_process_status` for each program’s name, group, state,
+exit status, spawn error, and PID. `supervisor_failure` retains the last unhealthy
+process snapshot even if a later poll reports recovery. Unreachable instances
+may have no process snapshot; use the task exception in the failure callback.
+Event listeners are excluded from workload completion and health checks.
+
+Supervisord owns log capture between Airflow polls. Airflow forwarding runs
+while a lifecycle task or scheduled watchdog executes. A five-minute watchdog
+can miss a crash that recovers between checks; callbacks report Airflow task
+failures rather than every Supervisor state transition.
 
 <!-- docs/src/explanation.html.md -->
 
@@ -604,6 +862,8 @@ as `pydantic.json`; cleanup removes the working directory, including logs.
 |------------------------|---------------------|--------------------------------------------------------------------------------------------------------|
 | `check_interval`       | 5 seconds           | Polling interval for the `airflow-ha` sensor.                                                          |
 | `check_timeout`        | 8 hours             | Sensor timeout.                                                                                        |
+| `forward_logs`         | `False`             | Forwards workload stdout and stderr through the Airflow task logger.                                   |
+| `log_chunk_size`       | `65536`             | Byte budget per stream per poll; `1`–`1048576`, plus up to 3 bytes for a UTF-8 boundary.               |
 | `runtime`              | `None`              | Monitoring end condition relative to `reference_date`.                                                 |
 | `endtime`              | `None`              | Time-of-day end condition passed to `airflow-ha`.                                                      |
 | `maxretrigger`         | `None`              | Retrigger limit passed to `airflow-ha`.                                                                |
@@ -637,19 +897,40 @@ These load supervisor configuration models. The `airflow_config.load_config`
 function loads a collection of declarative DAGs; the
 [how-to guides](how-to.html.md) show that workflow.
 
+## Health checks and diagnostics
+
+`check_supervisor_health(cfg, require_running=True, supervisor_client=None, **context)`
+checks an existing instance without configuration, startup, stop, or cleanup.
+`cfg` accepts `SupervisorAirflowConfiguration` or a dictionary validated as that
+model. `supervisor_client` optionally supplies the XML-RPC client.
+
+With `require_running=True`, every workload must be `STARTING` or `RUNNING`.
+With `False`, the configured exit codes and successful completion states are
+accepted. Unhealthy, empty, and unreachable instances raise `AirflowException`.
+A successful result contains `host`, `healthy`, and a `processes` summary.
+Event listeners are excluded from workload health and completion checks.
+
+`supervisor_process_status` XCom contains process `name`, `group`, `state`,
+`exitstatus`, `spawnerr`, and `pid`. `supervisor_failure` stores the last unhealthy
+process snapshot. `supervisor_log_offsets` stores byte cursors and the run ID;
+log contents are written to task logs rather than XCom. Final drains read at
+most 16 chunks per stream. The [observability guide](observability.html.md) provides
+Python and YAML configurations.
+
 ## Generated API
 
-| [`Supervisor`](_build/airflow_supervisor.Supervisor.html.md#airflow_supervisor.Supervisor)(dag, cfg, \*\*kwargs)                                                |                                                   |
-|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
-| [`SupervisorSSH`](_build/airflow_supervisor.SupervisorSSH.html.md#airflow_supervisor.SupervisorSSH)(dag, cfg[, host, port])                                     |                                                   |
-| [`SupervisorAirflowConfiguration`](_build/airflow_supervisor.SupervisorAirflowConfiguration.html.md#airflow_supervisor.SupervisorAirflowConfiguration)          | Settings that MUST be set when running in airflow |
-| [`SupervisorSSHAirflowConfiguration`](_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration) |                                                   |
-| [`SupervisorTask`](_build/airflow_supervisor.SupervisorTask.html.md#airflow_supervisor.SupervisorTask)                                                          |                                                   |
-| [`SupervisorTaskArgs`](_build/airflow_supervisor.SupervisorTaskArgs.html.md#airflow_supervisor.SupervisorTaskArgs)                                              |                                                   |
-| [`SupervisorSSHTask`](_build/airflow_supervisor.SupervisorSSHTask.html.md#airflow_supervisor.SupervisorSSHTask)                                                 |                                                   |
-| [`SupervisorSSHTaskArgs`](_build/airflow_supervisor.SupervisorSSHTaskArgs.html.md#airflow_supervisor.SupervisorSSHTaskArgs)                                     |                                                   |
-| [`load_airflow_config`](_build/airflow_supervisor.load_airflow_config.html.md#airflow_supervisor.load_airflow_config)([config_dir, ...])                        |                                                   |
-| [`load_airflow_ssh_config`](_build/airflow_supervisor.load_airflow_ssh_config.html.md#airflow_supervisor.load_airflow_ssh_config)([config_dir, ...])            |                                                   |
+| [`Supervisor`](_build/airflow_supervisor.Supervisor.html.md#airflow_supervisor.Supervisor)(dag, cfg, \*\*kwargs)                                                |                                                                             |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`SupervisorSSH`](_build/airflow_supervisor.SupervisorSSH.html.md#airflow_supervisor.SupervisorSSH)(dag, cfg[, host, port])                                     |                                                                             |
+| [`SupervisorAirflowConfiguration`](_build/airflow_supervisor.SupervisorAirflowConfiguration.html.md#airflow_supervisor.SupervisorAirflowConfiguration)          | Settings that MUST be set when running in airflow                           |
+| [`SupervisorSSHAirflowConfiguration`](_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration) |                                                                             |
+| [`SupervisorTask`](_build/airflow_supervisor.SupervisorTask.html.md#airflow_supervisor.SupervisorTask)                                                          |                                                                             |
+| [`SupervisorTaskArgs`](_build/airflow_supervisor.SupervisorTaskArgs.html.md#airflow_supervisor.SupervisorTaskArgs)                                              |                                                                             |
+| [`SupervisorSSHTask`](_build/airflow_supervisor.SupervisorSSHTask.html.md#airflow_supervisor.SupervisorSSHTask)                                                 |                                                                             |
+| [`SupervisorSSHTaskArgs`](_build/airflow_supervisor.SupervisorSSHTaskArgs.html.md#airflow_supervisor.SupervisorSSHTaskArgs)                                     |                                                                             |
+| [`load_airflow_config`](_build/airflow_supervisor.load_airflow_config.html.md#airflow_supervisor.load_airflow_config)([config_dir, ...])                        |                                                                             |
+| [`load_airflow_ssh_config`](_build/airflow_supervisor.load_airflow_ssh_config.html.md#airflow_supervisor.load_airflow_ssh_config)([config_dir, ...])            |                                                                             |
+| [`check_supervisor_health`](_build/airflow_supervisor.check_supervisor_health.html.md#airflow_supervisor.check_supervisor_health)(cfg[, ...])                   | Check an existing instance without starting, stopping, or reconfiguring it. |
 
 ### Re-exported supervisor models
 
@@ -745,6 +1026,14 @@ Bases: [`Supervisor`](airflow_supervisor.Supervisor.html.md#airflow_supervisor.S
 Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConvenienceConfiguration.html.md#airflow_supervisor.SupervisorConvenienceConfiguration)
 
 Settings that MUST be set when running in airflow
+
+#### *field* forward_logs *: bool* *= False*
+
+Forward program stdout and stderr into Airflow task logs
+
+#### *field* log_chunk_size *: int* *= 65536*
+
+Log read budget in bytes per program stream on each poll
 
 #### *field* check_interval *: timedelta* *= datetime.timedelta(seconds=5)*
 
@@ -873,6 +1162,14 @@ The port to user for Supervisor, if not otherwise provided in configs
 # airflow_supervisor.load_airflow_ssh_config
 
 ### airflow_supervisor.load_airflow_ssh_config(config_dir: str = 'config', config_name: str = '', overrides: list[str] | None = None, , basepath: str = '', \_offset: int = 3) → [SupervisorConfiguration](airflow_supervisor.SupervisorConfiguration.html.md#airflow_supervisor.SupervisorConfiguration)
+
+<!-- docs/src/_build/airflow_supervisor.check_supervisor_health.html.md -->
+
+# airflow_supervisor.check_supervisor_health
+
+### airflow_supervisor.check_supervisor_health(cfg, require_running=True, supervisor_client=None, \*\*context)[[source]](../../../_modules/airflow_supervisor/airflow/observability.html.md#check_supervisor_health)
+
+Check an existing instance without starting, stopping, or reconfiguring it.
 
 <!-- docs/src/_build/airflow_supervisor.SupervisorConfiguration.html.md -->
 
@@ -1164,22 +1461,25 @@ A light wrapper over the supervisor xmlrpc api: [http://supervisord.org/api.html
 
 ### Methods
 
-| [`__init__`](#airflow_supervisor.SupervisorRemoteXMLRPCClient.__init__)(cfg)   |    |
-|--------------------------------------------------------------------------------|----|
-| `getAllProcessInfo`()                                                          |    |
-| `getProcessInfo`(name)                                                         |    |
-| `getState`()                                                                   |    |
-| `readProcessLog`(name)                                                         |    |
-| `readProcessStderrLog`(name[, offset, length])                                 |    |
-| `readProcessStdoutLog`(name[, offset, length])                                 |    |
-| `reloadConfig`([start_new])                                                    |    |
-| `restart`()                                                                    |    |
-| `shutdown`()                                                                   |    |
-| `signalProcess`(name, signal)                                                  |    |
-| `startAllProcesses`()                                                          |    |
-| `startProcess`(name)                                                           |    |
-| `stopAllProcesses`()                                                           |    |
-| `stopProcess`(name)                                                            |    |
+| [`__init__`](#airflow_supervisor.SupervisorRemoteXMLRPCClient.__init__)(cfg)   |                                                                               |
+|--------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `getAllProcessInfo`()                                                          |                                                                               |
+| `getProcessInfo`(name)                                                         |                                                                               |
+| `getProcessLogSize`(name, channel)                                             |                                                                               |
+| `getProgramProcessInfo`()                                                      | Return configured workloads, excluding event listeners.                       |
+| `getState`()                                                                   |                                                                               |
+| `readProcessLog`(name)                                                         |                                                                               |
+| `readProcessLogChunk`(name, channel[, offset, ...])                            | Read new UTF-8 text, advancing a byte cursor without replaying a tail window. |
+| `readProcessStderrLog`(name[, offset, length])                                 |                                                                               |
+| `readProcessStdoutLog`(name[, offset, length])                                 |                                                                               |
+| `reloadConfig`([start_new])                                                    |                                                                               |
+| `restart`()                                                                    |                                                                               |
+| `shutdown`()                                                                   |                                                                               |
+| `signalProcess`(name, signal)                                                  |                                                                               |
+| `startAllProcesses`()                                                          |                                                                               |
+| `startProcess`(name)                                                           |                                                                               |
+| `stopAllProcesses`()                                                           |                                                                               |
+| `stopProcess`(name)                                                            |                                                                               |
 
 <!-- docs/src/_build/airflow_supervisor.ProcessInfo.html.md -->
 

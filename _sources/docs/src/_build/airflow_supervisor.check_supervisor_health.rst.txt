@@ -1,0 +1,6 @@
+﻿airflow\_supervisor.check\_supervisor\_health
+=============================================
+
+.. currentmodule:: airflow_supervisor
+
+.. autofunction:: check_supervisor_health

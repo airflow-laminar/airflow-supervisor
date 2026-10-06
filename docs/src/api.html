@@ -82,6 +82,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: run your first supervised job</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to.html">How-to guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">How to forward program logs and check retained services</a></li>
 <li class="toctree-l1"><a class="reference internal" href="explanation.html">Why Airflow delegates process ownership</a></li>
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="current reference internal expandable" href="#">API reference<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
@@ -94,6 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorSSHTaskArgs.html">airflow_supervisor.SupervisorSSHTaskArgs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.load_airflow_config.html">airflow_supervisor.load_airflow_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.load_airflow_ssh_config.html">airflow_supervisor.load_airflow_ssh_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.check_supervisor_health.html">airflow_supervisor.check_supervisor_health</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorConfiguration.html">airflow_supervisor.SupervisorConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorConvenienceConfiguration.html">airflow_supervisor.SupervisorConvenienceConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.ProgramConfiguration.html">airflow_supervisor.ProgramConfiguration</a></li>
@@ -284,6 +286,14 @@ as <code class="docutils literal notranslate"><span class="pre">pydantic.json</s
 <td><p>8 hours</p></td>
 <td><p>Sensor timeout.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forward_logs</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Forwards workload stdout and stderr through the Airflow task logger.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">log_chunk_size</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">65536</span></code></p></td>
+<td><p>Byte budget per stream per poll; <code class="docutils literal notranslate"><span class="pre">1</span></code>–<code class="docutils literal notranslate"><span class="pre">1048576</span></code>, plus up to 3 bytes for a UTF-8 boundary.</p></td>
+</tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runtime</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
 <td><p>Monitoring end condition relative to <code class="docutils literal notranslate"><span class="pre">reference_date</span></code>.</p></td>
@@ -361,6 +371,24 @@ function loads a collection of declarative DAGs; the
 <a class="reference internal" href="how-to.html"><span class="std std-doc">how-to guides</span></a> show that workflow.</p>
 </section>
 </section>
+<section id="health-checks-and-diagnostics">
+<h2>Health checks and diagnostics<a class="headerlink" href="#health-checks-and-diagnostics" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#health-checks-and-diagnostics'">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">check_supervisor_health(cfg,</span> <span class="pre">require_running=True,</span> <span class="pre">supervisor_client=None,</span> <span class="pre">**context)</span></code>
+checks an existing instance without configuration, startup, stop, or cleanup.
+<code class="docutils literal notranslate"><span class="pre">cfg</span></code> accepts <code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code> or a dictionary validated as that
+model. <code class="docutils literal notranslate"><span class="pre">supervisor_client</span></code> optionally supplies the XML-RPC client.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">require_running=True</span></code>, every workload must be <code class="docutils literal notranslate"><span class="pre">STARTING</span></code> or <code class="docutils literal notranslate"><span class="pre">RUNNING</span></code>.
+With <code class="docutils literal notranslate"><span class="pre">False</span></code>, the configured exit codes and successful completion states are
+accepted. Unhealthy, empty, and unreachable instances raise <code class="docutils literal notranslate"><span class="pre">AirflowException</span></code>.
+A successful result contains <code class="docutils literal notranslate"><span class="pre">host</span></code>, <code class="docutils literal notranslate"><span class="pre">healthy</span></code>, and a <code class="docutils literal notranslate"><span class="pre">processes</span></code> summary.
+Event listeners are excluded from workload health and completion checks.</p>
+<p><code class="docutils literal notranslate"><span class="pre">supervisor_process_status</span></code> XCom contains process <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">group</span></code>, <code class="docutils literal notranslate"><span class="pre">state</span></code>,
+<code class="docutils literal notranslate"><span class="pre">exitstatus</span></code>, <code class="docutils literal notranslate"><span class="pre">spawnerr</span></code>, and <code class="docutils literal notranslate"><span class="pre">pid</span></code>. <code class="docutils literal notranslate"><span class="pre">supervisor_failure</span></code> stores the last unhealthy
+process snapshot. <code class="docutils literal notranslate"><span class="pre">supervisor_log_offsets</span></code> stores byte cursors and the run ID;
+log contents are written to task logs rather than XCom. Final drains read at
+most 16 chunks per stream. The <a class="reference internal" href="observability.html"><span class="std std-doc">observability guide</span></a> provides
+Python and YAML configurations.</p>
+</section>
 <section id="generated-api">
 <h2>Generated API<a class="headerlink" href="#generated-api" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#generated-api'">¶</a></h2>
 <table class="autosummary longtable docutils align-default">
@@ -394,6 +422,9 @@ function loads a collection of declarative DAGs; the
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="_build/airflow_supervisor.load_airflow_ssh_config.html#airflow_supervisor.load_airflow_ssh_config" title="airflow_supervisor.load_airflow_ssh_config"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_airflow_ssh_config</span></code></a>([config_dir, ...])</p></td>
 <td><p></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="_build/airflow_supervisor.check_supervisor_health.html#airflow_supervisor.check_supervisor_health" title="airflow_supervisor.check_supervisor_health"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_supervisor_health</span></code></a>(cfg[, ...])</p></td>
+<td><p>Check an existing instance without starting, stopping, or reconfiguring it.</p></td>
 </tr>
 </tbody>
 </table>
@@ -434,6 +465,7 @@ function loads a collection of declarative DAGs; the
 <li><a :data-current="activeSection === '#ssh-fields'" class="reference internal" href="#ssh-fields">SSH fields</a></li>
 </ul>
 </li>
+<li><a :data-current="activeSection === '#health-checks-and-diagnostics'" class="reference internal" href="#health-checks-and-diagnostics">Health checks and diagnostics</a></li>
 <li><a :data-current="activeSection === '#generated-api'" class="reference internal" href="#generated-api">Generated API</a><ul>
 <li><a :data-current="activeSection === '#re-exported-supervisor-models'" class="reference internal" href="#re-exported-supervisor-models">Re-exported supervisor models</a></li>
 </ul>

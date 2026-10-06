@@ -10,19 +10,22 @@ A light wrapper over the supervisor xmlrpc api: [http://supervisord.org/api.html
 
 ### Methods
 
-| [`__init__`](#airflow_supervisor.SupervisorRemoteXMLRPCClient.__init__)(cfg)   |    |
-|--------------------------------------------------------------------------------|----|
-| `getAllProcessInfo`()                                                          |    |
-| `getProcessInfo`(name)                                                         |    |
-| `getState`()                                                                   |    |
-| `readProcessLog`(name)                                                         |    |
-| `readProcessStderrLog`(name[, offset, length])                                 |    |
-| `readProcessStdoutLog`(name[, offset, length])                                 |    |
-| `reloadConfig`([start_new])                                                    |    |
-| `restart`()                                                                    |    |
-| `shutdown`()                                                                   |    |
-| `signalProcess`(name, signal)                                                  |    |
-| `startAllProcesses`()                                                          |    |
-| `startProcess`(name)                                                           |    |
-| `stopAllProcesses`()                                                           |    |
-| `stopProcess`(name)                                                            |    |
+| [`__init__`](#airflow_supervisor.SupervisorRemoteXMLRPCClient.__init__)(cfg)   |                                                                               |
+|--------------------------------------------------------------------------------|-------------------------------------------------------------------------------|
+| `getAllProcessInfo`()                                                          |                                                                               |
+| `getProcessInfo`(name)                                                         |                                                                               |
+| `getProcessLogSize`(name, channel)                                             |                                                                               |
+| `getProgramProcessInfo`()                                                      | Return configured workloads, excluding event listeners.                       |
+| `getState`()                                                                   |                                                                               |
+| `readProcessLog`(name)                                                         |                                                                               |
+| `readProcessLogChunk`(name, channel[, offset, ...])                            | Read new UTF-8 text, advancing a byte cursor without replaying a tail window. |
+| `readProcessStderrLog`(name[, offset, length])                                 |                                                                               |
+| `readProcessStdoutLog`(name[, offset, length])                                 |                                                                               |
+| `reloadConfig`([start_new])                                                    |                                                                               |
+| `restart`()                                                                    |                                                                               |
+| `shutdown`()                                                                   |                                                                               |
+| `signalProcess`(name, signal)                                                  |                                                                               |
+| `startAllProcesses`()                                                          |                                                                               |
+| `startProcess`(name)                                                           |                                                                               |
+| `stopAllProcesses`()                                                           |                                                                               |
+| `stopProcess`(name)                                                            |                                                                               |

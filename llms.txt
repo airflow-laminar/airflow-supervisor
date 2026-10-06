@@ -7,6 +7,7 @@
 - [airflow-supervisor](index.html.md): Run and monitor supervisord-managed jobs from Apache Airflow.
 - [Tutorial: run your first supervised job](docs/src/tutorial.html.md): We will run a five-second job under supervisord, monitor it from Airflow, and remove its configuration when it finishes.
 - [How-to guides](docs/src/how-to.html.md): Run jobs on an Airflow worker or a remote SSH host, with configuration in Python or airflow-config YAML.
+- [How to forward program logs and check retained services](docs/src/observability.html.md): Forward a program’s stdout and stderr into Airflow task logs during its lifecycle. For services retained between DAG runs, use a separate scheduled health ta...
 - [Why Airflow delegates process ownership](docs/src/explanation.html.md): An Airflow task instance owns a worker process for part of a workflow. A job that spawns children or keeps running between DAG runs needs a process manager w...
 - [API reference](docs/src/api.html.md): All names below are exported from airflow_supervisor.
 - [airflow_supervisor.Supervisor](docs/src/_build/airflow_supervisor.Supervisor.html.md): Bases: object
@@ -19,6 +20,7 @@
 - [airflow_supervisor.SupervisorSSHTaskArgs](docs/src/_build/airflow_supervisor.SupervisorSSHTaskArgs.html.md): Bases: TaskArgs
 - [airflow_supervisor.load_airflow_config](docs/src/_build/airflow_supervisor.load_airflow_config.html.md): Documentation page.
 - [airflow_supervisor.load_airflow_ssh_config](docs/src/_build/airflow_supervisor.load_airflow_ssh_config.html.md): Documentation page.
+- [airflow_supervisor.check_supervisor_health](docs/src/_build/airflow_supervisor.check_supervisor_health.html.md): Check an existing instance without starting, stopping, or reconfiguring it.
 - [airflow_supervisor.SupervisorConfiguration](docs/src/_build/airflow_supervisor.SupervisorConfiguration.html.md): Bases: BaseModel
 - [airflow_supervisor.SupervisorConvenienceConfiguration](docs/src/_build/airflow_supervisor.SupervisorConvenienceConfiguration.html.md): Bases: SupervisorConfiguration
 - [airflow_supervisor.ProgramConfiguration](docs/src/_build/airflow_supervisor.ProgramConfiguration.html.md): Bases: _BaseCfgModel

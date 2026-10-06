@@ -37,7 +37,7 @@
 <link href="../../_static/awesome-myst-nb.css?v=7c7ea10c" rel="stylesheet" type="text/css"/>
 <link href="../../search.html" rel="search" title="Search"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
-<link href="explanation.html" rel="next" title="Why Airflow delegates process ownership"/>
+<link href="observability.html" rel="next" title="How to forward program logs and check retained services"/>
 <link href="tutorial.html" rel="prev" title="Tutorial: run your first supervised job"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
@@ -82,6 +82,7 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: run your first supervised job</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">How-to guides</a></li>
+<li class="toctree-l1"><a class="reference internal" href="observability.html">How to forward program logs and check retained services</a></li>
 <li class="toctree-l1"><a class="reference internal" href="explanation.html">Why Airflow delegates process ownership</a></li>
 <li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="api.html">API reference<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
@@ -94,6 +95,7 @@
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorSSHTaskArgs.html">airflow_supervisor.SupervisorSSHTaskArgs</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.load_airflow_config.html">airflow_supervisor.load_airflow_config</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.load_airflow_ssh_config.html">airflow_supervisor.load_airflow_ssh_config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.check_supervisor_health.html">airflow_supervisor.check_supervisor_health</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorConfiguration.html">airflow_supervisor.SupervisorConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.SupervisorConvenienceConfiguration.html">airflow_supervisor.SupervisorConvenienceConfiguration</a></li>
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.ProgramConfiguration.html">airflow_supervisor.ProgramConfiguration</a></li>
@@ -206,10 +208,12 @@ tasks, then trigger <code class="docutils literal notranslate"><span class="pre"
 </span></code></pre></div>
 </div>
 <p>Save <code class="docutils literal notranslate"><span class="pre">local_supervisor.py</span></code> in the DAG folder:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="sd">"""Generate Airflow DAGs from the local supervisor configuration."""</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="s2">"config"</span><span class="p">,</span> <span class="s2">"local_supervisor"</span><span class="p">)</span>
-</span><span id="line-4"><span class="n">config</span><span class="o">.</span><span class="n">generate_in_mem</span><span class="p">()</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="s2">"config"</span><span class="p">,</span> <span class="s2">"local_supervisor"</span><span class="p">)</span>
+</span><span id="line-6"><span class="n">config</span><span class="o">.</span><span class="n">generate_in_mem</span><span class="p">()</span>
 </span></code></pre></div>
 </div>
 <p>Run <code class="docutils literal notranslate"><span class="pre">airflow</span> <span class="pre">tasks</span> <span class="pre">list</span> <span class="pre">local-supervisor</span></code>, then trigger <code class="docutils literal notranslate"><span class="pre">local-supervisor</span></code>.
@@ -298,10 +302,12 @@ Install <code class="docutils literal notranslate"><span class="pre">airflow-con
 <p>If the remote tools are in a virtual environment, add
 <code class="docutils literal notranslate"><span class="pre">command_prefix:</span> <span class="pre">source</span> <span class="pre">/opt/supervisor-venv/bin/activate</span></code> under <code class="docutils literal notranslate"><span class="pre">cfg</span></code>.</p>
 <p>Save <code class="docutils literal notranslate"><span class="pre">ssh_supervisor.py</span></code> in the DAG folder:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="sd">"""Generate Airflow DAGs from the SSH supervisor configuration."""</span>
 </span><span id="line-2">
-</span><span id="line-3"><span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="s2">"config"</span><span class="p">,</span> <span class="s2">"ssh_supervisor"</span><span class="p">)</span>
-</span><span id="line-4"><span class="n">config</span><span class="o">.</span><span class="n">generate_in_mem</span><span class="p">()</span>
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+</span><span id="line-4">
+</span><span id="line-5"><span class="n">config</span> <span class="o">=</span> <span class="n">load_config</span><span class="p">(</span><span class="s2">"config"</span><span class="p">,</span> <span class="s2">"ssh_supervisor"</span><span class="p">)</span>
+</span><span id="line-6"><span class="n">config</span><span class="o">.</span><span class="n">generate_in_mem</span><span class="p">()</span>
 </span></code></pre></div>
 </div>
 <p>Run <code class="docutils literal notranslate"><span class="pre">airflow</span> <span class="pre">tasks</span> <span class="pre">list</span> <span class="pre">ssh-supervisor</span></code>, then trigger <code class="docutils literal notranslate"><span class="pre">ssh-supervisor</span></code>.

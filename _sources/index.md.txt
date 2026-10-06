@@ -10,6 +10,8 @@ docs/src/tutorial.md
 
 docs/src/how-to.md
 
+docs/src/observability.md
+
 docs/src/explanation.md
 
 docs/src/api.md
@@ -70,6 +72,9 @@ The [API reference](docs/src/api.md) describes configuration fields, defaults,
 and DAG constraints. [Why Airflow delegates process ownership](docs/src/explanation.md)
 explains worker placement, SSH and XML-RPC, and the Python/YAML configuration
 choices.
+
+Use the [log forwarding and health-check guide](docs/src/observability.md) to
+collect program output in task logs and monitor retained services between runs.
 
 Published documentation is available at
 [airflow-laminar.github.io/airflow-supervisor](https://airflow-laminar.github.io/airflow-supervisor/).

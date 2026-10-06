@@ -78,6 +78,8 @@ dags:
 Save `local_supervisor.py` in the DAG folder:
 
 ```python
+"""Generate Airflow DAGs from the local supervisor configuration."""
+
 from airflow_config import load_config
 
 config = load_config("config", "local_supervisor")
@@ -182,6 +184,8 @@ If the remote tools are in a virtual environment, add
 Save `ssh_supervisor.py` in the DAG folder:
 
 ```python
+"""Generate Airflow DAGs from the SSH supervisor configuration."""
+
 from airflow_config import load_config
 
 config = load_config("config", "ssh_supervisor")

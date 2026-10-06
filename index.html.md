@@ -52,6 +52,9 @@ and DAG constraints. [Why Airflow delegates process ownership](docs/src/explanat
 explains worker placement, SSH and XML-RPC, and the Python/YAML configuration
 choices.
 
+Use the [log forwarding and health-check guide](docs/src/observability.html.md) to
+collect program output in task logs and monitor retained services between runs.
+
 Published documentation is available at
 [airflow-laminar.github.io/airflow-supervisor](https://airflow-laminar.github.io/airflow-supervisor/).
 

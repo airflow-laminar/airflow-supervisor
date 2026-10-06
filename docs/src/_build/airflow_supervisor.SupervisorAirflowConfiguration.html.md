@@ -6,6 +6,14 @@ Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConve
 
 Settings that MUST be set when running in airflow
 
+#### *field* forward_logs *: bool* *= False*
+
+Forward program stdout and stderr into Airflow task logs
+
+#### *field* log_chunk_size *: int* *= 65536*
+
+Log read budget in bytes per program stream on each poll
+
 #### *field* check_interval *: timedelta* *= datetime.timedelta(seconds=5)*
 
 Interval between supervisor program status checks

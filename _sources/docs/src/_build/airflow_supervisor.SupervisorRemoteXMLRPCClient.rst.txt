@@ -16,8 +16,11 @@
       ~SupervisorRemoteXMLRPCClient.__init__
       ~SupervisorRemoteXMLRPCClient.getAllProcessInfo
       ~SupervisorRemoteXMLRPCClient.getProcessInfo
+      ~SupervisorRemoteXMLRPCClient.getProcessLogSize
+      ~SupervisorRemoteXMLRPCClient.getProgramProcessInfo
       ~SupervisorRemoteXMLRPCClient.getState
       ~SupervisorRemoteXMLRPCClient.readProcessLog
+      ~SupervisorRemoteXMLRPCClient.readProcessLogChunk
       ~SupervisorRemoteXMLRPCClient.readProcessStderrLog
       ~SupervisorRemoteXMLRPCClient.readProcessStdoutLog
       ~SupervisorRemoteXMLRPCClient.reloadConfig

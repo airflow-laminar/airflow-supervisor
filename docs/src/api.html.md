@@ -86,6 +86,8 @@ as `pydantic.json`; cleanup removes the working directory, including logs.
 |------------------------|---------------------|--------------------------------------------------------------------------------------------------------|
 | `check_interval`       | 5 seconds           | Polling interval for the `airflow-ha` sensor.                                                          |
 | `check_timeout`        | 8 hours             | Sensor timeout.                                                                                        |
+| `forward_logs`         | `False`             | Forwards workload stdout and stderr through the Airflow task logger.                                   |
+| `log_chunk_size`       | `65536`             | Byte budget per stream per poll; `1`–`1048576`, plus up to 3 bytes for a UTF-8 boundary.               |
 | `runtime`              | `None`              | Monitoring end condition relative to `reference_date`.                                                 |
 | `endtime`              | `None`              | Time-of-day end condition passed to `airflow-ha`.                                                      |
 | `maxretrigger`         | `None`              | Retrigger limit passed to `airflow-ha`.                                                                |
@@ -119,19 +121,40 @@ These load supervisor configuration models. The `airflow_config.load_config`
 function loads a collection of declarative DAGs; the
 [how-to guides](how-to.html.md) show that workflow.
 
+## Health checks and diagnostics
+
+`check_supervisor_health(cfg, require_running=True, supervisor_client=None, **context)`
+checks an existing instance without configuration, startup, stop, or cleanup.
+`cfg` accepts `SupervisorAirflowConfiguration` or a dictionary validated as that
+model. `supervisor_client` optionally supplies the XML-RPC client.
+
+With `require_running=True`, every workload must be `STARTING` or `RUNNING`.
+With `False`, the configured exit codes and successful completion states are
+accepted. Unhealthy, empty, and unreachable instances raise `AirflowException`.
+A successful result contains `host`, `healthy`, and a `processes` summary.
+Event listeners are excluded from workload health and completion checks.
+
+`supervisor_process_status` XCom contains process `name`, `group`, `state`,
+`exitstatus`, `spawnerr`, and `pid`. `supervisor_failure` stores the last unhealthy
+process snapshot. `supervisor_log_offsets` stores byte cursors and the run ID;
+log contents are written to task logs rather than XCom. Final drains read at
+most 16 chunks per stream. The [observability guide](observability.html.md) provides
+Python and YAML configurations.
+
 ## Generated API
 
-| [`Supervisor`](_build/airflow_supervisor.Supervisor.html.md#airflow_supervisor.Supervisor)(dag, cfg, \*\*kwargs)                                                |                                                   |
-|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
-| [`SupervisorSSH`](_build/airflow_supervisor.SupervisorSSH.html.md#airflow_supervisor.SupervisorSSH)(dag, cfg[, host, port])                                     |                                                   |
-| [`SupervisorAirflowConfiguration`](_build/airflow_supervisor.SupervisorAirflowConfiguration.html.md#airflow_supervisor.SupervisorAirflowConfiguration)          | Settings that MUST be set when running in airflow |
-| [`SupervisorSSHAirflowConfiguration`](_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration) |                                                   |
-| [`SupervisorTask`](_build/airflow_supervisor.SupervisorTask.html.md#airflow_supervisor.SupervisorTask)                                                          |                                                   |
-| [`SupervisorTaskArgs`](_build/airflow_supervisor.SupervisorTaskArgs.html.md#airflow_supervisor.SupervisorTaskArgs)                                              |                                                   |
-| [`SupervisorSSHTask`](_build/airflow_supervisor.SupervisorSSHTask.html.md#airflow_supervisor.SupervisorSSHTask)                                                 |                                                   |
-| [`SupervisorSSHTaskArgs`](_build/airflow_supervisor.SupervisorSSHTaskArgs.html.md#airflow_supervisor.SupervisorSSHTaskArgs)                                     |                                                   |
-| [`load_airflow_config`](_build/airflow_supervisor.load_airflow_config.html.md#airflow_supervisor.load_airflow_config)([config_dir, ...])                        |                                                   |
-| [`load_airflow_ssh_config`](_build/airflow_supervisor.load_airflow_ssh_config.html.md#airflow_supervisor.load_airflow_ssh_config)([config_dir, ...])            |                                                   |
+| [`Supervisor`](_build/airflow_supervisor.Supervisor.html.md#airflow_supervisor.Supervisor)(dag, cfg, \*\*kwargs)                                                |                                                                             |
+|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| [`SupervisorSSH`](_build/airflow_supervisor.SupervisorSSH.html.md#airflow_supervisor.SupervisorSSH)(dag, cfg[, host, port])                                     |                                                                             |
+| [`SupervisorAirflowConfiguration`](_build/airflow_supervisor.SupervisorAirflowConfiguration.html.md#airflow_supervisor.SupervisorAirflowConfiguration)          | Settings that MUST be set when running in airflow                           |
+| [`SupervisorSSHAirflowConfiguration`](_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration) |                                                                             |
+| [`SupervisorTask`](_build/airflow_supervisor.SupervisorTask.html.md#airflow_supervisor.SupervisorTask)                                                          |                                                                             |
+| [`SupervisorTaskArgs`](_build/airflow_supervisor.SupervisorTaskArgs.html.md#airflow_supervisor.SupervisorTaskArgs)                                              |                                                                             |
+| [`SupervisorSSHTask`](_build/airflow_supervisor.SupervisorSSHTask.html.md#airflow_supervisor.SupervisorSSHTask)                                                 |                                                                             |
+| [`SupervisorSSHTaskArgs`](_build/airflow_supervisor.SupervisorSSHTaskArgs.html.md#airflow_supervisor.SupervisorSSHTaskArgs)                                     |                                                                             |
+| [`load_airflow_config`](_build/airflow_supervisor.load_airflow_config.html.md#airflow_supervisor.load_airflow_config)([config_dir, ...])                        |                                                                             |
+| [`load_airflow_ssh_config`](_build/airflow_supervisor.load_airflow_ssh_config.html.md#airflow_supervisor.load_airflow_ssh_config)([config_dir, ...])            |                                                                             |
+| [`check_supervisor_health`](_build/airflow_supervisor.check_supervisor_health.html.md#airflow_supervisor.check_supervisor_health)(cfg[, ...])                   | Check an existing instance without starting, stopping, or reconfiguring it. |
 
 ### Re-exported supervisor models
 
