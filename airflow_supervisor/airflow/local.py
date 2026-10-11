@@ -83,10 +83,15 @@ class Supervisor:
         self.configure_supervisor >> self.start_supervisor >> self.start_programs >> self.check_programs
 
         # fail, restart
-        self.check_programs.retrigger_fail >> self.restart_programs
+        cast("Operator", self.check_programs.retrigger_fail) >> self.restart_programs
 
         # pass, finish
-        self.check_programs.stop_pass >> self.stop_programs >> self.stop_supervisor >> self.unconfigure_supervisor
+        (
+            cast("Operator", self.check_programs.stop_pass)
+            >> self.stop_programs
+            >> self.stop_supervisor
+            >> self.unconfigure_supervisor
+        )
 
         # TODO make helper dag
         self._force_kill = self.get_step_operator("force-kill")
@@ -178,7 +183,7 @@ class Supervisor:
 
     @property
     def check_programs(self) -> "HighAvailabilityOperator":
-        return self._check_programs
+        return cast("HighAvailabilityOperator", self._check_programs)
 
     @property
     def stop_programs(self) -> "Operator":
