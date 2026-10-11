@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 from airflow_balancer.testing import pools, variables
 from airflow_config import load_config
-from airflow_pydantic import SSHOperatorArgs
 from airflow_pydantic.airflow import Pool
 from airflow_pydantic.migration import _airflow_3
 
@@ -20,14 +19,17 @@ def test_hydra_config():
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         cfg = load_config("config", "config")
+        assert cfg.extensions is not None
         assert "balancer" in cfg.extensions
         assert "supervisor" in cfg.extensions
 
-        supervisor_cfg: SupervisorSSHAirflowConfiguration = cfg.extensions["supervisor"]
+        supervisor_cfg = cfg.extensions["supervisor"]
+        assert isinstance(supervisor_cfg, SupervisorSSHAirflowConfiguration)
 
         # Basic Supervisor checks
         assert supervisor_cfg.command_prefix == ""
         assert supervisor_cfg.working_dir == pth / f"supervisor-{getuser()}-sleep-echo"
+        assert supervisor_cfg.inet_http_server is not None
         assert supervisor_cfg.inet_http_server.port == "*:9001"
         assert str(supervisor_cfg.supervisorctl.serverurl) == "http://localhost:9001/"
 
@@ -37,7 +39,7 @@ def test_hydra_config():
         assert supervisor_cfg.program["echo"].command == 'echo "hello"'
 
         # SSH Operator checks
-        ssh_args: SSHOperatorArgs = supervisor_cfg.ssh_operator_args
+        ssh_args = supervisor_cfg.ssh_operator_args
         assert ssh_args is not None
         assert ssh_args.cmd_timeout == 63
 
@@ -53,6 +55,7 @@ def test_hydra_config_render():
             p2.return_value = "user"
             cfg = load_config("config", "config_tasks")
 
+            assert cfg.dags is not None
             dag = cfg.dags["example_dag"]
             assert (
                 dag.render()
@@ -164,6 +167,7 @@ def test_hydra_config_render_hosts():
             p2.return_value = "user"
             cfg = load_config("config", "config_tasks_host")
 
+            assert cfg.dags is not None
             dag = cfg.dags["example_dag"]
             assert (
                 dag.render()
@@ -237,6 +241,7 @@ def test_hydra_config_render_hosts_query():
             p2.return_value = "user"
             cfg = load_config("config", "config_tasks_host_query")
 
+            assert cfg.dags is not None
             dag = cfg.dags["example_dag"]
             assert (
                 dag.render()

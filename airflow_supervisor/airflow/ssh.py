@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from logging import getLogger
 from shlex import quote
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from airflow_pydantic import Host, Port, SSHOperatorArgs
 from supervisor_pydantic.convenience import SupervisorTaskStep
@@ -10,8 +11,8 @@ from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
 from .local import Supervisor
 
 if TYPE_CHECKING:
+    from airflow.models.baseoperator import BaseOperator as Operator
     from airflow.models.dag import DAG
-    from airflow.models.operator import Operator
 
 
 __all__ = ("SupervisorSSH",)
@@ -20,13 +21,15 @@ _log = getLogger(__name__)
 
 
 class SupervisorSSH(Supervisor):
+    _command_prefix: str
+
     # Mimic SSH Operator: https://airflow.apache.org/docs/apache-airflow-providers-ssh/stable/_api/airflow/providers/ssh/operators/ssh/index.html
     def __init__(
         self,
         dag: "DAG",
         cfg: SupervisorSSHAirflowConfiguration,
-        host: "Host" = None,
-        port: "Port" = None,
+        host: Host | None = None,
+        port: Port | None = None,
         **kwargs,
     ):
         if isinstance(cfg, dict):
@@ -61,7 +64,7 @@ class SupervisorSSH(Supervisor):
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
                 if attr in (cfg.__pydantic_fields__.keys() if hasattr(cfg, "__pydantic_fields__") else cfg.__fields__):
                     setattr(cfg, attr, self._ssh_operator_kwargs[attr])
-                elif attr in (
+                elif cfg.ssh_operator_args is not None and attr in (
                     cfg.ssh_operator_args.__pydantic_fields__.keys()
                     if hasattr(cfg.ssh_operator_args, "__pydantic_fields__")
                     else cfg.ssh_operator_args.__fields__
@@ -97,7 +100,7 @@ class SupervisorSSH(Supervisor):
         if host or port:
             # revalidate
             _log.info("Revalidating configuration")
-            cfg._setup_convenience_defaults()
+            cast(Callable[[], Any], cfg._setup_convenience_defaults)()
 
         super().__init__(dag=dag, cfg=cfg, **kwargs)
 
@@ -135,11 +138,14 @@ _supervisor_convenience {step} --cfg {quote(str(self._cfg._pydantic_path))}
             "force-kill",
         ):
             return SSHOperator(
-                **{
-                    "task_id": f"{self._dag.dag_id}-{step}",
-                    **self.get_base_operator_kwargs(),
-                    **self.get_step_kwargs(step),
-                }
+                **cast(
+                    dict[str, Any],
+                    {
+                        "task_id": f"{self._dag.dag_id}-{step}",
+                        **self.get_base_operator_kwargs(),
+                        **self.get_step_kwargs(step),
+                    },
+                )
             )
         else:
             # can be done via XMLRPC API

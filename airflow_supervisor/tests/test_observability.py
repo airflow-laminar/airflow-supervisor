@@ -1,6 +1,5 @@
 import logging
 from datetime import UTC, datetime
-from types import SimpleNamespace
 from unittest.mock import Mock, patch
 from xmlrpc.client import Fault
 
@@ -81,7 +80,7 @@ class TI:
 def client(cfg, process=None):
     value = SupervisorRemoteXMLRPCClient.__new__(SupervisorRemoteXMLRPCClient)
     value._cfg = cfg
-    value._client = SimpleNamespace(supervisor=Logs())
+    value._client = Mock(supervisor=Logs())
     value.getAllProcessInfo = Mock(return_value=[process or info()])
     return value
 

@@ -43,11 +43,10 @@ def permissioned_open_port() -> int:
 
 @fixture(scope="module")
 def supervisor_airflow_configuration(open_port: int) -> Iterator[SupervisorAirflowConfiguration]:
-    with NamedTemporaryFile("w", suffix=".cfg") as tf:
+    with NamedTemporaryFile("w", suffix=".cfg"):
         cfg = SupervisorAirflowConfiguration(
-            port=open_port,
+            port=f"*:{open_port}",
             pool="test-pool",
-            path=tf.name,
             program={
                 "test": ProgramConfiguration(
                     command="bash -c 'sleep 1; exit 1'",
@@ -67,10 +66,9 @@ def supervisor_airflow_ssh_configuration(open_port: int):
         from airflow_supervisor import SupervisorSSHAirflowConfiguration
     except ImportError:
         pytest.skip("SupervisorSSHAirflowConfiguration not available")
-    with NamedTemporaryFile("w", suffix=".cfg") as tf:
+    with NamedTemporaryFile("w", suffix=".cfg"):
         cfg = SupervisorSSHAirflowConfiguration(
-            port=open_port,
-            path=tf.name,
+            port=f"*:{open_port}",
             program={
                 "test": ProgramConfiguration(
                     command="bash -c 'sleep 1; exit 1'",
@@ -90,12 +88,11 @@ def supervisor_airflow_ssh_configuration(open_port: int):
 def permissioned_supervisor_airflow_configuration(
     permissioned_open_port: int,
 ) -> Iterator[SupervisorAirflowConfiguration]:
-    with NamedTemporaryFile("w", suffix=".cfg") as tf:
+    with NamedTemporaryFile("w", suffix=".cfg"):
         cfg = SupervisorAirflowConfiguration(
             port=f"*:{permissioned_open_port}",
             username="user1",
             password="testpassword1",
-            path=tf.name,
             program={
                 "test": ProgramConfiguration(
                     command="bash -c 'sleep 1; exit 1'",

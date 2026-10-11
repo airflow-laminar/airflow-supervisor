@@ -1,5 +1,7 @@
 from airflow_pydantic.airflow import DAG
 
+from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
+
 
 class TestSSH:
     def test_ssh_setup(self, supervisor_airflow_ssh_configuration):
@@ -20,6 +22,11 @@ class TestSSH:
             cfg=supervisor_airflow_ssh_configuration,
             host=Host(name="test-host"),
         )
+        assert isinstance(inst._cfg, SupervisorSSHAirflowConfiguration)
+        assert inst._cfg.ssh_operator_args is not None
+        from airflow_pydantic.airflow import SSHHook
+
+        assert isinstance(inst._cfg.ssh_operator_args.ssh_hook, SSHHook)
         assert inst._cfg.ssh_operator_args.ssh_hook.remote_host == "test-host.local"
 
         from airflow_pydantic.airflow import SSHHook
@@ -30,4 +37,9 @@ class TestSSH:
             cfg=supervisor_airflow_ssh_configuration,
             ssh_hook=SSHHook(remote_host="test-host"),
         )
+        assert isinstance(inst._cfg, SupervisorSSHAirflowConfiguration)
+        assert inst._cfg.ssh_operator_args is not None
+        from airflow_pydantic.airflow import SSHHook
+
+        assert isinstance(inst._cfg.ssh_operator_args.ssh_hook, SSHHook)
         assert inst._cfg.ssh_operator_args.ssh_hook.remote_host == "test-host"

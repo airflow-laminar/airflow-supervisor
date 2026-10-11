@@ -1,5 +1,6 @@
 from getpass import getuser
 from pathlib import Path
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -60,7 +61,7 @@ def test_hydra_overrides():
     ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
-        cfg = load_airflow_config(
+        cfg = cast(Any, load_airflow_config)(
             "config", overrides=["+program=[sleep,echo]", "+rpcinterface=standard", "+inet_http_server=local"]
         )
         assert cfg.to_cfg().strip() == EXPECTED_CFG.format(dir=str(pth / f"supervisor-{getuser()}-sleep-echo"))
@@ -76,7 +77,7 @@ def test_hydra_overrides_ssh():
     ):
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
-        cfg = load_airflow_ssh_config(
+        cfg = cast(Any, load_airflow_ssh_config)(
             "config",
             "supervisor",
         )
