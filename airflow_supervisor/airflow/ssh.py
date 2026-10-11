@@ -49,11 +49,7 @@ class SupervisorSSH(Supervisor):
 
         if cfg.ssh_operator_args is not None:
             self._ssh_operator_kwargs = cfg.ssh_operator_args.model_dump(exclude_none=True)
-            pydantic_fields = (
-                cfg.ssh_operator_args.__pydantic_fields__.keys()
-                if hasattr(cfg.ssh_operator_args, "__pydantic_fields__")
-                else cfg.ssh_operator_args.__fields__
-            )
+            pydantic_fields = type(cfg.ssh_operator_args).model_fields.keys()
         else:
             self._ssh_operator_kwargs = {}
             pydantic_fields = ()
@@ -62,13 +58,9 @@ class SupervisorSSH(Supervisor):
             if attr in kwargs:
                 _log.info(f"Setting {attr} to {kwargs.get(attr)}")
                 self._ssh_operator_kwargs[attr] = kwargs.pop(attr)
-                if attr in (cfg.__pydantic_fields__.keys() if hasattr(cfg, "__pydantic_fields__") else cfg.__fields__):
+                if attr in type(cfg).model_fields:
                     setattr(cfg, attr, self._ssh_operator_kwargs[attr])
-                elif cfg.ssh_operator_args is not None and attr in (
-                    cfg.ssh_operator_args.__pydantic_fields__.keys()
-                    if hasattr(cfg.ssh_operator_args, "__pydantic_fields__")
-                    else cfg.ssh_operator_args.__fields__
-                ):
+                elif cfg.ssh_operator_args is not None and attr in type(cfg.ssh_operator_args).model_fields:
                     setattr(cfg.ssh_operator_args, attr, self._ssh_operator_kwargs[attr])
                 else:
                     raise ValueError(f"Unknown attribute {attr}")
