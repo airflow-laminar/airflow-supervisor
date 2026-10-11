@@ -97,7 +97,7 @@ replace = 'version = "{new_version}"'
 [tool.coverage.run]
 branch = true
 omit = [
-    "airflow_supervisor/tests/integration/",
+    "airflow_supervisor/tests/integration/*",
 ]
 
 [tool.coverage.report]
@@ -131,6 +131,9 @@ addopts = [
     "--junitxml=junit.xml",
 ]
 testpaths = "airflow_supervisor/tests"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["airflow.**"]
 
 [tool.ruff]
 line-length = 120

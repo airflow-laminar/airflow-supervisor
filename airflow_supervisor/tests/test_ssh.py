@@ -1,4 +1,11 @@
-from airflow_pydantic.airflow import DAG
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from airflow.models import DAG
+else:
+    from airflow_pydantic.airflow import DAG
+
+from airflow_supervisor.config import SupervisorSSHAirflowConfiguration
 
 
 class TestSSH:
@@ -14,20 +21,30 @@ class TestSSH:
 
         from airflow_supervisor import SupervisorSSH
 
-        dag = DAG(dag_id="test_dag", default_args={}, schedule=None, params={})
+        dag = DAG(dag_id="test_dag", default_args={}, schedule=None)
         inst = SupervisorSSH(
             dag=dag,
             cfg=supervisor_airflow_ssh_configuration,
             host=Host(name="test-host"),
         )
+        assert isinstance(inst._cfg, SupervisorSSHAirflowConfiguration)
+        assert inst._cfg.ssh_operator_args is not None
+        from airflow_pydantic.airflow import SSHHook
+
+        assert isinstance(inst._cfg.ssh_operator_args.ssh_hook, SSHHook)
         assert inst._cfg.ssh_operator_args.ssh_hook.remote_host == "test-host.local"
 
         from airflow_pydantic.airflow import SSHHook
 
-        dag = DAG(dag_id="test_dag", default_args={}, schedule=None, params={})
+        dag = DAG(dag_id="test_dag", default_args={}, schedule=None)
         inst = SupervisorSSH(
             dag=dag,
             cfg=supervisor_airflow_ssh_configuration,
             ssh_hook=SSHHook(remote_host="test-host"),
         )
+        assert isinstance(inst._cfg, SupervisorSSHAirflowConfiguration)
+        assert inst._cfg.ssh_operator_args is not None
+        from airflow_pydantic.airflow import SSHHook
+
+        assert isinstance(inst._cfg.ssh_operator_args.ssh_hook, SSHHook)
         assert inst._cfg.ssh_operator_args.ssh_hook.remote_host == "test-host"

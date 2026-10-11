@@ -21,7 +21,7 @@ def ssh_configuration():
     with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
         p1.return_value = "/tmp"
         cfg = SupervisorSSHAirflowConfiguration(
-            port=9001,
+            port="*:9001",
             pool="test-pool",
             command_prefix="source /etc/profile &&",
             program={
@@ -111,7 +111,7 @@ class TestSupervisorSSHExtended:
         with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
             p1.return_value = "/tmp"
             cfg = SupervisorSSHAirflowConfiguration(
-                port=9007,
+                port="*:9007",
                 program={
                     "test": ProgramConfiguration(command="echo hello"),
                 },

@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
 
 from airflow_pydantic import Pool, fail, skip
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
@@ -20,8 +20,8 @@ from airflow_supervisor.config import SupervisorAirflowConfiguration
 from .observability import _RPC_ERRORS, _failure_details, _LogForwarder, _publish_status
 
 if TYPE_CHECKING:
+    from airflow.models.baseoperator import BaseOperator as Operator
     from airflow.models.dag import DAG
-    from airflow.models.operator import Operator
     from airflow_ha import HighAvailabilityOperator
 
 __all__ = ("Supervisor",)
@@ -33,7 +33,7 @@ class Supervisor:
     _cfg: SupervisorAirflowConfiguration
     _dag: "DAG"
     _kill_dag: "DAG"
-    _pool: "Pool"
+    _pool: str | None
     _xmlrpc_client: SupervisorRemoteXMLRPCClient
 
     def __init__(self, dag: "DAG", cfg: SupervisorAirflowConfiguration, **kwargs):
@@ -83,16 +83,21 @@ class Supervisor:
         self.configure_supervisor >> self.start_supervisor >> self.start_programs >> self.check_programs
 
         # fail, restart
-        self.check_programs.retrigger_fail >> self.restart_programs
+        cast("Operator", self.check_programs.retrigger_fail) >> self.restart_programs
 
         # pass, finish
-        self.check_programs.stop_pass >> self.stop_programs >> self.stop_supervisor >> self.unconfigure_supervisor
+        (
+            cast("Operator", self.check_programs.stop_pass)
+            >> self.stop_programs
+            >> self.stop_supervisor
+            >> self.unconfigure_supervisor
+        )
 
         # TODO make helper dag
         self._force_kill = self.get_step_operator("force-kill")
 
         # Default non running
-        from airflow.operators.python import PythonOperator
+        from airflow.providers.standard.operators.python import PythonOperator
 
         (
             PythonOperator(
@@ -127,7 +132,7 @@ class Supervisor:
         self._dag.max_active_runs = 1
 
     def initialize_tasks(self):
-        from airflow.operators.python import PythonOperator
+        from airflow.providers.standard.operators.python import PythonOperator
 
         # NOTE: initialize this first as it is relied upon by startup steps
         self._check_programs = self.get_step_operator("check-programs")
@@ -178,7 +183,7 @@ class Supervisor:
 
     @property
     def check_programs(self) -> "HighAvailabilityOperator":
-        return self._check_programs
+        return cast("HighAvailabilityOperator", self._check_programs)
 
     @property
     def stop_programs(self) -> "Operator":
@@ -241,7 +246,7 @@ class Supervisor:
                 self._inspect_programs(context, flush=True)
             except _RPC_ERRORS as error:
                 _log.warning("Cannot collect final supervisor logs: %s", error)
-        cfg = self._cfg
+        cfg: Any = self._cfg
         commands = {
             "configure-supervisor": lambda: write_supervisor_config(cfg, _exit=False),
             "start-supervisor": lambda: start_supervisor(cfg._pydantic_path, _exit=False),
@@ -297,11 +302,11 @@ class Supervisor:
         return {"python_callable": lambda **context: self._run_step(step, context), "do_xcom_push": True}
 
     def get_step_operator(self, step: SupervisorTaskStep) -> "Operator":
-        from airflow.operators.python import PythonOperator
+        from airflow.providers.standard.operators.python import PythonOperator
         from airflow_ha import HighAvailabilityOperator
 
         if step == "check-programs":
-            ha_operator_args = {
+            ha_operator_args: dict[str, Any] = {
                 # Sensor Args
                 "task_id": f"{self._dag.dag_id}-{step}",
                 "poke_interval": self._cfg.check_interval.total_seconds(),
@@ -319,7 +324,14 @@ class Supervisor:
             _log.info(f"Creating HighAvailabilityOperator for {step} with args: {ha_operator_args}")
             return HighAvailabilityOperator(**ha_operator_args)
         return PythonOperator(
-            **{"task_id": f"{self._dag.dag_id}-{step}", **self.get_base_operator_kwargs(), **self.get_step_kwargs(step)}
+            **cast(
+                dict[str, Any],
+                {
+                    "task_id": f"{self._dag.dag_id}-{step}",
+                    **self.get_base_operator_kwargs(),
+                    **self.get_step_kwargs(step),
+                },
+            )
         )
 
     def __lshift__(self, other: "Operator") -> "Operator":

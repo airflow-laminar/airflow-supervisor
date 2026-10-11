@@ -14,7 +14,7 @@ def supervisor_configuration():
     with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
         p1.return_value = "/tmp"
         cfg = SupervisorAirflowConfiguration(
-            port=9001,
+            port="*:9001",
             pool="test-pool",
             stop_on_exit=True,
             cleanup=True,
@@ -33,7 +33,7 @@ def supervisor_no_stop_configuration():
     with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
         p1.return_value = "/tmp"
         cfg = SupervisorAirflowConfiguration(
-            port=9002,
+            port="*:9002",
             pool="test-pool",
             stop_on_exit=False,
             cleanup=False,
@@ -52,7 +52,7 @@ def supervisor_no_cleanup_configuration():
     with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
         p1.return_value = "/tmp"
         cfg = SupervisorAirflowConfiguration(
-            port=9003,
+            port="*:9003",
             pool="test-pool",
             stop_on_exit=True,
             cleanup=False,
@@ -71,7 +71,7 @@ def supervisor_restart_configuration():
     with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
         p1.return_value = "/tmp"
         cfg = SupervisorAirflowConfiguration(
-            port=9004,
+            port="*:9004",
             pool="test-pool",
             restart_on_initial=True,
             restart_on_retrigger=True,

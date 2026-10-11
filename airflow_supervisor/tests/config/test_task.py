@@ -15,7 +15,7 @@ class TestSupervisorTaskArgs:
         with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
             p1.return_value = "/tmp"
             cfg = SupervisorAirflowConfiguration(
-                port=9001,
+                port="*:9001",
                 program={
                     "test": ProgramConfiguration(command="echo hello"),
                 },
@@ -36,7 +36,7 @@ class TestSupervisorTask:
         with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
             p1.return_value = "/tmp"
             cfg = SupervisorAirflowConfiguration(
-                port=9001,
+                port="*:9001",
                 program={
                     "test": ProgramConfiguration(command="echo hello"),
                 },
@@ -56,7 +56,7 @@ class TestSupervisorTask:
         with patch("supervisor_pydantic.config.supervisor.gettempdir") as p1:
             p1.return_value = "/tmp"
             cfg = SupervisorAirflowConfiguration(
-                port=9001,
+                port="*:9001",
                 pool="test-pool",
                 program={
                     "test": ProgramConfiguration(command="echo hello"),
