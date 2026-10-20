@@ -96,6 +96,27 @@ class TestSupervisorSSHExtended:
         forcekill_kwargs = s.get_step_kwargs("force-kill")
         assert "command" in forcekill_kwargs
 
+    def test_supervisor_ssh_configure_json_survives_shell(self, ssh_configuration):
+        """Single quotes in the config must not break the shell argument."""
+        import shlex
+
+        from airflow.models.dag import DAG
+
+        from airflow_supervisor import ProgramConfiguration, SupervisorSSH
+
+        ssh_configuration.program["test"] = ProgramConfiguration(
+            command="echo hello",
+            environment={"DOMAINS": '["a.com","b.com"]', "CHANNELS": "[]"},
+        )
+        dag = DAG(dag_id="test_ssh_dag_configure_quote", default_args={}, schedule=None, params={})
+        s = SupervisorSSH(dag=dag, cfg=ssh_configuration)
+
+        command = s.get_step_kwargs("configure-supervisor")["command"]
+        line = next(part for part in command.splitlines() if part.startswith("_supervisor_convenience"))
+        expected = ssh_configuration.model_dump_json()
+        assert "'" in expected
+        assert shlex.split(line) == ["_supervisor_convenience", "configure-supervisor", expected]
+
     def test_supervisor_ssh_with_host_pool(self):
         """Test SupervisorSSH extracts pool from Host."""
         try:

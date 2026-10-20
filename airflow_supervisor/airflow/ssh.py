@@ -108,7 +108,7 @@ class SupervisorSSH(Supervisor):
                 **self._ssh_operator_kwargs,
                 "command": f"""
 {self._command_prefix}
-_supervisor_convenience {step} '{self._cfg.model_dump_json()}'
+_supervisor_convenience {step} {quote(self._cfg.model_dump_json())}
 """,
             }
         elif step in ("start-supervisor", "stop-supervisor", "unconfigure-supervisor", "force-kill"):
