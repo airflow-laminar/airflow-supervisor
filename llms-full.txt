@@ -1201,11 +1201,11 @@ Bases: `BaseModel`
 
 #### *field* rpcinterface *: dict[str, RpcInterfaceConfiguration] | None* *= None*
 
-#### *field* config_path *: Path | None* *= 'supervisord.conf'*
+#### *field* config_path *: Path | None* *= PosixPath('supervisord.conf')*
 
 Path to supervisor configuration file, relative to working_dir
 
-#### *field* working_dir *: Path | None* *= ''*
+#### *field* working_dir *: Path | None* *= None*
 
 Path to supervisor working directory
 
@@ -1311,7 +1311,7 @@ Timeout for convenience commands sent to the supervisor, in seconds
 
 Bases: `_BaseCfgModel`
 
-#### to_cfg(key: str) → str[[source]](../../../_modules/supervisor_pydantic/config/program.html.md#ProgramConfiguration.to_cfg)
+#### to_cfg(key: str = '') → str[[source]](../../../_modules/supervisor_pydantic/config/program.html.md#ProgramConfiguration.to_cfg)
 
 #### *field* command *: str* *[Required]*
 

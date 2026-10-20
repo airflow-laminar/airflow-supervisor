@@ -23,9 +23,9 @@
   <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
   <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#030711" />
   
-  <title>supervisor_pydantic.config.convenience | airflow-supervisor v1.11.1</title>
-  <meta property="og:title" content="supervisor_pydantic.config.convenience | airflow-supervisor v1.11.1" />
-  <meta name="twitter:title" content="supervisor_pydantic.config.convenience | airflow-supervisor v1.11.1" />
+  <title>supervisor_pydantic.config.convenience | airflow-supervisor v1.11.2</title>
+  <meta property="og:title" content="supervisor_pydantic.config.convenience | airflow-supervisor v1.11.2" />
+  <meta name="twitter:title" content="supervisor_pydantic.config.convenience | airflow-supervisor v1.11.2" />
   <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
   <link rel="stylesheet" type="text/css" href="../../../_static/theme.css?v=d6d7c91b" />
   <link rel="stylesheet" type="text/css" href="../../../_static/mystnb.11b39860a7a0cbfd473a3ad8a317855267ff0bd372690045ca344a6b62be495e.css" />
@@ -50,7 +50,7 @@
       Skip to content
     </a><header class="sticky top-0 z-40 w-full border-b shadow-xs border-border bg-background/90 backdrop-blur"><div class="container flex items-center h-14">
     <div class="hidden mr-4 md:flex">
-      <a href="../../../index.html" class="flex items-center mr-6"><span class="hidden font-bold sm:inline-block text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.11.1</code></span>
+      <a href="../../../index.html" class="flex items-center mr-6"><span class="hidden font-bold sm:inline-block text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.11.2</code></span>
       </a></div><button
       class="inline-flex items-center justify-center h-10 px-0 py-2 mr-2 text-base font-medium transition-colors rounded-md hover:text-accent-foreground hover:bg-transparent md:hidden"
       type="button" @click="showSidebar = true">
@@ -106,7 +106,7 @@
   class="fixed inset-y-0 left-0 md:top-14 z-50 md:z-30 bg-background md:bg-transparent transition-all duration-100 -translate-x-full md:translate-x-0 ml-0 p-6 md:p-0 md:-ml-2 md:h-[calc(100vh-3.5rem)] w-5/6 md:w-full overflow-y-auto border-r border-border md:sticky"
   :aria-hidden="!showSidebar" :class="{ 'translate-x-0': showSidebar }">
 
-    <a href="../../../index.html" class="justify-start text-sm md:!hidden bg-background"><span class="font-bold text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.11.1</code></span>
+    <a href="../../../index.html" class="justify-start text-sm md:!hidden bg-background"><span class="font-bold text-clip whitespace-nowrap">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.11.2</code></span>
     </a>
 
     <div class="relative overflow-hidden md:overflow-auto my-4 md:my-0">
@@ -155,7 +155,7 @@
      class="flex items-center mb-4 space-x-1 text-sm text-muted-foreground">
   <a class="overflow-hidden text-ellipsis whitespace-nowrap hover:text-foreground"
      href="../../../index.html">
-    <span class="hidden md:inline">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.11.1</code></span>
+    <span class="hidden md:inline">airflow-supervisor <code style='font-size: var(--font-size--small--4);color: var(--sd-color-primary);'>v1.11.2</code></span>
     <svg xmlns="http://www.w3.org/2000/svg"
          height="18"
          width="18"
@@ -180,7 +180,7 @@
 <span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">getLogger</span>
 </span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
 </span><span id="line-3">
-</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">Field</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">SecretStr</span><span class="p">,</span> <span class="n">field_serializer</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
+</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">AnyUrl</span><span class="p">,</span> <span class="n">Field</span><span class="p">,</span> <span class="n">PrivateAttr</span><span class="p">,</span> <span class="n">SecretStr</span><span class="p">,</span> <span class="n">field_serializer</span><span class="p">,</span> <span class="n">field_validator</span><span class="p">,</span> <span class="n">model_validator</span>
 </span><span id="line-5">
 </span><span id="line-6"><span class="kn">from</span><span class="w"> </span><span class="nn">.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">HostPort</span><span class="p">,</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">SupervisorLocation</span><span class="p">,</span> <span class="n">UnixUserName</span>
 </span><span id="line-7"><span class="kn">from</span><span class="w"> </span><span class="nn">.inet_http_server</span><span class="w"> </span><span class="kn">import</span> <span class="n">InetHttpServerConfiguration</span>
@@ -197,7 +197,7 @@
 </span><span id="line-16"><span class="k">class</span><span class="w"> </span><span class="nc">SupervisorConvenienceConfiguration</span><span class="p">(</span><span class="n">SupervisorConfiguration</span><span class="p">):</span>
 </span><span id="line-17"><span class="w">    </span><span class="sd">"""Convenience layer, settings that MUST be set when running via convenience API"""</span>
 </span><span id="line-18">
-</span><span id="line-19">    <span class="n">_pydantic_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">"pydantic.json"</span><span class="p">)</span>
+</span><span id="line-19">    <span class="n">_pydantic_path</span><span class="p">:</span> <span class="n">Path</span> <span class="o">=</span> <span class="n">PrivateAttr</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Path</span><span class="p">(</span><span class="s2">"pydantic.json"</span><span class="p">))</span>
 </span><span id="line-20">
 </span><span id="line-21">    <span class="c1">############</span>
 </span><span id="line-22">    <span class="c1"># programs #</span>
@@ -321,50 +321,54 @@
 </span><span id="line-140">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="p">:</span>
 </span><span id="line-141">            <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span> <span class="o">=</span> <span class="n">InetHttpServerConfiguration</span><span class="p">()</span>
 </span><span id="line-142">
-</span><span id="line-143">        <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">port</span>
-</span><span id="line-144">        <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="line-145">            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
-</span><span id="line-146">            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
-</span><span id="line-147">        <span class="p">)</span>
-</span><span id="line-148">        <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="p">(</span>
-</span><span id="line-149">            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
-</span><span id="line-150">            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
-</span><span id="line-151">        <span class="p">)</span>
-</span><span id="line-152">
-</span><span id="line-153">        <span class="bp">self</span><span class="o">.</span><span class="n">supervisorctl</span><span class="o">.</span><span class="n">serverurl</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="si">}</span><span class="s2">://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">':'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">/"</span>
+</span><span id="line-143">        <span class="n">port</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">port</span>
+</span><span id="line-144">        <span class="k">assert</span> <span class="n">port</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="line-145">        <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">port</span><span class="p">,</span> <span class="n">port</span>
+</span><span id="line-146">        <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-147">            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+</span><span id="line-148">            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+</span><span id="line-149">        <span class="p">)</span>
+</span><span id="line-150">        <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="p">(</span>
+</span><span id="line-151">            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
+</span><span id="line-152">            <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">inet_http_server</span><span class="o">.</span><span class="n">password</span><span class="p">,</span>
+</span><span id="line-153">        <span class="p">)</span>
 </span><span id="line-154">
-</span><span id="line-155">        <span class="c1"># rpcinterface</span>
-</span><span id="line-156">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface</span><span class="p">:</span>
-</span><span id="line-157">            <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"supervisor"</span><span class="p">:</span> <span class="n">RpcInterfaceConfiguration</span><span class="p">()}</span>
-</span><span id="line-158">        <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface</span><span class="p">[</span><span class="s2">"supervisor"</span><span class="p">]</span><span class="o">.</span><span class="n">rpcinterface_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface_factory</span>
-</span><span id="line-159">
-</span><span id="line-160">        <span class="c1"># supervisord</span>
-</span><span id="line-161">        <span class="bp">self</span><span class="o">.</span><span class="n">supervisord</span><span class="o">.</span><span class="n">nodaemon</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="line-162">        <span class="bp">self</span><span class="o">.</span><span class="n">supervisord</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">"supervisor"</span>
-</span><span id="line-163">
-</span><span id="line-164">        <span class="c1"># programs</span>
-</span><span id="line-165">        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">program</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span id="line-166">            <span class="n">config</span><span class="o">.</span><span class="n">autostart</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="line-167">            <span class="n">config</span><span class="o">.</span><span class="n">autorestart</span> <span class="o">=</span> <span class="kc">False</span>
-</span><span id="line-168">            <span class="n">config</span><span class="o">.</span><span class="n">startsecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startsecs</span>
-</span><span id="line-169">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">startretries</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span id="line-170">                <span class="n">config</span><span class="o">.</span><span class="n">startretries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startretries</span>
-</span><span id="line-171">            <span class="n">config</span><span class="o">.</span><span class="n">exitcodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcodes</span>
-</span><span id="line-172">            <span class="n">config</span><span class="o">.</span><span class="n">stopsignal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopsignal</span>
-</span><span id="line-173">            <span class="n">config</span><span class="o">.</span><span class="n">stopwaitsecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopwaitsecs</span>
-</span><span id="line-174">            <span class="n">config</span><span class="o">.</span><span class="n">stopasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopasgroup</span>
-</span><span id="line-175">            <span class="n">config</span><span class="o">.</span><span class="n">killasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">killasgroup</span>
-</span><span id="line-176">            <span class="n">config</span><span class="o">.</span><span class="n">stdout_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">"output.log"</span>
-</span><span id="line-177">            <span class="n">config</span><span class="o">.</span><span class="n">stderr_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">"error.log"</span>
-</span><span id="line-178">
-</span><span id="line-179">        <span class="c1"># other</span>
-</span><span id="line-180">        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">):</span>
-</span><span id="line-181">            <span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="s2">"pydantic.json"</span>
-</span><span id="line-182">        <span class="k">return</span> <span class="bp">self</span></div>
+</span><span id="line-155">        <span class="bp">self</span><span class="o">.</span><span class="n">supervisorctl</span><span class="o">.</span><span class="n">serverurl</span> <span class="o">=</span> <span class="n">AnyUrl</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="si">}</span><span class="s2">://</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">host</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">':'</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">/"</span><span class="p">)</span>
+</span><span id="line-156">
+</span><span id="line-157">        <span class="c1"># rpcinterface</span>
+</span><span id="line-158">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface</span><span class="p">:</span>
+</span><span id="line-159">            <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"supervisor"</span><span class="p">:</span> <span class="n">RpcInterfaceConfiguration</span><span class="p">()}</span>
+</span><span id="line-160">        <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface</span><span class="p">[</span><span class="s2">"supervisor"</span><span class="p">]</span><span class="o">.</span><span class="n">rpcinterface_factory</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rpcinterface_factory</span>
+</span><span id="line-161">
+</span><span id="line-162">        <span class="c1"># supervisord</span>
+</span><span id="line-163">        <span class="bp">self</span><span class="o">.</span><span class="n">supervisord</span><span class="o">.</span><span class="n">nodaemon</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="line-164">        <span class="bp">self</span><span class="o">.</span><span class="n">supervisord</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">"supervisor"</span>
+</span><span id="line-165">
+</span><span id="line-166">        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span id="line-167">
+</span><span id="line-168">        <span class="c1"># programs</span>
+</span><span id="line-169">        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">program</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span id="line-170">            <span class="n">config</span><span class="o">.</span><span class="n">autostart</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="line-171">            <span class="n">config</span><span class="o">.</span><span class="n">autorestart</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span id="line-172">            <span class="n">config</span><span class="o">.</span><span class="n">startsecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startsecs</span>
+</span><span id="line-173">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">startretries</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span id="line-174">                <span class="n">config</span><span class="o">.</span><span class="n">startretries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">startretries</span>
+</span><span id="line-175">            <span class="n">config</span><span class="o">.</span><span class="n">exitcodes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">exitcodes</span>
+</span><span id="line-176">            <span class="n">config</span><span class="o">.</span><span class="n">stopsignal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopsignal</span>
+</span><span id="line-177">            <span class="n">config</span><span class="o">.</span><span class="n">stopwaitsecs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopwaitsecs</span>
+</span><span id="line-178">            <span class="n">config</span><span class="o">.</span><span class="n">stopasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopasgroup</span>
+</span><span id="line-179">            <span class="n">config</span><span class="o">.</span><span class="n">killasgroup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">killasgroup</span>
+</span><span id="line-180">            <span class="n">config</span><span class="o">.</span><span class="n">stdout_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">"output.log"</span>
+</span><span id="line-181">            <span class="n">config</span><span class="o">.</span><span class="n">stderr_logfile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="n">name</span> <span class="o">/</span> <span class="s2">"error.log"</span>
+</span><span id="line-182">
+</span><span id="line-183">        <span class="c1"># other</span>
+</span><span id="line-184">        <span class="k">if</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span><span class="p">):</span>
+</span><span id="line-185">            <span class="bp">self</span><span class="o">.</span><span class="n">_pydantic_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">/</span> <span class="s2">"pydantic.json"</span>
+</span><span id="line-186">        <span class="k">return</span> <span class="bp">self</span></div>
 
-</span><span id="line-183">
-</span><span id="line-184">
-</span><span id="line-185"><span class="n">load_convenience_config</span> <span class="o">=</span> <span class="n">SupervisorConvenienceConfiguration</span><span class="o">.</span><span class="n">load</span>
+</span><span id="line-187">
+</span><span id="line-188">
+</span><span id="line-189"><span class="n">load_convenience_config</span> <span class="o">=</span> <span class="n">SupervisorConvenienceConfiguration</span><span class="o">.</span><span class="n">load</span>
 </span></code></pre></div>
     </div></div>
           </main>
@@ -380,7 +384,7 @@
 </footer>
     </div>
     
-    <script src="../../../_static/documentation_options.js?v=c8897f99"></script>
+    <script src="../../../_static/documentation_options.js?v=ff71f5f3"></script>
     <script src="../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
