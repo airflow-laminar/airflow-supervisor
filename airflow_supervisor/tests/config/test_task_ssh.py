@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from airflow_pydantic import Host, Port, SSHOperatorArgs
+from airflow_pydantic import Host, Pool, Port, SSHOperatorArgs
 
 from airflow_supervisor import ProgramConfiguration
 from airflow_supervisor.config import (
@@ -49,7 +49,7 @@ class TestSupervisorSSHTaskArgs:
 
     def test_supervisor_ssh_task_args_with_host(self, ssh_config):
         """Test SupervisorSSHTaskArgs with Host."""
-        host = Host(name="test-host", pool="test-pool")
+        host = Host(name="test-host", pool=Pool(pool="test-pool"))
         args = SupervisorSSHTaskArgs(cfg=ssh_config, host=host)
         assert args.host == host
 
@@ -91,7 +91,7 @@ class TestSupervisorSSHTask:
 
     def test_supervisor_ssh_task_with_host_and_port(self, ssh_config):
         """Test SupervisorSSHTask with Host and Port."""
-        host = Host(name="test-host", pool="test-pool")
+        host = Host(name="test-host", pool=Pool(pool="test-pool"))
         port = Port(host_name="test-host", port=9002)
         task = SupervisorSSHTask(
             task_id="test-task",
