@@ -140,7 +140,7 @@ class TestSupervisorSSHExtended:
                     ssh_hook=SSHHook(remote_host="localhost"),
                 ),
             )
-            host = Host(name="test-host", pool="host-pool")
+            host = Host(name="test-host", pool=Pool(pool="host-pool"))
             dag = DAG(dag_id="test_ssh_dag_pool", default_args={}, schedule=None, params={})
             s = SupervisorSSH(dag=dag, cfg=cfg, host=host)
             # The pool should be extracted from the host (can be Pool or string)
