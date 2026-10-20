@@ -24,7 +24,7 @@ def ssh_config():
             from airflow.providers.ssh.hooks.ssh import SSHHook
 
             cfg = SupervisorSSHAirflowConfiguration(
-                port=9001,
+                port="*:9001",
                 program={
                     "test": ProgramConfiguration(command="echo hello"),
                 },
@@ -64,6 +64,7 @@ class TestSupervisorSSHTaskArgs:
         host_dict = {"name": "test-host", "pool": "test-pool"}
         args = SupervisorSSHTaskArgs(cfg=ssh_config, host=host_dict)
         assert args.host is not None
+        assert isinstance(args.host, Host)
         assert args.host.name == "test-host"
 
     def test_supervisor_ssh_task_args_with_port_dict(self, ssh_config):
@@ -71,6 +72,7 @@ class TestSupervisorSSHTaskArgs:
         port_dict = {"host_name": "test-host", "port": 9002}
         args = SupervisorSSHTaskArgs(cfg=ssh_config, port=port_dict)
         assert args.port is not None
+        assert isinstance(args.port, Port)
         assert args.port.port == 9002
 
 

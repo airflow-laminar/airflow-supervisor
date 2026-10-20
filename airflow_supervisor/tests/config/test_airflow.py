@@ -12,7 +12,7 @@ def test_airflow_inst():
         pth = Path(__file__).resolve().parent.parent.parent.parent / ".pytest_cache"
         p1.return_value = str(pth)
         c = SupervisorAirflowConfiguration(
-            port=9001,
+            port="*:9001",
             program={
                 "test": ProgramConfiguration(
                     command="sleep 1 && exit 1",

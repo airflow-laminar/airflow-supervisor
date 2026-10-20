@@ -21,6 +21,11 @@ __all__ = (
 class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
     """Settings that MUST be set when running in airflow"""
 
+    forward_logs: bool = Field(default=False, description="Forward program stdout and stderr into Airflow task logs")
+    log_chunk_size: int = Field(
+        default=65536, gt=0, le=1048576, description="Log read budget in bytes per program stream on each poll"
+    )
+
     # Passthrough to PythonSensor in airflow-ha
     check_interval: timedelta = Field(
         default=timedelta(seconds=5), description="Interval between supervisor program status checks"

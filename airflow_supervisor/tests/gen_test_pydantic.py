@@ -5,9 +5,8 @@ from airflow_supervisor import ProgramConfiguration, SupervisorAirflowConfigurat
 if __name__ == "__main__":
     path = Path(__file__).parent.parent.parent
     cfg = SupervisorAirflowConfiguration(
-        port=9090,
+        port="*:9090",
         working_dir=path,
-        path=path,
         program={
             "test": ProgramConfiguration(
                 command="bash -c 'sleep 60; exit 1'",
