@@ -38,6 +38,34 @@ def ssh_config():
 
 
 class TestSupervisorSSHTaskArgs:
+    @pytest.mark.parametrize("as_dict", [False, True])
+    def test_connection_overrides_are_serialized_without_mutating_shared_config(self, tmp_path, as_dict):
+        cfg = SupervisorSSHAirflowConfiguration(working_dir=tmp_path, program={"demo": {"command": "sleep 1"}})
+        host = Host(name="remote.example")
+        port = Port(host_name=host.name, port=8080)
+        args = SupervisorSSHTaskArgs(
+            cfg=cfg.model_dump() if as_dict else cfg,
+            host=host.model_dump() if as_dict else host,
+            port=port.model_dump() if as_dict else port,
+        )
+        assert args.cfg.host == host.name
+        assert args.cfg.port == "*:8080"
+        assert args.cfg.inet_http_server is not None
+        assert args.cfg.inet_http_server.port == "*:8080"
+        dumped = args.model_dump()
+        assert dumped["cfg"]["port"] == dumped["cfg"]["inet_http_server"]["port"] == "*:8080"
+        assert cfg.host == "localhost"
+        assert cfg.port == "*:9001"
+
+    def test_connection_assignment_updates_configuration(self, tmp_path):
+        args = SupervisorSSHTaskArgs(cfg={"working_dir": tmp_path, "program": {"demo": {"command": "sleep 1"}}})
+        args.host = Host(name="remote.example")
+        args.port = Port(host_name="remote.example", port=8080)
+        assert args.cfg.host == "remote.example"
+        assert args.cfg.port == "*:8080"
+        assert args.cfg.inet_http_server is not None
+        assert args.cfg.inet_http_server.port == "*:8080"
+
     def test_supervisor_ssh_task_args_instantiation(self, ssh_config):
         """Test basic SupervisorSSHTaskArgs instantiation."""
         args = SupervisorSSHTaskArgs(cfg=ssh_config)

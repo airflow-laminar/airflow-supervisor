@@ -188,7 +188,7 @@ with DAG(
 ) as dag:
     run = SupervisorSSH(
         cfg={
-            "inet_http_server": {"port": "*:9001", "username": None, "password": "test"},
+            "inet_http_server": {"port": "*:8080", "username": None, "password": "test"},
             "program": {
                 "echo": {
                     "command": 'echo "hello"',
@@ -209,9 +209,10 @@ with DAG(
             "rpcinterface": {"supervisor": {"rpcinterface_factory": "supervisor.rpcinterface:make_main_rpcinterface"}},
             "config_path": Path("/data/supervisord.conf"),
             "working_dir": Path("/data"),
-            "port": "*:9001",
+            "port": "*:8080",
             "username": None,
             "password": "test",
+            "host": "my-remote-host",
         },
         host=Host(name="my-remote-host", password=Variable(key="blerg", deserialize_json=True), os="rhel"),
         port=Port(
@@ -262,7 +263,7 @@ with DAG(
 ) as dag:
     run = SupervisorSSH(
         cfg={
-            "inet_http_server": {"port": "*:9001", "username": None, "password": "test"},
+            "inet_http_server": {"port": "*:8080", "username": None, "password": "test"},
             "program": {
                 "echo": {
                     "command": 'echo "hello"',
@@ -283,9 +284,10 @@ with DAG(
             "rpcinterface": {"supervisor": {"rpcinterface_factory": "supervisor.rpcinterface:make_main_rpcinterface"}},
             "config_path": Path("/data/supervisord.conf"),
             "working_dir": Path("/data"),
-            "port": "*:9001",
+            "port": "*:8080",
             "username": None,
             "password": "test",
+            "host": "server2",
         },
         host=Host(
             name="server2",
