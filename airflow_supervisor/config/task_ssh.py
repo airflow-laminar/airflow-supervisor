@@ -1,5 +1,6 @@
+from collections.abc import Callable
 from types import FunctionType, MethodType
-from typing import Any
+from typing import Any, cast
 
 from airflow_pydantic import CallablePath, Host, HostQuery, ImportPath, Port, PortQuery, Task, TaskArgs, get_import_path
 from pydantic import Field, TypeAdapter, field_validator, model_validator
@@ -26,6 +27,19 @@ class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
         description="The port to user for Supervisor, if not otherwise provided in configs",
     )
     port_foo: CallablePath | None = Field(default=None, exclude=True)
+
+    @model_validator(mode="after")
+    def _synchronize_connection(self):
+        if not isinstance(self.host, Host) and not isinstance(self.port, Port):
+            return self
+        cfg = self.cfg.model_copy(deep=True)
+        if isinstance(self.host, Host):
+            cfg.host = self.host.name
+        if isinstance(self.port, Port):
+            cfg.port = f"*:{self.port.port}"
+        cast(Callable[[], Any], cfg._setup_convenience_defaults)()
+        object.__setattr__(self, "cfg", cfg)
+        return self
 
     @model_validator(mode="before")
     @classmethod
