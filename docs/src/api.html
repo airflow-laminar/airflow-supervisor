@@ -165,6 +165,9 @@ as a constructor keyword.</p>
 queries of kind <code class="docutils literal notranslate"><span class="pre">select</span></code>, or callables and their import paths. <code class="docutils literal notranslate"><span class="pre">SupervisorTask</span></code>
 and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> resolve their default <code class="docutils literal notranslate"><span class="pre">operator</span></code> to the corresponding
 lifecycle class.</p>
+<p>Resolved SSH host and port values are applied to a copy of <code class="docutils literal notranslate"><span class="pre">cfg</span></code> before rendering;
+the nested HTTP server port matches the selected port. Shared input configurations
+are unchanged. Callables that cannot resolve during loading retain runtime resolution.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">SupervisorOperator</span></code>, <code class="docutils literal notranslate"><span class="pre">SupervisorOperatorArgs</span></code>, <code class="docutils literal notranslate"><span class="pre">SupervisorSSHOperator</span></code>, and
 <code class="docutils literal notranslate"><span class="pre">SupervisorSSHOperatorArgs</span></code> names are aliases for the corresponding task models.</p>
 <section id="dag-constraints-and-boundaries">

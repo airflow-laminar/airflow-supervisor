@@ -802,6 +802,10 @@ queries of kind `select`, or callables and their import paths. `SupervisorTask`
 and `SupervisorSSHTask` resolve their default `operator` to the corresponding
 lifecycle class.
 
+Resolved SSH host and port values are applied to a copy of `cfg` before rendering;
+the nested HTTP server port matches the selected port. Shared input configurations
+are unchanged. Callables that cannot resolve during loading retain runtime resolution.
+
 The `SupervisorOperator`, `SupervisorOperatorArgs`, `SupervisorSSHOperator`, and
 `SupervisorSSHOperatorArgs` names are aliases for the corresponding task models.
 
