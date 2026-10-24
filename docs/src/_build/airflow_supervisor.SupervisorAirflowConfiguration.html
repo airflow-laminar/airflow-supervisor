@@ -199,6 +199,11 @@
 <em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">restart_on_retrigger</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">False</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_retrigger" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_retrigger'">¶</a></dt>
 <dd><p>Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown</p>
 </dd></dl>
+<dl class="py attribute pydantic_field">
+<dt class="sig sig-object py" id="airflow_supervisor.SupervisorAirflowConfiguration.preset">
+<em class="property"><span class="pre">field</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">preset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Literal</span><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'always_on'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'daily'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'half_day'</span></span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#airflow_supervisor.SupervisorAirflowConfiguration.preset" title="Link to this definition" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#airflow_supervisor.SupervisorAirflowConfiguration.preset'">¶</a></dt>
+<dd><p>Lifecycle defaults applied before explicit configuration values</p>
+</dd></dl>
 </dd></dl>
 </section>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
@@ -218,6 +223,7 @@
 <li><a :data-current="activeSection === '#airflow_supervisor.SupervisorAirflowConfiguration.cleanup'" class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.cleanup"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.cleanup</span></code></a></li>
 <li><a :data-current="activeSection === '#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_initial'" class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_initial"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.restart_on_initial</span></code></a></li>
 <li><a :data-current="activeSection === '#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_retrigger'" class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.restart_on_retrigger"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.restart_on_retrigger</span></code></a></li>
+<li><a :data-current="activeSection === '#airflow_supervisor.SupervisorAirflowConfiguration.preset'" class="reference internal" href="#airflow_supervisor.SupervisorAirflowConfiguration.preset"><code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration.preset</span></code></a></li>
 </ul>
 </li>
 </ul>

@@ -59,3 +59,7 @@ Restart the job when the DAG is run directly via airflow (NOT retriggered). This
 #### *field* restart_on_retrigger *: bool | None* *= False*
 
 Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown
+
+#### *field* preset *: Literal['always_on', 'daily', 'half_day'] | None* *= None*
+
+Lifecycle defaults applied before explicit configuration values

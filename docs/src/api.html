@@ -273,6 +273,69 @@ as <code class="docutils literal notranslate"><span class="pre">pydantic.json</s
 </section>
 <section id="monitoring-and-lifecycle-fields">
 <h3>Monitoring and lifecycle fields<a class="headerlink" href="#monitoring-and-lifecycle-fields" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#monitoring-and-lifecycle-fields'">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">preset</span></code> selects defaults before explicit input values are validated. It accepts
+<code class="docutils literal notranslate"><span class="pre">always_on</span></code>, <code class="docutils literal notranslate"><span class="pre">daily</span></code>, <code class="docutils literal notranslate"><span class="pre">half_day</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> (the default). Both local and SSH
+configuration models support it. Explicit values, including <code class="docutils literal notranslate"><span class="pre">False</span></code> and <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+override preset values. Omitting <code class="docutils literal notranslate"><span class="pre">preset</span></code> preserves the ordinary field defaults.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Setting</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">always_on</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">daily</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">half_day</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">runtime</span></code></p></td>
+<td><p>7 days</p></td>
+<td><p>1 day</p></td>
+<td><p>12 hours</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">endtime</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">20:00:00</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maxretrigger</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">10</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">check_interval</span></code></p></td>
+<td><p>30 seconds</p></td>
+<td><p>30 seconds</p></td>
+<td><p>30 seconds</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">check_timeout</span></code></p></td>
+<td><p>8 hours</p></td>
+<td><p>8 hours</p></td>
+<td><p>8 hours</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">stop_on_exit</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">cleanup</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">restart_on_initial</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">restart_on_retrigger</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Presets do not set the DAG schedule. Runtime uses <code class="docutils literal notranslate"><span class="pre">reference_date</span></code>; the half-day
+cutoff uses the DAG timezone. Stop and cleanup follow the successful lifecycle
+branch, as described above.</p>
 <table class="docutils align-default">
 <thead>
 <tr class="row-odd"><th class="head"><p>Field</p></th>

@@ -86,6 +86,27 @@ as `pydantic.json`; cleanup removes the working directory, including logs.
 
 ### Monitoring and lifecycle fields
 
+`preset` selects defaults before explicit input values are validated. It accepts
+`always_on`, `daily`, `half_day`, or `None` (the default). Both local and SSH
+configuration models support it. Explicit values, including `False` and `None`,
+override preset values. Omitting `preset` preserves the ordinary field defaults.
+
+| Setting                | `always_on`   | `daily`    | `half_day`   |
+|------------------------|---------------|------------|--------------|
+| `runtime`              | 7 days        | 1 day      | 12 hours     |
+| `endtime`              | `None`        | `None`     | `20:00:00`   |
+| `maxretrigger`         | `None`        | `None`     | `10`         |
+| `check_interval`       | 30 seconds    | 30 seconds | 30 seconds   |
+| `check_timeout`        | 8 hours       | 8 hours    | 8 hours      |
+| `stop_on_exit`         | `False`       | `True`     | `True`       |
+| `cleanup`              | `False`       | `True`     | `False`      |
+| `restart_on_initial`   | `True`        | `False`    | `False`      |
+| `restart_on_retrigger` | `False`       | `False`    | `False`      |
+
+Presets do not set the DAG schedule. Runtime uses `reference_date`; the half-day
+cutoff uses the DAG timezone. Stop and cleanup follow the successful lifecycle
+branch, as described above.
+
 | Field                  | Default             | Meaning                                                                                                |
 |------------------------|---------------------|--------------------------------------------------------------------------------------------------------|
 | `check_interval`       | 5 seconds           | Polling interval for the `airflow-ha` sensor.                                                          |

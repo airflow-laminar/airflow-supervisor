@@ -379,6 +379,42 @@ In Python, set `check_interval=timedelta(seconds=10)`,
 [timing reference](api.html.md#monitoring-and-lifecycle-fields) for defaults and
 reference dates.
 
+## How to choose lifecycle defaults
+
+Use a preset when several jobs need the same monitoring and cleanup settings:
+
+```python
+from airflow_supervisor import SupervisorAirflowConfiguration
+
+cfg = SupervisorAirflowConfiguration(
+    preset="always_on",
+    working_dir="/var/tmp/service",
+    program={"service": {"command": "/opt/service/bin/run"}},
+)
+```
+
+`always_on` retains the service and its directory after a seven-day monitoring
+window. Use `daily` for a one-day window that stops and cleans up on success, or
+`half_day` for a 12-hour window ending by 20:00 that stops the service but keeps
+its files. These windows are relative to the configured reference date.
+
+For an `airflow-config` configuration, set the same field in the Supervisor model:
+
+```yaml
+_target_: airflow_supervisor.SupervisorAirflowConfiguration
+preset: half_day
+working_dir: /var/tmp/report
+program:
+  report:
+    command: /opt/report/bin/run
+check_interval: 15
+```
+
+Explicit settings override preset values. Both local and
+`SupervisorSSHAirflowConfiguration` models accept presets. Refer to the
+[preset reference](api.html.md#monitoring-and-lifecycle-fields) for restart flags,
+timeouts, and cleanup settings; choose the DAG schedule separately.
+
 ## How to keep a service running between DAG runs
 
 Set these fields on either configuration model, or under `cfg` in YAML:
@@ -862,6 +898,27 @@ as `pydantic.json`; cleanup removes the working directory, including logs.
 
 ### Monitoring and lifecycle fields
 
+`preset` selects defaults before explicit input values are validated. It accepts
+`always_on`, `daily`, `half_day`, or `None` (the default). Both local and SSH
+configuration models support it. Explicit values, including `False` and `None`,
+override preset values. Omitting `preset` preserves the ordinary field defaults.
+
+| Setting                | `always_on`   | `daily`    | `half_day`   |
+|------------------------|---------------|------------|--------------|
+| `runtime`              | 7 days        | 1 day      | 12 hours     |
+| `endtime`              | `None`        | `None`     | `20:00:00`   |
+| `maxretrigger`         | `None`        | `None`     | `10`         |
+| `check_interval`       | 30 seconds    | 30 seconds | 30 seconds   |
+| `check_timeout`        | 8 hours       | 8 hours    | 8 hours      |
+| `stop_on_exit`         | `False`       | `True`     | `True`       |
+| `cleanup`              | `False`       | `True`     | `False`      |
+| `restart_on_initial`   | `True`        | `False`    | `False`      |
+| `restart_on_retrigger` | `False`       | `False`    | `False`      |
+
+Presets do not set the DAG schedule. Runtime uses `reference_date`; the half-day
+cutoff uses the DAG timezone. Stop and cleanup follow the successful lifecycle
+branch, as described above.
+
 | Field                  | Default             | Meaning                                                                                                |
 |------------------------|---------------------|--------------------------------------------------------------------------------------------------------|
 | `check_interval`       | 5 seconds           | Polling interval for the `airflow-ha` sensor.                                                          |
@@ -1084,6 +1141,10 @@ Restart the job when the DAG is run directly via airflow (NOT retriggered). This
 #### *field* restart_on_retrigger *: bool | None* *= False*
 
 Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown
+
+#### *field* preset *: Literal['always_on', 'daily', 'half_day'] | None* *= None*
+
+Lifecycle defaults applied before explicit configuration values
 
 <!-- docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md -->
 

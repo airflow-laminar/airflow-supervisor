@@ -331,6 +331,37 @@ in either local or SSH YAML configuration:</p>
 <a class="reference internal" href="api.html#monitoring-and-lifecycle-fields"><span class="std std-ref">timing reference</span></a> for defaults and
 reference dates.</p>
 </section>
+<section id="how-to-choose-lifecycle-defaults">
+<h2>How to choose lifecycle defaults<a class="headerlink" href="#how-to-choose-lifecycle-defaults" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-choose-lifecycle-defaults'">¶</a></h2>
+<p>Use a preset when several jobs need the same monitoring and cleanup settings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">SupervisorAirflowConfiguration</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="n">cfg</span> <span class="o">=</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+</span><span id="line-4">    <span class="n">preset</span><span class="o">=</span><span class="s2">"always_on"</span><span class="p">,</span>
+</span><span id="line-5">    <span class="n">working_dir</span><span class="o">=</span><span class="s2">"/var/tmp/service"</span><span class="p">,</span>
+</span><span id="line-6">    <span class="n">program</span><span class="o">=</span><span class="p">{</span><span class="s2">"service"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"command"</span><span class="p">:</span> <span class="s2">"/opt/service/bin/run"</span><span class="p">}},</span>
+</span><span id="line-7"><span class="p">)</span>
+</span></code></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">always_on</span></code> retains the service and its directory after a seven-day monitoring
+window. Use <code class="docutils literal notranslate"><span class="pre">daily</span></code> for a one-day window that stops and cleans up on success, or
+<code class="docutils literal notranslate"><span class="pre">half_day</span></code> for a 12-hour window ending by 20:00 that stops the service but keeps
+its files. These windows are relative to the configured reference date.</p>
+<p>For an <code class="docutils literal notranslate"><span class="pre">airflow-config</span></code> configuration, set the same field in the Supervisor model:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorAirflowConfiguration</span>
+</span><span id="line-2"><span class="nt">preset</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">half_day</span>
+</span><span id="line-3"><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/var/tmp/report</span>
+</span><span id="line-4"><span class="nt">program</span><span class="p">:</span>
+</span><span id="line-5"><span class="w">  </span><span class="nt">report</span><span class="p">:</span>
+</span><span id="line-6"><span class="w">    </span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/opt/report/bin/run</span>
+</span><span id="line-7"><span class="nt">check_interval</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+</span></code></pre></div>
+</div>
+<p>Explicit settings override preset values. Both local and
+<code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code> models accept presets. Refer to the
+<a class="reference internal" href="api.html#monitoring-and-lifecycle-fields"><span class="std std-ref">preset reference</span></a> for restart flags,
+timeouts, and cleanup settings; choose the DAG schedule separately.</p>
+</section>
 <section id="how-to-keep-a-service-running-between-dag-runs">
 <h2>How to keep a service running between DAG runs<a class="headerlink" href="#how-to-keep-a-service-running-between-dag-runs" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-keep-a-service-running-between-dag-runs'">¶</a></h2>
 <p>Set these fields on either configuration model, or under <code class="docutils literal notranslate"><span class="pre">cfg</span></code> in YAML:</p>
@@ -396,6 +427,7 @@ Keep stop and cleanup enabled if downstream tasks should run with the default
 <li><a :data-current="activeSection === '#how-to-run-a-job-over-ssh-in-python'" class="reference internal" href="#how-to-run-a-job-over-ssh-in-python">How to run a job over SSH in Python</a></li>
 <li><a :data-current="activeSection === '#how-to-run-a-job-over-ssh-with-airflow-config'" class="reference internal" href="#how-to-run-a-job-over-ssh-with-airflow-config">How to run a job over SSH with airflow-config</a></li>
 <li><a :data-current="activeSection === '#how-to-limit-monitoring'" class="reference internal" href="#how-to-limit-monitoring">How to limit monitoring</a></li>
+<li><a :data-current="activeSection === '#how-to-choose-lifecycle-defaults'" class="reference internal" href="#how-to-choose-lifecycle-defaults">How to choose lifecycle defaults</a></li>
 <li><a :data-current="activeSection === '#how-to-keep-a-service-running-between-dag-runs'" class="reference internal" href="#how-to-keep-a-service-running-between-dag-runs">How to keep a service running between DAG runs</a></li>
 <li><a :data-current="activeSection === '#how-to-select-a-host-with-airflow-balancer'" class="reference internal" href="#how-to-select-a-host-with-airflow-balancer">How to select a host with airflow-balancer</a></li>
 <li><a :data-current="activeSection === '#how-to-chain-the-lifecycle-with-other-tasks'" class="reference internal" href="#how-to-chain-the-lifecycle-with-other-tasks">How to chain the lifecycle with other tasks</a></li>
