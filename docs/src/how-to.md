@@ -220,6 +220,42 @@ In Python, set `check_interval=timedelta(seconds=10)`,
 [timing reference](api.md#monitoring-and-lifecycle-fields) for defaults and
 reference dates.
 
+## How to choose lifecycle defaults
+
+Use a preset when several jobs need the same monitoring and cleanup settings:
+
+```python
+from airflow_supervisor import SupervisorAirflowConfiguration
+
+cfg = SupervisorAirflowConfiguration(
+    preset="always_on",
+    working_dir="/var/tmp/service",
+    program={"service": {"command": "/opt/service/bin/run"}},
+)
+```
+
+`always_on` retains the service and its directory after a seven-day monitoring
+window. Use `daily` for a one-day window that stops and cleans up on success, or
+`half_day` for a 12-hour window ending by 20:00 that stops the service but keeps
+its files. These windows are relative to the configured reference date.
+
+For an `airflow-config` configuration, set the same field in the Supervisor model:
+
+```yaml
+_target_: airflow_supervisor.SupervisorAirflowConfiguration
+preset: half_day
+working_dir: /var/tmp/report
+program:
+  report:
+    command: /opt/report/bin/run
+check_interval: 15
+```
+
+Explicit settings override preset values. Both local and
+`SupervisorSSHAirflowConfiguration` models accept presets. Refer to the
+[preset reference](api.md#monitoring-and-lifecycle-fields) for restart flags,
+timeouts, and cleanup settings; choose the DAG schedule separately.
+
 ## How to keep a service running between DAG runs
 
 Set these fields on either configuration model, or under `cfg` in YAML:

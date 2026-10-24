@@ -2,7 +2,7 @@ from datetime import time, timedelta
 from typing import Literal
 
 from airflow_pydantic import Pool
-from pydantic import Field
+from pydantic import Field, model_validator
 from supervisor_pydantic import SupervisorConvenienceConfiguration
 
 __all__ = (
@@ -11,11 +11,31 @@ __all__ = (
 )
 
 
-# PredefinedTemplates = Literal[
-#     "always_on",
-#     "half_day",
-#     # TODO add more
-# ]
+_PRESETS = {
+    "always_on": {
+        "runtime": timedelta(days=7),
+        "stop_on_exit": False,
+        "cleanup": False,
+        "restart_on_initial": True,
+        "restart_on_retrigger": False,
+    },
+    "daily": {
+        "runtime": timedelta(days=1),
+        "stop_on_exit": True,
+        "cleanup": True,
+        "restart_on_initial": False,
+        "restart_on_retrigger": False,
+    },
+    "half_day": {
+        "runtime": timedelta(hours=12),
+        "endtime": time(20),
+        "maxretrigger": 10,
+        "stop_on_exit": True,
+        "cleanup": False,
+        "restart_on_initial": False,
+        "restart_on_retrigger": False,
+    },
+}
 
 
 class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
@@ -73,26 +93,21 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
         description="Restart the job when the DAG is retriggered. This is useful for jobs that do not shutdown",
     )
 
-    # template: Optional[PredefinedTemplates] = Field(
-    #     default=None,
-    #     description="A template of settings to use. This is a convenience for common settings. Individual settings will override the template.",
-    # )
+    preset: Literal["always_on", "daily", "half_day"] | None = Field(
+        default=None, description="Lifecycle defaults applied before explicit configuration values"
+    )
 
-    # @model_validator(mode="after")
-    # def _set_fields_from_template(self):
-    #     if self.template == "always_on":
-
-    #         self.stop_on_exit = False
-    #         self.cleanup = False
-    #         self.restart_on_initial = True
-    #         self.restart_on_retrigger = True
-    #     elif self.template == "half_day":
-    #         self.runtime = self.runtime or self.timedelta(hours=12)
-    #         self.stop_on_exit = True
-    #         self.cleanup = True
-    #         self.restart_on_initial = False
-    #         self.restart_on_retrigger = False
-    #     return self
+    @model_validator(mode="before")
+    @classmethod
+    def _apply_preset(cls, values):
+        if isinstance(values, dict) and isinstance(values.get("preset"), str) and values["preset"] in _PRESETS:
+            return {
+                "check_interval": timedelta(seconds=30),
+                "check_timeout": timedelta(hours=8),
+                **_PRESETS[values["preset"]],
+                **values,
+            }
+        return values
 
 
 load_airflow_config = SupervisorAirflowConfiguration.load
