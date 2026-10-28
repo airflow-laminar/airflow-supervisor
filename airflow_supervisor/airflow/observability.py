@@ -27,13 +27,29 @@ def _status(infos):
     ]
 
 
+def _xcom_push(ti, key, value):
+    # Observability writes must not fail the supervisor check they describe.
+    try:
+        ti.xcom_push(key=key, value=value)
+    except Exception as error:  # noqa: BLE001
+        _log.warning("Cannot record %s in XCom: %s", key, error)
+
+
+def _xcom_pull(ti, **kwargs):
+    try:
+        return ti.xcom_pull(**kwargs)
+    except Exception as error:  # noqa: BLE001
+        _log.warning("Cannot read %s from XCom: %s", kwargs.get("key"), error)
+        return None
+
+
 def _publish_status(infos, context, exitcodes=None, failed=False):
     value = _status(infos)
     ti = context.get("task_instance") or context.get("ti")
     if ti is not None:
-        ti.xcom_push(key=_STATUS, value=value)
+        _xcom_push(ti, _STATUS, value)
         if failed or any(info.bad(exitcodes) for info in infos):
-            ti.xcom_push(key="supervisor_failure", value=value)
+            _xcom_push(ti, "supervisor_failure", value)
     return value
 
 
@@ -62,7 +78,7 @@ class _LogForwarder:
         if ti is None:
             return
         ids = [ti.task_id, *self.task_ids]
-        values = ti.xcom_pull(key=_LOG_OFFSETS, task_ids=ids, include_prior_dates=True)
+        values = _xcom_pull(ti, key=_LOG_OFFSETS, task_ids=ids, include_prior_dates=True)
         if isinstance(values, dict):
             values = [values]
         current_run = context.get("run_id") or ti.run_id
@@ -77,7 +93,7 @@ class _LogForwarder:
             offsets = {
                 key: offset - len(self.pending.get(key, "").encode("utf-8")) for key, offset in self.offsets.items()
             }
-            ti.xcom_push(key=_LOG_OFFSETS, value={"run_id": context.get("run_id") or ti.run_id, "offsets": offsets})
+            _xcom_push(ti, _LOG_OFFSETS, {"run_id": context.get("run_id") or ti.run_id, "offsets": offsets})
 
     def baseline(self, infos, context):
         if not self.cfg.forward_logs:

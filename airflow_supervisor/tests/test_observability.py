@@ -276,6 +276,37 @@ def test_monitor_publishes_empty_workload_failure(tmp_path):
     assert ti.values["supervisor_failure"] == []
 
 
+class UnreachableMetadataTI(TI):
+    def xcom_pull(self, **kwargs):
+        raise OSError("metadata database connection failed")
+
+    def xcom_push(self, key, value):
+        raise OSError("metadata database connection failed")
+
+
+def test_monitor_survives_metadata_database_errors(tmp_path, caplog):
+    from airflow_ha import Action, Result
+
+    cfg, value = setup(tmp_path)
+    value._client.supervisor.stdout = b"still running\n"
+    with DAG(dag_id="metadata-outage", schedule=None) as dag:
+        supervisor = Supervisor(dag=dag, cfg=cfg, xmlrpc_client=value)
+    caplog.set_level(logging.INFO)
+    monitor = supervisor.get_step_kwargs("check-programs")["python_callable"]
+    assert monitor(ti=UnreachableMetadataTI()) == (Result.PASS, Action.CONTINUE)
+    assert " stdout] still running" in caplog.text
+    assert "Cannot record supervisor_process_status in XCom" in caplog.text
+    assert "Cannot read supervisor_log_offsets from XCom" in caplog.text
+
+
+def test_health_check_verdict_ignores_metadata_database_errors(tmp_path):
+    cfg, value = setup(tmp_path)
+    assert check_supervisor_health(cfg, supervisor_client=value, ti=UnreachableMetadataTI())["healthy"]
+    value.getAllProcessInfo.return_value = [info("FATAL")]
+    with pytest.raises(AirflowException, match="unhealthy"):
+        check_supervisor_health(cfg, supervisor_client=value, ti=UnreachableMetadataTI())
+
+
 def test_stop_forwards_output_before_and_during_shutdown_once(tmp_path, caplog):
     cfg, value = setup(tmp_path)
     value._client.supervisor.stdout = b"before stop\n"
