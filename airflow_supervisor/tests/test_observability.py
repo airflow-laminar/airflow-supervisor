@@ -141,7 +141,23 @@ def test_retry_or_next_health_run_resumes_from_last_complete_line(tmp_path, capl
     assert " stdout] partial line" in caplog.text
 
 
-def test_default_does_not_read_logs(tmp_path):
+def test_retrigger_resumes_logs_from_inherited_cursor(tmp_path, caplog):
+    from types import SimpleNamespace
+
+    cfg, value = setup(tmp_path)
+    value._client.supervisor.stdout = b"old\nnew\n"
+    ti = TI()
+    caplog.set_level(logging.INFO)
+    context = {
+        "ti": ti,
+        "dag_run": SimpleNamespace(conf={"supervisor_log_offsets": '{"offsets": {"demo:demo:stdout": 4}}'}),
+    }
+    _LogForwarder(cfg, value).forward([info()], context, flush=True)
+    assert " stdout] new" in caplog.text
+    assert " stdout] old" not in caplog.text
+
+
+def test_disabled_forwarding_does_not_read_logs(tmp_path):
     cfg, value = setup(tmp_path, forward_logs=False)
     value.readProcessLogChunk = Mock(side_effect=AssertionError("unexpected log read"))
     result = check_supervisor_health(cfg, supervisor_client=value)

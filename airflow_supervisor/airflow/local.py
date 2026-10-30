@@ -35,6 +35,7 @@ class Supervisor:
     _kill_dag: "DAG"
     _pool: str | None
     _xmlrpc_client: SupervisorRemoteXMLRPCClient
+    _program_tasks: dict[str, Any]
 
     def __init__(self, dag: "DAG", cfg: SupervisorAirflowConfiguration, **kwargs):
         if isinstance(cfg, dict):
@@ -43,6 +44,7 @@ class Supervisor:
 
         # store config
         self._cfg = cfg
+        self._program_tasks = {}
 
         # process pool
         self._pool = cfg.pool.pool if isinstance(cfg.pool, Pool) else cfg.pool
@@ -76,6 +78,15 @@ class Supervisor:
         existing_tasks = set(dag.task_ids)
 
         self.setup_dag()
+
+        self._program_lifecycle = None
+        if cfg.program_lifecycle is not None:
+            from .programs import ProgramLifecycle
+
+            self._program_lifecycle = ProgramLifecycle(self)
+            self._program_lifecycle.build()
+            cast(Any, dag)._supervisor_lifecycles = [self]
+            return
 
         # initialize tasks
         self.initialize_tasks()
@@ -191,6 +202,8 @@ class Supervisor:
 
     @property
     def restart_programs(self) -> "Operator":
+        if self._program_lifecycle is not None:
+            raise ValueError("Use program_operator or a restart control DAG for per-program lifecycles")
         return self._restart_programs
 
     @property
@@ -204,6 +217,29 @@ class Supervisor:
     @property
     def supervisor_client(self) -> SupervisorRemoteXMLRPCClient:
         return self._xmlrpc_client
+
+    @property
+    def program_tasks(self):
+        """Discrete start, delay, and stop tasks, keyed by Supervisor program group."""
+        return self._program_tasks
+
+    def program_operator(self, program, action, **kwargs):
+        """Create a discrete start, stop, or restart task for a managed program group."""
+        from functools import partial
+
+        from airflow.providers.standard.operators.python import PythonOperator
+
+        if self._program_lifecycle is None:
+            raise ValueError("Program operators require program_lifecycle configuration")
+        if program not in self._program_lifecycle.policies or action not in ("start", "stop", "restart"):
+            raise ValueError("Select a configured program group and a start, stop, or restart action")
+        operator_kwargs: dict[str, Any] = {
+            **self.get_base_operator_kwargs(),
+            "task_id": f"{self._dag.dag_id}-{action}-{program}",
+            **kwargs,
+            "python_callable": partial(self._program_lifecycle.control, program, action),
+        }
+        return PythonOperator(**operator_kwargs)
 
     def get_base_operator_kwargs(self) -> dict:
         return {"dag": self._dag, "pool": self._pool, **self._callbacks}
@@ -233,7 +269,12 @@ class Supervisor:
             and self.check_programs.check_end_conditions(**context) is not None
         ):
             return False
-        if step == "start-programs" and self._cfg.forward_logs:
+        inherited_conf = getattr(context.get("dag_run"), "conf", None) or {}
+        if (
+            step == "start-programs"
+            and self._cfg.forward_logs
+            and not inherited_conf.get(f"{self.check_programs.task_id}-retrigger", 0)
+        ):
             try:
                 self._log_forwarder.baseline(self._xmlrpc_client.getProgramProcessInfo(), context)
             except _RPC_ERRORS as error:
@@ -283,6 +324,8 @@ class Supervisor:
 
     def get_step_kwargs(self, step: SupervisorTaskStep) -> dict:
         if step == "check-programs":
+            if self._program_lifecycle is not None:
+                return {"python_callable": self._program_lifecycle.monitor, "do_xcom_push": True}
 
             def _check_programs(**context):
                 from airflow_ha import Action, Result
@@ -322,7 +365,14 @@ class Supervisor:
                 **self.get_step_kwargs(step),
             }
             _log.info(f"Creating HighAvailabilityOperator for {step} with args: {ha_operator_args}")
-            return HighAvailabilityOperator(**ha_operator_args)
+            operator = HighAvailabilityOperator(**ha_operator_args)
+            for trigger in (operator.retrigger_pass, operator.retrigger_fail):
+                trigger.conf["supervisor_log_offsets"] = (
+                    "{{ (ti.xcom_pull(task_ids='"
+                    + operator.task_id
+                    + "', key='supervisor_log_offsets') or {}) | tojson }}"
+                )
+            return operator
         return PythonOperator(
             **cast(
                 dict[str, Any],

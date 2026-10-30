@@ -5,6 +5,48 @@ myst:
 
 # API reference
 
+## Per-program lifecycle
+
+`program_lifecycle=None` retains the grouped lifecycle. A mapping, including `{}`,
+enables discrete program tasks. Omitted policies receive defaults. Policy keys are
+Supervisor process-group names: normally a `[program:name]` name, or an explicit
+`[group:name]` name when programs are grouped. A `numprocs` group is controlled as
+one unit; event listeners are excluded.
+
+`ProgramLifecycleConfiguration` accepts:
+
+| Field                      | Default    | Meaning                                                                               |
+| -------------------------- | ---------- | ------------------------------------------------------------------------------------- |
+| `start_after`              | `[]`       | Predecessor program start tasks. Startup ordering is reversed for shutdown.           |
+| `start_delay`              | zero       | Delay from the latest predecessor process start, or run start without predecessors.   |
+| `stop_before`              | `[]`       | Additional shutdown ordering constraints.                                             |
+| `retries`                  | `0`        | Airflow retries for generated program operation and delay tasks.                      |
+| `retry_delay`              | 30 seconds | Delay between Airflow task retries.                                                   |
+| `required`                 | `True`     | Whether a program failure selects the failed HA outcome.                              |
+| `max_consecutive_failures` | `None`     | Disable an optional program for the chain after this many failures; must be positive. |
+
+Unknown dependencies and startup/shutdown cycles are rejected. A failure limit
+requires `required=False`. Duration fields accept `timedelta` or numeric seconds.
+`stop_on_exit` and `cleanup` still control terminal shutdown and file removal.
+The grouped `restart_programs` property is replaced by individual control tasks
+and generated restart control DAGs in this mode.
+
+`Supervisor.program_tasks[name]` exposes `start`, `delay`, and `stop` operators.
+`Supervisor.program_operator(name, action, **kwargs)` creates a separately composable
+control task; action is `start`, `stop`, or `restart`. Task kwargs include retries,
+task ID, and DAG. Control tasks update the desired state as well as issuing the
+XML-RPC operation.
+
+`create_supervisor_control_dags(supervisor_or_dag)` returns native DAGs keyed by
+their IDs. Pass a managed lifecycle or its native DAG, then register the returned
+mapping in the DAG module's globals. All controls are unscheduled. Program controls
+require `program_lifecycle` to be enabled.
+
+`supervisor_program_state` contains per-program failure counts, disabled flags,
+and manual-control revisions in monitoring XCom and retrigger configuration.
+`airflow-supervisor:<dag_id>:<program>:control` Variables retain explicit start/stop
+intent. Airflow 3 tasks use the Task SDK Variable interface.
+
 ## Lifecycle classes and task models
 
 All names below are exported from `airflow_supervisor`.
@@ -116,7 +158,7 @@ branch, as described above.
 | ---------------------- | ------------------- | ------------------------------------------------------------------------------------------------------ |
 | `check_interval`       | 5 seconds           | Polling interval for the `airflow-ha` sensor.                                                          |
 | `check_timeout`        | 8 hours             | Sensor timeout.                                                                                        |
-| `forward_logs`         | `False`             | Forwards workload stdout and stderr through the Airflow task logger.                                   |
+| `forward_logs`         | `True`              | Forwards workload stdout and stderr through the Airflow task logger.                                   |
 | `log_chunk_size`       | `65536`             | Byte budget per stream per poll; `1`–`1048576`, plus up to 3 bytes for a UTF-8 boundary.               |
 | `runtime`              | `None`              | Monitoring end condition relative to `reference_date`.                                                 |
 | `endtime`              | `None`              | Time-of-day end condition passed to `airflow-ha`.                                                      |

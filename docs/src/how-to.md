@@ -318,3 +318,133 @@ tasks:
 Upstream tasks precede configuration; downstream tasks follow unconfiguration.
 Keep stop and cleanup enabled if downstream tasks should run with the default
 `all_success` trigger rule. Disabling cleanup creates a skipped boundary task.
+
+## How to order programs and tolerate an optional program's failure
+
+Set `program_lifecycle` to create separate start, delay, and stop tasks. This
+example starts A, waits ten minutes from A's process start, starts B, then C.
+Shutdown follows C, B, A. C is disabled for the monitoring chain after three
+consecutive failures; A and B keep running across recovery retriggers.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from airflow import DAG
+from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration, create_supervisor_control_dags
+
+with DAG(
+    dag_id="ordered-services",
+    schedule=None,
+    start_date=datetime(2026, 1, 1, tzinfo=timezone.utc),
+) as dag:
+    service = Supervisor(
+        dag=dag,
+        cfg=SupervisorAirflowConfiguration(
+            working_dir="/tmp/ordered-services",
+            runtime=timedelta(hours=8),
+            reference_date="start_date",
+            program={
+                "A": {"command": "/opt/services/a"},
+                "B": {"command": "/opt/services/b"},
+                "C": {"command": "/opt/services/c"},
+            },
+            program_lifecycle={
+                "A": {},
+                "B": {"start_after": ["A"], "start_delay": timedelta(minutes=10)},
+                "C": {
+                    "start_after": ["B"],
+                    "required": False,
+                    "max_consecutive_failures": 3,
+                    "retries": 2,
+                    "retry_delay": timedelta(seconds=30),
+                },
+            },
+        ),
+    )
+
+globals().update(create_supervisor_control_dags(service))
+```
+
+The delay uses a rescheduling sensor, releasing its worker slot between checks.
+An already-running B proceeds without repeating the delay on every retrigger.
+Configure `restart_on_initial` or `restart_on_retrigger` only when those restarts
+are intended; the defaults leave healthy programs running.
+
+Airflow retries a failed start command twice in this example. If the final attempt
+still fails, C consumes one failure from its program budget. Monitoring also counts
+an observed process failure once until another start attempt. A healthy observation
+resets the consecutive failure count. A fresh scheduled or manual run starts a new
+budget; HA retriggers inherit it. An optional program's failure does not select the
+DAG failure branch. Required program failures retain the failed retrigger path.
+
+To use SSH, replace `Supervisor` and `SupervisorAirflowConfiguration` with
+`SupervisorSSH` and `SupervisorSSHAirflowConfiguration`, adding the SSH settings from
+the [SSH guide](#how-to-run-a-job-over-ssh-in-python). Program operations still use
+XML-RPC, so workers need access to that endpoint.
+
+For `airflow-config`, put the same policy under the task's `cfg`:
+
+```yaml
+dags:
+  ordered-services:
+    tasks:
+      run:
+        _target_: airflow_supervisor.SupervisorTask
+        cfg:
+          _target_: airflow_supervisor.SupervisorAirflowConfiguration
+          working_dir: /tmp/ordered-services
+          runtime: 28800
+          reference_date: start_date
+          program:
+            A: {command: /opt/services/a}
+            B: {command: /opt/services/b}
+            C: {command: /opt/services/c}
+          program_lifecycle:
+            A: {}
+            B: {start_after: [A], start_delay: 600}
+            C:
+              start_after: [B]
+              required: false
+              max_consecutive_failures: 3
+              retries: 2
+              retry_delay: 30
+```
+
+Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH. After
+generating the configured DAGs in memory, register controls from the native DAG:
+
+```python
+from airflow_config import load_config
+from airflow_supervisor import create_supervisor_control_dags
+
+load_config("config", "ordered_services").generate_in_mem()
+globals().update(create_supervisor_control_dags(globals()["ordered-services"]))
+```
+
+## How to control a program independently
+
+The registration above exports unscheduled `ordered-services-start-C`,
+`ordered-services-stop-C`, and `ordered-services-restart-C` DAGs, with equivalent
+controls for A and B. Aggregate `start-programs`, `stop-programs`, `restart-programs`,
+and `force-kill` DAGs are also exported. Aggregate restart stops programs in shutdown
+order, then starts them in startup order with the configured delays.
+
+A stop control suspends that program through an Airflow Variable, so monitoring
+does not immediately recover it. Start and restart controls re-enable it and reset
+its failure budget. The stop intent persists across fresh runs until explicitly
+re-enabled. Trigger one control operation at a time for a lifecycle; separate
+control DAGs do not provide a transaction or distributed lock around remote actions.
+The daemon must already exist for program controls. Force kill terminates the
+daemon and remains an emergency operation, not an orderly shutdown.
+
+To compose a control with other Airflow tasks, create it in another DAG:
+
+```python
+with DAG(dag_id="maintenance", schedule=None) as maintenance:
+    stop_b = service.program_operator("B", "stop", dag=maintenance)
+    restart_a = service.program_operator("A", "restart", dag=maintenance, retries=2)
+    stop_b >> restart_a
+```
+
+Program stdout and stderr are forwarded by default during operations and
+monitoring. Inspect the relevant task log; set `forward_logs=False` to opt out.

@@ -1,3 +1,4 @@
+from json import loads
 from logging import getLogger
 from xmlrpc.client import Fault, ProtocolError
 
@@ -77,6 +78,12 @@ class _LogForwarder:
         ti = context.get("task_instance") or context.get("ti")
         if ti is None:
             return
+        dag_run = context.get("dag_run")
+        inherited = (getattr(dag_run, "conf", None) or {}).get(_LOG_OFFSETS)
+        if isinstance(inherited, str):
+            inherited = loads(inherited)
+        if isinstance(inherited, dict):
+            self.offsets = inherited.get("offsets", {}).copy()
         ids = [ti.task_id, *self.task_ids]
         values = _xcom_pull(ti, key=_LOG_OFFSETS, task_ids=ids, include_prior_dates=True)
         if isinstance(values, dict):
@@ -84,8 +91,8 @@ class _LogForwarder:
         current_run = context.get("run_id") or ti.run_id
         for value in values or []:
             if isinstance(value, dict) and (not self.task_ids or value.get("run_id") == current_run):
-                self.offsets = value.get("offsets", {}).copy()
-                break
+                for key, offset in value.get("offsets", {}).items():
+                    self.offsets[key] = max(self.offsets.get(key, 0), offset)
 
     def _save(self, context):
         ti = context.get("task_instance") or context.get("ti")
