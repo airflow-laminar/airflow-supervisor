@@ -46,6 +46,7 @@ develop = [
     "mdformat-tables>=1",
     "pytest",
     "pytest-cov",
+    "supervisor",
     "ruff",
     "twine",
     "ty",

@@ -1,9 +1,12 @@
 from datetime import time, timedelta
+from graphlib import TopologicalSorter
 from typing import Literal
 
 from airflow_pydantic import Pool
 from pydantic import Field, model_validator
 from supervisor_pydantic import SupervisorConvenienceConfiguration
+
+from .program import ProgramLifecycleConfiguration
 
 __all__ = (
     "SupervisorAirflowConfiguration",
@@ -41,7 +44,7 @@ _PRESETS = {
 class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
     """Settings that MUST be set when running in airflow"""
 
-    forward_logs: bool = Field(default=False, description="Forward program stdout and stderr into Airflow task logs")
+    forward_logs: bool = Field(default=True, description="Forward program stdout and stderr into Airflow task logs")
     log_chunk_size: int = Field(
         default=65536, gt=0, le=1048576, description="Log read budget in bytes per program stream on each poll"
     )
@@ -96,6 +99,40 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
     preset: Literal["always_on", "daily", "half_day"] | None = Field(
         default=None, description="Lifecycle defaults applied before explicit configuration values"
     )
+
+    program_lifecycle: dict[str, ProgramLifecycleConfiguration] | None = Field(
+        default=None, description="Enable discrete Airflow tasks and policies for configured Supervisor program groups"
+    )
+
+    @model_validator(mode="after")
+    def _validate_program_lifecycle(self):
+        if self.program_lifecycle is None:
+            return self
+        names = set(self.program) | set(self.fcgiprogram or {})
+        for group in (self.group or {}).values():
+            names.difference_update(group.programs)
+        names.update(self.group or {})
+        if not names:
+            raise ValueError("program_lifecycle requires at least one Supervisor program group")
+        unknown = set(self.program_lifecycle) - names
+        if unknown:
+            raise ValueError(f"Unknown Supervisor program groups: {sorted(unknown)}")
+        start_graph = {name: set() for name in names}
+        stop_graph = {name: set() for name in names}
+        for name, policy in self.program_lifecycle.items():
+            unknown = (set(policy.start_after) | set(policy.stop_before)) - names
+            if unknown:
+                raise ValueError(f"Unknown lifecycle dependencies for {name}: {sorted(unknown)}")
+            start_graph[name].update(policy.start_after)
+            for parent in policy.start_after:
+                stop_graph[parent].add(name)
+            for after in policy.stop_before:
+                stop_graph[after].add(name)
+            if policy.required and policy.max_consecutive_failures is not None:
+                raise ValueError(f"{name}: max_consecutive_failures requires required=False")
+        tuple(TopologicalSorter(start_graph).static_order())
+        tuple(TopologicalSorter(stop_graph).static_order())
+        return self
 
     @model_validator(mode="before")
     @classmethod
