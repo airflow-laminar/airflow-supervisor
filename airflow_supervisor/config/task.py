@@ -1,6 +1,7 @@
 from airflow_pydantic import ImportPath, Task, TaskArgs
 from pydantic import Field, field_validator
 
+from .subtasks import SupervisorSubtasks
 from .supervisor import SupervisorAirflowConfiguration
 
 __all__ = (
@@ -11,7 +12,7 @@ __all__ = (
 )
 
 
-class SupervisorTaskArgs(TaskArgs):
+class SupervisorTaskArgs(TaskArgs, SupervisorSubtasks):
     cfg: SupervisorAirflowConfiguration
 
 

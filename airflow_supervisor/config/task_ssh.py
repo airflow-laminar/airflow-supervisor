@@ -5,6 +5,7 @@ from typing import Any, cast
 from airflow_pydantic import CallablePath, Host, HostQuery, ImportPath, Port, PortQuery, Task, TaskArgs, get_import_path
 from pydantic import Field, TypeAdapter, field_validator, model_validator
 
+from .subtasks import SupervisorSubtasks
 from .supervisor_ssh import SupervisorSSHAirflowConfiguration
 
 __all__ = (
@@ -15,7 +16,7 @@ __all__ = (
 )
 
 
-class SupervisorSSHTaskArgs(TaskArgs, extra="allow"):
+class SupervisorSSHTaskArgs(TaskArgs, SupervisorSubtasks, extra="allow"):
     cfg: SupervisorSSHAirflowConfiguration
     host: Host | HostQuery | CallablePath | None = Field(
         default=None,
