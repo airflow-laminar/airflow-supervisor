@@ -478,6 +478,136 @@ Upstream tasks precede configuration; downstream tasks follow unconfiguration.
 Keep stop and cleanup enabled if downstream tasks should run with the default
 `all_success` trigger rule. Disabling cleanup creates a skipped boundary task.
 
+## How to order programs and tolerate an optional program’s failure
+
+Set `program_lifecycle` to create separate start, delay, and stop tasks. This
+example starts A, waits ten minutes from A’s process start, starts B, then C.
+Shutdown follows C, B, A. C is disabled for the monitoring chain after three
+consecutive failures; A and B keep running across recovery retriggers.
+
+```python
+from datetime import datetime, timedelta, timezone
+
+from airflow import DAG
+from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration, create_supervisor_control_dags
+
+with DAG(
+    dag_id="ordered-services",
+    schedule=None,
+    start_date=datetime(2026, 1, 1, tzinfo=timezone.utc),
+) as dag:
+    service = Supervisor(
+        dag=dag,
+        cfg=SupervisorAirflowConfiguration(
+            working_dir="/tmp/ordered-services",
+            runtime=timedelta(hours=8),
+            reference_date="start_date",
+            program={
+                "A": {"command": "/opt/services/a"},
+                "B": {"command": "/opt/services/b"},
+                "C": {"command": "/opt/services/c"},
+            },
+            program_lifecycle={
+                "A": {},
+                "B": {"start_after": ["A"], "start_delay": timedelta(minutes=10)},
+                "C": {
+                    "start_after": ["B"],
+                    "required": False,
+                    "max_consecutive_failures": 3,
+                    "retries": 2,
+                    "retry_delay": timedelta(seconds=30),
+                },
+            },
+        ),
+    )
+
+globals().update(create_supervisor_control_dags(service))
+```
+
+The delay uses a rescheduling sensor, releasing its worker slot between checks.
+An already-running B proceeds without repeating the delay on every retrigger.
+Configure `restart_on_initial` or `restart_on_retrigger` only when those restarts
+are intended; the defaults leave healthy programs running.
+
+Airflow retries a failed start command twice in this example. If the final attempt
+still fails, C consumes one failure from its program budget. Monitoring also counts
+an observed process failure once until another start attempt. A healthy observation
+resets the consecutive failure count. A fresh scheduled or manual run starts a new
+budget; HA retriggers inherit it. An optional program’s failure does not select the
+DAG failure branch. Required program failures retain the failed retrigger path.
+
+To use SSH, replace `Supervisor` and `SupervisorAirflowConfiguration` with
+`SupervisorSSH` and `SupervisorSSHAirflowConfiguration`, adding the SSH settings from
+the [SSH guide](). Program operations still use
+XML-RPC, so workers need access to that endpoint.
+
+For `airflow-config`, put the same policy under the task’s `cfg`:
+
+```yaml
+dags:
+  ordered-services:
+    tasks:
+      run:
+        _target_: airflow_supervisor.SupervisorTask
+        cfg:
+          _target_: airflow_supervisor.SupervisorAirflowConfiguration
+          working_dir: /tmp/ordered-services
+          runtime: 28800
+          reference_date: start_date
+          program:
+            A: {command: /opt/services/a}
+            B: {command: /opt/services/b}
+            C: {command: /opt/services/c}
+          program_lifecycle:
+            A: {}
+            B: {start_after: [A], start_delay: 600}
+            C:
+              start_after: [B]
+              required: false
+              max_consecutive_failures: 3
+              retries: 2
+              retry_delay: 30
+```
+
+Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH. After
+generating the configured DAGs in memory, register controls from the native DAG:
+
+```python
+from airflow_config import load_config
+from airflow_supervisor import create_supervisor_control_dags
+
+load_config("config", "ordered_services").generate_in_mem()
+globals().update(create_supervisor_control_dags(globals()["ordered-services"]))
+```
+
+## How to control a program independently
+
+The registration above exports unscheduled `ordered-services-start-C`,
+`ordered-services-stop-C`, and `ordered-services-restart-C` DAGs, with equivalent
+controls for A and B. Aggregate `start-programs`, `stop-programs`, `restart-programs`,
+and `force-kill` DAGs are also exported. Aggregate restart stops programs in shutdown
+order, then starts them in startup order with the configured delays.
+
+A stop control suspends that program through an Airflow Variable, so monitoring
+does not immediately recover it. Start and restart controls re-enable it and reset
+its failure budget. The stop intent persists across fresh runs until explicitly
+re-enabled. Trigger one control operation at a time for a lifecycle; separate
+control DAGs do not provide a transaction or distributed lock around remote actions.
+The daemon must already exist for program controls. Force kill terminates the
+daemon and remains an emergency operation, not an orderly shutdown.
+
+To compose a control with other Airflow tasks, create it in another DAG:
+
+```python
+with DAG(dag_id="maintenance", schedule=None) as maintenance:
+    stop_b = service.program_operator("B", "stop", dag=maintenance)
+    restart_a = service.program_operator("A", "restart", dag=maintenance, retries=2)
+    stop_b >> restart_a
+```
+
+Program stdout and stderr are forwarded by default during operations and
+monitoring. Inspect the relevant task log; set `forward_logs=False` to opt out.
+
 <!-- docs/src/observability.html.md -->
 
 # How to forward program logs and check retained services
@@ -701,7 +831,8 @@ available in the DAG parsing and worker environments. For completed finite jobs,
 
 ## Set read limits and inspect diagnostics
 
-Log forwarding is opt-in: `forward_logs` defaults to `False`. Each poll reads
+Log forwarding is enabled by default. Set `forward_logs=False` in Python or
+`forward_logs: false` in YAML to disable it. Each poll reads
 `log_chunk_size` bytes per program stream, defaulting to 65,536 bytes, with up to
 three extra bytes to finish a UTF-8 character at the boundary. Set
 it on `cfg` in Python or YAML; accepted values are 1 through 1,048,576. Final
@@ -710,7 +841,8 @@ Log read failures warn without changing an otherwise healthy task’s result;
 status and lifecycle failures still fail through their existing paths.
 
 XCom stores cursors and compact process metadata, rather than log contents.
-`supervisor_log_offsets` tracks stream positions. Watchdog runs reuse cursors
+`supervisor_log_offsets` tracks stream positions and is carried into HA retriggers.
+Watchdog runs reuse cursors
 from earlier runs so a scheduled check can collect new output. If a log file
 shrinks below its stored cursor, forwarding resets that cursor and warns.
 XML-RPC does not identify file replacements; rotation to a file of the same
@@ -811,6 +943,48 @@ fits workloads that need a separate manager installed with the application.
 <!-- docs/src/api.html.md -->
 
 # API reference
+
+## Per-program lifecycle
+
+`program_lifecycle=None` retains the grouped lifecycle. A mapping, including `{}`,
+enables discrete program tasks. Omitted policies receive defaults. Policy keys are
+Supervisor process-group names: normally a `[program:name]` name, or an explicit
+`[group:name]` name when programs are grouped. A `numprocs` group is controlled as
+one unit; event listeners are excluded.
+
+`ProgramLifecycleConfiguration` accepts:
+
+| Field                      | Default    | Meaning                                                                               |
+|----------------------------|------------|---------------------------------------------------------------------------------------|
+| `start_after`              | `[]`       | Predecessor program start tasks. Startup ordering is reversed for shutdown.           |
+| `start_delay`              | zero       | Delay from the latest predecessor process start, or run start without predecessors.   |
+| `stop_before`              | `[]`       | Additional shutdown ordering constraints.                                             |
+| `retries`                  | `0`        | Airflow retries for generated program operation and delay tasks.                      |
+| `retry_delay`              | 30 seconds | Delay between Airflow task retries.                                                   |
+| `required`                 | `True`     | Whether a program failure selects the failed HA outcome.                              |
+| `max_consecutive_failures` | `None`     | Disable an optional program for the chain after this many failures; must be positive. |
+
+Unknown dependencies and startup/shutdown cycles are rejected. A failure limit
+requires `required=False`. Duration fields accept `timedelta` or numeric seconds.
+`stop_on_exit` and `cleanup` still control terminal shutdown and file removal.
+The grouped `restart_programs` property is replaced by individual control tasks
+and generated restart control DAGs in this mode.
+
+`Supervisor.program_tasks[name]` exposes `start`, `delay`, and `stop` operators.
+`Supervisor.program_operator(name, action, **kwargs)` creates a separately composable
+control task; action is `start`, `stop`, or `restart`. Task kwargs include retries,
+task ID, and DAG. Control tasks update the desired state as well as issuing the
+XML-RPC operation.
+
+`create_supervisor_control_dags(supervisor_or_dag)` returns native DAGs keyed by
+their IDs. Pass a managed lifecycle or its native DAG, then register the returned
+mapping in the DAG module’s globals. All controls are unscheduled. Program controls
+require `program_lifecycle` to be enabled.
+
+`supervisor_program_state` contains per-program failure counts, disabled flags,
+and manual-control revisions in monitoring XCom and retrigger configuration.
+`airflow-supervisor:<dag_id>:<program>:control` Variables retain explicit start/stop
+intent. Airflow 3 tasks use the Task SDK Variable interface.
 
 ## Lifecycle classes and task models
 
@@ -923,7 +1097,7 @@ branch, as described above.
 |------------------------|---------------------|--------------------------------------------------------------------------------------------------------|
 | `check_interval`       | 5 seconds           | Polling interval for the `airflow-ha` sensor.                                                          |
 | `check_timeout`        | 8 hours             | Sensor timeout.                                                                                        |
-| `forward_logs`         | `False`             | Forwards workload stdout and stderr through the Airflow task logger.                                   |
+| `forward_logs`         | `True`              | Forwards workload stdout and stderr through the Airflow task logger.                                   |
 | `log_chunk_size`       | `65536`             | Byte budget per stream per poll; `1`–`1048576`, plus up to 3 bytes for a UTF-8 boundary.               |
 | `runtime`              | `None`              | Monitoring end condition relative to `reference_date`.                                                 |
 | `endtime`              | `None`              | Time-of-day end condition passed to `airflow-ha`.                                                      |
@@ -1014,31 +1188,33 @@ Bases: `object`
 
 ### Methods
 
-| [`__init__`](#airflow_supervisor.Supervisor.__init__)(dag, cfg, \*\*kwargs)   |    |
-|-------------------------------------------------------------------------------|----|
-| `get_base_operator_kwargs`()                                                  |    |
-| `get_step_kwargs`(step)                                                       |    |
-| `get_step_operator`(step)                                                     |    |
-| `initialize_tasks`()                                                          |    |
-| `set_downstream`(other)                                                       |    |
-| `set_upstream`(other)                                                         |    |
-| `setup_dag`()                                                                 |    |
-| `update_relative`(other[, upstream, edge_modifier])                           |    |
+| [`__init__`](#airflow_supervisor.Supervisor.__init__)(dag, cfg, \*\*kwargs)   |                                                                             |
+|-------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `get_base_operator_kwargs`()                                                  |                                                                             |
+| `get_step_kwargs`(step)                                                       |                                                                             |
+| `get_step_operator`(step)                                                     |                                                                             |
+| `initialize_tasks`()                                                          |                                                                             |
+| `program_operator`(program, action, \*\*kwargs)                               | Create a discrete start, stop, or restart task for a managed program group. |
+| `set_downstream`(other)                                                       |                                                                             |
+| `set_upstream`(other)                                                         |                                                                             |
+| `setup_dag`()                                                                 |                                                                             |
+| `update_relative`(other[, upstream, edge_modifier])                           |                                                                             |
 
 ### Attributes
 
-| `check_programs`         |                               |
-|--------------------------|-------------------------------|
-| `configure_supervisor`   |                               |
-| `leaves`                 | Return the leaves of the DAG. |
-| `restart_programs`       |                               |
-| `roots`                  | Return the roots of the DAG.  |
-| `start_programs`         |                               |
-| `start_supervisor`       |                               |
-| `stop_programs`          |                               |
-| `stop_supervisor`        |                               |
-| `supervisor_client`      |                               |
-| `unconfigure_supervisor` |                               |
+| `check_programs`         |                                                                           |
+|--------------------------|---------------------------------------------------------------------------|
+| `configure_supervisor`   |                                                                           |
+| `leaves`                 | Return the leaves of the DAG.                                             |
+| `program_tasks`          | Discrete start, delay, and stop tasks, keyed by Supervisor program group. |
+| `restart_programs`       |                                                                           |
+| `roots`                  | Return the roots of the DAG.                                              |
+| `start_programs`         |                                                                           |
+| `start_supervisor`       |                                                                           |
+| `stop_programs`          |                                                                           |
+| `stop_supervisor`        |                                                                           |
+| `supervisor_client`      |                                                                           |
+| `unconfigure_supervisor` |                                                                           |
 
 <!-- docs/src/_build/airflow_supervisor.SupervisorSSH.html.md -->
 
@@ -1052,31 +1228,33 @@ Bases: [`Supervisor`](airflow_supervisor.Supervisor.html.md#airflow_supervisor.S
 
 ### Methods
 
-| [`__init__`](#airflow_supervisor.SupervisorSSH.__init__)(dag, cfg[, host, port])   |    |
-|------------------------------------------------------------------------------------|----|
-| `get_base_operator_kwargs`()                                                       |    |
-| `get_step_kwargs`(step)                                                            |    |
-| `get_step_operator`(step)                                                          |    |
-| `initialize_tasks`()                                                               |    |
-| `set_downstream`(other)                                                            |    |
-| `set_upstream`(other)                                                              |    |
-| `setup_dag`()                                                                      |    |
-| `update_relative`(other[, upstream, edge_modifier])                                |    |
+| [`__init__`](#airflow_supervisor.SupervisorSSH.__init__)(dag, cfg[, host, port])   |                                                                             |
+|------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| `get_base_operator_kwargs`()                                                       |                                                                             |
+| `get_step_kwargs`(step)                                                            |                                                                             |
+| `get_step_operator`(step)                                                          |                                                                             |
+| `initialize_tasks`()                                                               |                                                                             |
+| `program_operator`(program, action, \*\*kwargs)                                    | Create a discrete start, stop, or restart task for a managed program group. |
+| `set_downstream`(other)                                                            |                                                                             |
+| `set_upstream`(other)                                                              |                                                                             |
+| `setup_dag`()                                                                      |                                                                             |
+| `update_relative`(other[, upstream, edge_modifier])                                |                                                                             |
 
 ### Attributes
 
-| `check_programs`         |                               |
-|--------------------------|-------------------------------|
-| `configure_supervisor`   |                               |
-| `leaves`                 | Return the leaves of the DAG. |
-| `restart_programs`       |                               |
-| `roots`                  | Return the roots of the DAG.  |
-| `start_programs`         |                               |
-| `start_supervisor`       |                               |
-| `stop_programs`          |                               |
-| `stop_supervisor`        |                               |
-| `supervisor_client`      |                               |
-| `unconfigure_supervisor` |                               |
+| `check_programs`         |                                                                           |
+|--------------------------|---------------------------------------------------------------------------|
+| `configure_supervisor`   |                                                                           |
+| `leaves`                 | Return the leaves of the DAG.                                             |
+| `program_tasks`          | Discrete start, delay, and stop tasks, keyed by Supervisor program group. |
+| `restart_programs`       |                                                                           |
+| `roots`                  | Return the roots of the DAG.                                              |
+| `start_programs`         |                                                                           |
+| `start_supervisor`       |                                                                           |
+| `stop_programs`          |                                                                           |
+| `stop_supervisor`        |                                                                           |
+| `supervisor_client`      |                                                                           |
+| `unconfigure_supervisor` |                                                                           |
 
 <!-- docs/src/_build/airflow_supervisor.SupervisorAirflowConfiguration.html.md -->
 
@@ -1088,7 +1266,7 @@ Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConve
 
 Settings that MUST be set when running in airflow
 
-#### *field* forward_logs *: bool* *= False*
+#### *field* forward_logs *: bool* *= True*
 
 Forward program stdout and stderr into Airflow task logs
 
@@ -1145,6 +1323,10 @@ Restart the job when the DAG is retriggered. This is useful for jobs that do not
 #### *field* preset *: Literal['always_on', 'daily', 'half_day'] | None* *= None*
 
 Lifecycle defaults applied before explicit configuration values
+
+#### *field* program_lifecycle *: dict[str, ProgramLifecycleConfiguration] | None* *= None*
+
+Enable discrete Airflow tasks and policies for configured Supervisor program groups
 
 <!-- docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md -->
 

@@ -224,7 +224,8 @@ available in the DAG parsing and worker environments. For completed finite jobs,
 
 ## Set read limits and inspect diagnostics
 
-Log forwarding is opt-in: `forward_logs` defaults to `False`. Each poll reads
+Log forwarding is enabled by default. Set `forward_logs=False` in Python or
+`forward_logs: false` in YAML to disable it. Each poll reads
 `log_chunk_size` bytes per program stream, defaulting to 65,536 bytes, with up to
 three extra bytes to finish a UTF-8 character at the boundary. Set
 it on `cfg` in Python or YAML; accepted values are 1 through 1,048,576. Final
@@ -233,7 +234,8 @@ Log read failures warn without changing an otherwise healthy task's result;
 status and lifecycle failures still fail through their existing paths.
 
 XCom stores cursors and compact process metadata, rather than log contents.
-`supervisor_log_offsets` tracks stream positions. Watchdog runs reuse cursors
+`supervisor_log_offsets` tracks stream positions and is carried into HA retriggers.
+Watchdog runs reuse cursors
 from earlier runs so a scheduled check can collect new output. If a log file
 shrinks below its stored cursor, forwarding resets that cursor and warns.
 XML-RPC does not identify file replacements; rotation to a file of the same

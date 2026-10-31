@@ -418,6 +418,124 @@ object:</p>
 Keep stop and cleanup enabled if downstream tasks should run with the default
 <code class="docutils literal notranslate"><span class="pre">all_success</span></code> trigger rule. Disabling cleanup creates a skipped boundary task.</p>
 </section>
+<section id="how-to-order-programs-and-tolerate-an-optional-program-s-failure">
+<h2>How to order programs and tolerate an optional program’s failure<a class="headerlink" href="#how-to-order-programs-and-tolerate-an-optional-program-s-failure" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-order-programs-and-tolerate-an-optional-program-s-failure'">¶</a></h2>
+<p>Set <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> to create separate start, delay, and stop tasks. This
+example starts A, waits ten minutes from A’s process start, starts B, then C.
+Shutdown follows C, B, A. C is disabled for the monitoring chain after three
+consecutive failures; A and B keep running across recovery retriggers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span><span class="p">,</span> <span class="n">timezone</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow</span><span class="w"> </span><span class="kn">import</span> <span class="n">DAG</span>
+</span><span id="line-4"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">Supervisor</span><span class="p">,</span> <span class="n">SupervisorAirflowConfiguration</span><span class="p">,</span> <span class="n">create_supervisor_control_dags</span>
+</span><span id="line-5">
+</span><span id="line-6"><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span>
+</span><span id="line-7">    <span class="n">dag_id</span><span class="o">=</span><span class="s2">"ordered-services"</span><span class="p">,</span>
+</span><span id="line-8">    <span class="n">schedule</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span id="line-9">    <span class="n">start_date</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2026</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">tzinfo</span><span class="o">=</span><span class="n">timezone</span><span class="o">.</span><span class="n">utc</span><span class="p">),</span>
+</span><span id="line-10"><span class="p">)</span> <span class="k">as</span> <span class="n">dag</span><span class="p">:</span>
+</span><span id="line-11">    <span class="n">service</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span>
+</span><span id="line-12">        <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span>
+</span><span id="line-13">        <span class="n">cfg</span><span class="o">=</span><span class="n">SupervisorAirflowConfiguration</span><span class="p">(</span>
+</span><span id="line-14">            <span class="n">working_dir</span><span class="o">=</span><span class="s2">"/tmp/ordered-services"</span><span class="p">,</span>
+</span><span id="line-15">            <span class="n">runtime</span><span class="o">=</span><span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="mi">8</span><span class="p">),</span>
+</span><span id="line-16">            <span class="n">reference_date</span><span class="o">=</span><span class="s2">"start_date"</span><span class="p">,</span>
+</span><span id="line-17">            <span class="n">program</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-18">                <span class="s2">"A"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"command"</span><span class="p">:</span> <span class="s2">"/opt/services/a"</span><span class="p">},</span>
+</span><span id="line-19">                <span class="s2">"B"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"command"</span><span class="p">:</span> <span class="s2">"/opt/services/b"</span><span class="p">},</span>
+</span><span id="line-20">                <span class="s2">"C"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"command"</span><span class="p">:</span> <span class="s2">"/opt/services/c"</span><span class="p">},</span>
+</span><span id="line-21">            <span class="p">},</span>
+</span><span id="line-22">            <span class="n">program_lifecycle</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-23">                <span class="s2">"A"</span><span class="p">:</span> <span class="p">{},</span>
+</span><span id="line-24">                <span class="s2">"B"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"start_after"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"A"</span><span class="p">],</span> <span class="s2">"start_delay"</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">minutes</span><span class="o">=</span><span class="mi">10</span><span class="p">)},</span>
+</span><span id="line-25">                <span class="s2">"C"</span><span class="p">:</span> <span class="p">{</span>
+</span><span id="line-26">                    <span class="s2">"start_after"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"B"</span><span class="p">],</span>
+</span><span id="line-27">                    <span class="s2">"required"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+</span><span id="line-28">                    <span class="s2">"max_consecutive_failures"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+</span><span id="line-29">                    <span class="s2">"retries"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+</span><span id="line-30">                    <span class="s2">"retry_delay"</span><span class="p">:</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">seconds</span><span class="o">=</span><span class="mi">30</span><span class="p">),</span>
+</span><span id="line-31">                <span class="p">},</span>
+</span><span id="line-32">            <span class="p">},</span>
+</span><span id="line-33">        <span class="p">),</span>
+</span><span id="line-34">    <span class="p">)</span>
+</span><span id="line-35">
+</span><span id="line-36"><span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">create_supervisor_control_dags</span><span class="p">(</span><span class="n">service</span><span class="p">))</span>
+</span></code></pre></div>
+</div>
+<p>The delay uses a rescheduling sensor, releasing its worker slot between checks.
+An already-running B proceeds without repeating the delay on every retrigger.
+Configure <code class="docutils literal notranslate"><span class="pre">restart_on_initial</span></code> or <code class="docutils literal notranslate"><span class="pre">restart_on_retrigger</span></code> only when those restarts
+are intended; the defaults leave healthy programs running.</p>
+<p>Airflow retries a failed start command twice in this example. If the final attempt
+still fails, C consumes one failure from its program budget. Monitoring also counts
+an observed process failure once until another start attempt. A healthy observation
+resets the consecutive failure count. A fresh scheduled or manual run starts a new
+budget; HA retriggers inherit it. An optional program’s failure does not select the
+DAG failure branch. Required program failures retain the failed retrigger path.</p>
+<p>To use SSH, replace <code class="docutils literal notranslate"><span class="pre">Supervisor</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorAirflowConfiguration</span></code> with
+<code class="docutils literal notranslate"><span class="pre">SupervisorSSH</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code>, adding the SSH settings from
+the <a class="reference internal" href="#how-to-run-a-job-over-ssh-in-python">SSH guide</a>. Program operations still use
+XML-RPC, so workers need access to that endpoint.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">airflow-config</span></code>, put the same policy under the task’s <code class="docutils literal notranslate"><span class="pre">cfg</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nt">dags</span><span class="p">:</span>
+</span><span id="line-2"><span class="w">  </span><span class="nt">ordered-services</span><span class="p">:</span>
+</span><span id="line-3"><span class="w">    </span><span class="nt">tasks</span><span class="p">:</span>
+</span><span id="line-4"><span class="w">      </span><span class="nt">run</span><span class="p">:</span>
+</span><span id="line-5"><span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorTask</span>
+</span><span id="line-6"><span class="w">        </span><span class="nt">cfg</span><span class="p">:</span>
+</span><span id="line-7"><span class="w">          </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorAirflowConfiguration</span>
+</span><span id="line-8"><span class="w">          </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/tmp/ordered-services</span>
+</span><span id="line-9"><span class="w">          </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28800</span>
+</span><span id="line-10"><span class="w">          </span><span class="nt">reference_date</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">start_date</span>
+</span><span id="line-11"><span class="w">          </span><span class="nt">program</span><span class="p">:</span>
+</span><span id="line-12"><span class="w">            </span><span class="nt">A</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="nv">/opt/services/a</span><span class="p p-Indicator">}</span>
+</span><span id="line-13"><span class="w">            </span><span class="nt">B</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="nv">/opt/services/b</span><span class="p p-Indicator">}</span>
+</span><span id="line-14"><span class="w">            </span><span class="nt">C</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="nv">/opt/services/c</span><span class="p p-Indicator">}</span>
+</span><span id="line-15"><span class="w">          </span><span class="nt">program_lifecycle</span><span class="p">:</span>
+</span><span id="line-16"><span class="w">            </span><span class="nt">A</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+</span><span id="line-17"><span class="w">            </span><span class="nt">B</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">start_after</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">A</span><span class="p p-Indicator">],</span><span class="nt"> start_delay</span><span class="p">:</span><span class="w"> </span><span class="nv">600</span><span class="p p-Indicator">}</span>
+</span><span id="line-18"><span class="w">            </span><span class="nt">C</span><span class="p">:</span>
+</span><span id="line-19"><span class="w">              </span><span class="nt">start_after</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">B</span><span class="p p-Indicator">]</span>
+</span><span id="line-20"><span class="w">              </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="line-21"><span class="w">              </span><span class="nt">max_consecutive_failures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="line-22"><span class="w">              </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="line-23"><span class="w">              </span><span class="nt">retry_delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
+</span></code></pre></div>
+</div>
+<p>Use <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code> for SSH. After
+generating the configured DAGs in memory, register controls from the native DAG:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
+</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_supervisor_control_dags</span>
+</span><span id="line-3">
+</span><span id="line-4"><span class="n">load_config</span><span class="p">(</span><span class="s2">"config"</span><span class="p">,</span> <span class="s2">"ordered_services"</span><span class="p">)</span><span class="o">.</span><span class="n">generate_in_mem</span><span class="p">()</span>
+</span><span id="line-5"><span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">create_supervisor_control_dags</span><span class="p">(</span><span class="nb">globals</span><span class="p">()[</span><span class="s2">"ordered-services"</span><span class="p">]))</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="how-to-control-a-program-independently">
+<h2>How to control a program independently<a class="headerlink" href="#how-to-control-a-program-independently" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-control-a-program-independently'">¶</a></h2>
+<p>The registration above exports unscheduled <code class="docutils literal notranslate"><span class="pre">ordered-services-start-C</span></code>,
+<code class="docutils literal notranslate"><span class="pre">ordered-services-stop-C</span></code>, and <code class="docutils literal notranslate"><span class="pre">ordered-services-restart-C</span></code> DAGs, with equivalent
+controls for A and B. Aggregate <code class="docutils literal notranslate"><span class="pre">start-programs</span></code>, <code class="docutils literal notranslate"><span class="pre">stop-programs</span></code>, <code class="docutils literal notranslate"><span class="pre">restart-programs</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">force-kill</span></code> DAGs are also exported. Aggregate restart stops programs in shutdown
+order, then starts them in startup order with the configured delays.</p>
+<p>A stop control suspends that program through an Airflow Variable, so monitoring
+does not immediately recover it. Start and restart controls re-enable it and reset
+its failure budget. The stop intent persists across fresh runs until explicitly
+re-enabled. Trigger one control operation at a time for a lifecycle; separate
+control DAGs do not provide a transaction or distributed lock around remote actions.
+The daemon must already exist for program controls. Force kill terminates the
+daemon and remains an emergency operation, not an orderly shutdown.</p>
+<p>To compose a control with other Airflow tasks, create it in another DAG:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="k">with</span> <span class="n">DAG</span><span class="p">(</span><span class="n">dag_id</span><span class="o">=</span><span class="s2">"maintenance"</span><span class="p">,</span> <span class="n">schedule</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="k">as</span> <span class="n">maintenance</span><span class="p">:</span>
+</span><span id="line-2">    <span class="n">stop_b</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">program_operator</span><span class="p">(</span><span class="s2">"B"</span><span class="p">,</span> <span class="s2">"stop"</span><span class="p">,</span> <span class="n">dag</span><span class="o">=</span><span class="n">maintenance</span><span class="p">)</span>
+</span><span id="line-3">    <span class="n">restart_a</span> <span class="o">=</span> <span class="n">service</span><span class="o">.</span><span class="n">program_operator</span><span class="p">(</span><span class="s2">"A"</span><span class="p">,</span> <span class="s2">"restart"</span><span class="p">,</span> <span class="n">dag</span><span class="o">=</span><span class="n">maintenance</span><span class="p">,</span> <span class="n">retries</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span id="line-4">    <span class="n">stop_b</span> <span class="o">&gt;&gt;</span> <span class="n">restart_a</span>
+</span></code></pre></div>
+</div>
+<p>Program stdout and stderr are forwarded by default during operations and
+monitoring. Inspect the relevant task log; set <code class="docutils literal notranslate"><span class="pre">forward_logs=False</span></code> to opt out.</p>
+</section>
 </section>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
@@ -431,6 +549,8 @@ Keep stop and cleanup enabled if downstream tasks should run with the default
 <li><a :data-current="activeSection === '#how-to-keep-a-service-running-between-dag-runs'" class="reference internal" href="#how-to-keep-a-service-running-between-dag-runs">How to keep a service running between DAG runs</a></li>
 <li><a :data-current="activeSection === '#how-to-select-a-host-with-airflow-balancer'" class="reference internal" href="#how-to-select-a-host-with-airflow-balancer">How to select a host with airflow-balancer</a></li>
 <li><a :data-current="activeSection === '#how-to-chain-the-lifecycle-with-other-tasks'" class="reference internal" href="#how-to-chain-the-lifecycle-with-other-tasks">How to chain the lifecycle with other tasks</a></li>
+<li><a :data-current="activeSection === '#how-to-order-programs-and-tolerate-an-optional-program-s-failure'" class="reference internal" href="#how-to-order-programs-and-tolerate-an-optional-program-s-failure">How to order programs and tolerate an optional program’s failure</a></li>
+<li><a :data-current="activeSection === '#how-to-control-a-program-independently'" class="reference internal" href="#how-to-control-a-program-independently">How to control a program independently</a></li>
 </ul>
 </div>
 </aside>

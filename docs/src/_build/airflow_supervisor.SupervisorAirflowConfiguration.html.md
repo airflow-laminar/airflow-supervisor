@@ -6,7 +6,7 @@ Bases: [`SupervisorConvenienceConfiguration`](airflow_supervisor.SupervisorConve
 
 Settings that MUST be set when running in airflow
 
-#### *field* forward_logs *: bool* *= False*
+#### *field* forward_logs *: bool* *= True*
 
 Forward program stdout and stderr into Airflow task logs
 
@@ -63,3 +63,7 @@ Restart the job when the DAG is retriggered. This is useful for jobs that do not
 #### *field* preset *: Literal['always_on', 'daily', 'half_day'] | None* *= None*
 
 Lifecycle defaults applied before explicit configuration values
+
+#### *field* program_lifecycle *: dict[str, ProgramLifecycleConfiguration] | None* *= None*
+
+Enable discrete Airflow tasks and policies for configured Supervisor program groups

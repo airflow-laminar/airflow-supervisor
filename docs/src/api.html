@@ -127,6 +127,71 @@
 <div id="content" role="main">
 <section class="tex2jax_ignore mathjax_ignore" id="api-reference">
 <h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h1>
+<section id="per-program-lifecycle">
+<h2>Per-program lifecycle<a class="headerlink" href="#per-program-lifecycle" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#per-program-lifecycle'">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">program_lifecycle=None</span></code> retains the grouped lifecycle. A mapping, including <code class="docutils literal notranslate"><span class="pre">{}</span></code>,
+enables discrete program tasks. Omitted policies receive defaults. Policy keys are
+Supervisor process-group names: normally a <code class="docutils literal notranslate"><span class="pre">[program:name]</span></code> name, or an explicit
+<code class="docutils literal notranslate"><span class="pre">[group:name]</span></code> name when programs are grouped. A <code class="docutils literal notranslate"><span class="pre">numprocs</span></code> group is controlled as
+one unit; event listeners are excluded.</p>
+<p><code class="docutils literal notranslate"><span class="pre">ProgramLifecycleConfiguration</span></code> accepts:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">start_after</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+<td><p>Predecessor program start tasks. Startup ordering is reversed for shutdown.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">start_delay</span></code></p></td>
+<td><p>zero</p></td>
+<td><p>Delay from the latest predecessor process start, or run start without predecessors.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">stop_before</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[]</span></code></p></td>
+<td><p>Additional shutdown ordering constraints.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">retries</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p></td>
+<td><p>Airflow retries for generated program operation and delay tasks.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">retry_delay</span></code></p></td>
+<td><p>30 seconds</p></td>
+<td><p>Delay between Airflow task retries.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">required</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
+<td><p>Whether a program failure selects the failed HA outcome.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_consecutive_failures</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p></td>
+<td><p>Disable an optional program for the chain after this many failures; must be positive.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Unknown dependencies and startup/shutdown cycles are rejected. A failure limit
+requires <code class="docutils literal notranslate"><span class="pre">required=False</span></code>. Duration fields accept <code class="docutils literal notranslate"><span class="pre">timedelta</span></code> or numeric seconds.
+<code class="docutils literal notranslate"><span class="pre">stop_on_exit</span></code> and <code class="docutils literal notranslate"><span class="pre">cleanup</span></code> still control terminal shutdown and file removal.
+The grouped <code class="docutils literal notranslate"><span class="pre">restart_programs</span></code> property is replaced by individual control tasks
+and generated restart control DAGs in this mode.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Supervisor.program_tasks[name]</span></code> exposes <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">delay</span></code>, and <code class="docutils literal notranslate"><span class="pre">stop</span></code> operators.
+<code class="docutils literal notranslate"><span class="pre">Supervisor.program_operator(name,</span> <span class="pre">action,</span> <span class="pre">**kwargs)</span></code> creates a separately composable
+control task; action is <code class="docutils literal notranslate"><span class="pre">start</span></code>, <code class="docutils literal notranslate"><span class="pre">stop</span></code>, or <code class="docutils literal notranslate"><span class="pre">restart</span></code>. Task kwargs include retries,
+task ID, and DAG. Control tasks update the desired state as well as issuing the
+XML-RPC operation.</p>
+<p><code class="docutils literal notranslate"><span class="pre">create_supervisor_control_dags(supervisor_or_dag)</span></code> returns native DAGs keyed by
+their IDs. Pass a managed lifecycle or its native DAG, then register the returned
+mapping in the DAG module’s globals. All controls are unscheduled. Program controls
+require <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> to be enabled.</p>
+<p><code class="docutils literal notranslate"><span class="pre">supervisor_program_state</span></code> contains per-program failure counts, disabled flags,
+and manual-control revisions in monitoring XCom and retrigger configuration.
+<code class="docutils literal notranslate"><span class="pre">airflow-supervisor:&lt;dag_id&gt;:&lt;program&gt;:control</span></code> Variables retain explicit start/stop
+intent. Airflow 3 tasks use the Task SDK Variable interface.</p>
+</section>
 <section id="lifecycle-classes-and-task-models">
 <h2>Lifecycle classes and task models<a class="headerlink" href="#lifecycle-classes-and-task-models" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#lifecycle-classes-and-task-models'">¶</a></h2>
 <p>All names below are exported from <code class="docutils literal notranslate"><span class="pre">airflow_supervisor</span></code>.</p>
@@ -353,7 +418,7 @@ branch, as described above.</p>
 <td><p>Sensor timeout.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">forward_logs</span></code></p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p></td>
 <td><p>Forwards workload stdout and stderr through the Airflow task logger.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">log_chunk_size</span></code></p></td>
@@ -521,6 +586,7 @@ Python and YAML configurations.</p>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
+<li><a :data-current="activeSection === '#per-program-lifecycle'" class="reference internal" href="#per-program-lifecycle">Per-program lifecycle</a></li>
 <li><a :data-current="activeSection === '#lifecycle-classes-and-task-models'" class="reference internal" href="#lifecycle-classes-and-task-models">Lifecycle classes and task models</a><ul>
 <li><a :data-current="activeSection === '#dag-constraints-and-boundaries'" class="reference internal" href="#dag-constraints-and-boundaries">DAG constraints and boundaries</a></li>
 </ul>

@@ -327,7 +327,8 @@ available in the DAG parsing and worker environments. For completed finite jobs,
 </section>
 <section id="set-read-limits-and-inspect-diagnostics">
 <h2>Set read limits and inspect diagnostics<a class="headerlink" href="#set-read-limits-and-inspect-diagnostics" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#set-read-limits-and-inspect-diagnostics'">¶</a></h2>
-<p>Log forwarding is opt-in: <code class="docutils literal notranslate"><span class="pre">forward_logs</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>. Each poll reads
+<p>Log forwarding is enabled by default. Set <code class="docutils literal notranslate"><span class="pre">forward_logs=False</span></code> in Python or
+<code class="docutils literal notranslate"><span class="pre">forward_logs:</span> <span class="pre">false</span></code> in YAML to disable it. Each poll reads
 <code class="docutils literal notranslate"><span class="pre">log_chunk_size</span></code> bytes per program stream, defaulting to 65,536 bytes, with up to
 three extra bytes to finish a UTF-8 character at the boundary. Set
 it on <code class="docutils literal notranslate"><span class="pre">cfg</span></code> in Python or YAML; accepted values are 1 through 1,048,576. Final
@@ -335,7 +336,8 @@ drains read at most 16 chunks per stream and warn when they reach that bound.
 Log read failures warn without changing an otherwise healthy task’s result;
 status and lifecycle failures still fail through their existing paths.</p>
 <p>XCom stores cursors and compact process metadata, rather than log contents.
-<code class="docutils literal notranslate"><span class="pre">supervisor_log_offsets</span></code> tracks stream positions. Watchdog runs reuse cursors
+<code class="docutils literal notranslate"><span class="pre">supervisor_log_offsets</span></code> tracks stream positions and is carried into HA retriggers.
+Watchdog runs reuse cursors
 from earlier runs so a scheduled check can collect new output. If a log file
 shrinks below its stored cursor, forwarding resets that cursor and warns.
 XML-RPC does not identify file replacements; rotation to a file of the same
