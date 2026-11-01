@@ -95,12 +95,17 @@ def test_changed_endpoint_does_not_retain_previous_processes(storage):
     assert not value["processes"] and value["observed_at"] is None
 
 
-def test_real_xmlrpc_probe_uses_authentication_and_only_reads_processes(storage):
+def test_real_xmlrpc_probe_isolates_malformed_responses_and_only_reads_processes(storage):
     calls = []
 
     class Handler(SimpleXMLRPCRequestHandler):
         def do_POST(self):
             assert self.headers["Authorization"] == "Basic cmVhZGVyOnNlY3JldA=="
+            if self.path == "/not-xml":
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b"not XML")
+                return
             super().do_POST()
 
     with SimpleXMLRPCServer(("127.0.0.1", 0), requestHandler=Handler, logRequests=False) as server:
@@ -128,12 +133,16 @@ def test_real_xmlrpc_probe_uses_authentication_and_only_reads_processes(storage)
                     }
                 }
             )
-            assert collect_supervisor_status(cfg) == {"live": True}
+            malformed = cfg.instances["live"].model_copy(deep=True)
+            malformed.cfg.rpcpath = "/not-xml"
+            cfg.instances["malformed"] = malformed
+            assert collect_supervisor_status(cfg) == {"live": True, "malformed": False}
         finally:
             server.shutdown()
             thread.join()
     assert calls == ["getAllProcessInfo"]
     assert storage[cfg.variable_key]["instances"][0]["processes"][0]["state"] == 0
+    assert storage[cfg.variable_key]["instances"][1]["error"] == "XML-RPC request failed (ExpatError)"
 
 
 def test_timeout_is_bounded_and_does_not_block_another_instance(storage):

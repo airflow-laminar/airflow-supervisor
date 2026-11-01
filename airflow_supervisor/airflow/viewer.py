@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
-from http.client import HTTPConnection, HTTPSConnection
+from http.client import HTTPConnection, HTTPException, HTTPSConnection
+from xml.parsers.expat import ExpatError
 from xmlrpc.client import ServerProxy, Transport
 
 from pydantic import BaseModel, Field, HttpUrl
@@ -68,7 +69,7 @@ def _observe(instance_id, instance, timeout, previous):
             value.processes = client.getAllProcessInfo()
         value.observed_at = datetime.now(UTC)
         value.reachable = True
-    except _RPC_ERRORS as error:
+    except (*_RPC_ERRORS, HTTPException, ExpatError) as error:
         # ProtocolError URLs can contain credentials. Store only the exception type.
         value.error = f"XML-RPC request failed ({type(error).__name__})"
     return value
