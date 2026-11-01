@@ -102,7 +102,9 @@ def test_real_xmlrpc_probe_isolates_malformed_responses_and_only_reads_processes
         def do_POST(self):
             assert self.headers["Authorization"] == "Basic cmVhZGVyOnNlY3JldA=="
             if self.path == "/not-xml":
+                self.rfile.read(int(self.headers["Content-Length"]))
                 self.send_response(200)
+                self.send_header("Content-Length", "7")
                 self.end_headers()
                 self.wfile.write(b"not XML")
                 return
