@@ -46,7 +46,7 @@ jobs:
         run: make develop
 
       - name: Install Airflow 2.x
-        run: uv pip install -e .[airflow]
+        run: uv pip install -e .[airflow] "apache-airflow<3"
         if: ${{ matrix.airflow == '2' }}
   
       - name: Install Airflow 3.x
