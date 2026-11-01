@@ -418,8 +418,113 @@ object:</p>
 Keep stop and cleanup enabled if downstream tasks should run with the default
 <code class="docutils literal notranslate"><span class="pre">all_success</span></code> trigger rule. Disabling cleanup creates a skipped boundary task.</p>
 </section>
-<section id="how-to-order-programs-and-tolerate-an-optional-program-s-failure">
-<h2>How to order programs and tolerate an optional program’s failure<a class="headerlink" href="#how-to-order-programs-and-tolerate-an-optional-program-s-failure" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-order-programs-and-tolerate-an-optional-program-s-failure'">¶</a></h2>
+<section id="how-to-configure-generated-tasks-with-subtasks">
+<h2>How to configure generated tasks with subtasks<a class="headerlink" href="#how-to-configure-generated-tasks-with-subtasks" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-configure-generated-tasks-with-subtasks'">¶</a></h2>
+<p>Keep the Supervisor lifecycle as one outer task so normal tasks can run before
+configuration and after cleanup. Put internal task options under <code class="docutils literal notranslate"><span class="pre">subtasks</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="c1"># @package _global_</span>
+</span><span id="line-2"><span class="nt">supervisor</span><span class="p">:</span>
+</span><span id="line-3"><span class="w">  </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorAirflowConfiguration</span>
+</span><span id="line-4"><span class="w">  </span><span class="nt">working_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">/tmp/ordered-services</span>
+</span><span id="line-5"><span class="w">  </span><span class="nt">runtime</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">28800</span>
+</span><span id="line-6"><span class="w">  </span><span class="nt">reference_date</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">start_date</span>
+</span><span id="line-7"><span class="w">  </span><span class="nt">program</span><span class="p">:</span>
+</span><span id="line-8"><span class="w">    </span><span class="nt">A</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="nv">/opt/services/a</span><span class="p p-Indicator">}</span>
+</span><span id="line-9"><span class="w">    </span><span class="nt">B</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="nv">/opt/services/b</span><span class="p p-Indicator">}</span>
+</span><span id="line-10"><span class="w">    </span><span class="nt">C</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{</span><span class="nt">command</span><span class="p">:</span><span class="w"> </span><span class="nv">/opt/services/c</span><span class="p p-Indicator">}</span>
+</span><span id="line-11"><span class="w">  </span><span class="nt">program_lifecycle</span><span class="p">:</span>
+</span><span id="line-12"><span class="w">    </span><span class="nt">C</span><span class="p">:</span>
+</span><span id="line-13"><span class="w">      </span><span class="nt">required</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</span><span id="line-14"><span class="w">      </span><span class="nt">max_consecutive_failures</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="line-15">
+</span><span id="line-16"><span class="nt">dags</span><span class="p">:</span>
+</span><span id="line-17"><span class="w">  </span><span class="nt">ordered-services</span><span class="p">:</span>
+</span><span id="line-18"><span class="w">    </span><span class="nt">tasks</span><span class="p">:</span>
+</span><span id="line-19"><span class="w">      </span><span class="nt">prepare</span><span class="p">:</span>
+</span><span id="line-20"><span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.BashTask</span>
+</span><span id="line-21"><span class="w">        </span><span class="nt">bash_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo prepare</span>
+</span><span id="line-22">
+</span><span id="line-23"><span class="w">      </span><span class="nt">service</span><span class="p">:</span>
+</span><span id="line-24"><span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_supervisor.SupervisorTask</span>
+</span><span id="line-25"><span class="w">        </span><span class="nt">cfg</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">${supervisor}</span>
+</span><span id="line-26"><span class="w">        </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">prepare</span><span class="p p-Indicator">]</span>
+</span><span id="line-27"><span class="w">        </span><span class="nt">subtasks</span><span class="p">:</span>
+</span><span id="line-28"><span class="w">          </span><span class="nt">start-A</span><span class="p">:</span>
+</span><span id="line-29"><span class="w">            </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.PythonTask</span>
+</span><span id="line-30"><span class="w">            </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="line-31"><span class="w">            </span><span class="nt">retry_delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">15</span>
+</span><span id="line-32">
+</span><span id="line-33"><span class="w">          </span><span class="nt">wait-after-A</span><span class="p">:</span>
+</span><span id="line-34"><span class="w">            </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.WaitSensor</span>
+</span><span id="line-35"><span class="w">            </span><span class="nt">time_to_wait</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">600</span>
+</span><span id="line-36"><span class="w">            </span><span class="nt">deferrable</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span id="line-37"><span class="w">            </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">start-A</span><span class="p p-Indicator">]</span>
+</span><span id="line-38">
+</span><span id="line-39"><span class="w">          </span><span class="nt">start-B</span><span class="p">:</span>
+</span><span id="line-40"><span class="w">            </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.PythonTask</span>
+</span><span id="line-41"><span class="w">            </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">wait-after-A</span><span class="p p-Indicator">]</span>
+</span><span id="line-42"><span class="w">            </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span id="line-43">
+</span><span id="line-44"><span class="w">          </span><span class="nt">start-C</span><span class="p">:</span>
+</span><span id="line-45"><span class="w">            </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.PythonTask</span>
+</span><span id="line-46"><span class="w">            </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">start-B</span><span class="p p-Indicator">]</span>
+</span><span id="line-47"><span class="w">            </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="line-48">
+</span><span id="line-49"><span class="w">          </span><span class="nt">stop-C</span><span class="p">:</span>
+</span><span id="line-50"><span class="w">            </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.PythonTask</span>
+</span><span id="line-51"><span class="w">            </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">shutdown</span><span class="p p-Indicator">]</span>
+</span><span id="line-52">
+</span><span id="line-53"><span class="w">          </span><span class="nt">stop-B</span><span class="p">:</span>
+</span><span id="line-54"><span class="w">            </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.PythonTask</span>
+</span><span id="line-55"><span class="w">            </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">stop-C</span><span class="p p-Indicator">]</span>
+</span><span id="line-56">
+</span><span id="line-57"><span class="w">          </span><span class="nt">stop-A</span><span class="p">:</span>
+</span><span id="line-58"><span class="w">            </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.PythonTask</span>
+</span><span id="line-59"><span class="w">            </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">stop-B</span><span class="p p-Indicator">]</span>
+</span><span id="line-60">
+</span><span id="line-61"><span class="w">      </span><span class="nt">publish</span><span class="p">:</span>
+</span><span id="line-62"><span class="w">        </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.BashTask</span>
+</span><span id="line-63"><span class="w">        </span><span class="nt">bash_command</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">echo publish</span>
+</span><span id="line-64"><span class="w">        </span><span class="nt">dependencies</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">service</span><span class="p p-Indicator">]</span>
+</span></code></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">start-A</span></code>, <code class="docutils literal notranslate"><span class="pre">start-B</span></code>, and <code class="docutils literal notranslate"><span class="pre">start-C</span></code> configure existing tasks. Their generated
+callables remain in place. <code class="docutils literal notranslate"><span class="pre">wait-after-A</span></code> adds a real Airflow sensor between A
+and B; it waits ten minutes after the sensor starts, following A’s successful
+start task. This differs from <code class="docutils literal notranslate"><span class="pre">program_lifecycle.start_delay</span></code>, measured from the
+Supervisor process start time.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">shutdown</span></code> gate selects terminal cleanup. The explicit stop dependencies
+choose C, B, A; change those dependencies to choose another order. The
+cross-retrigger budget for optional C remains separate from Airflow task retries.
+If you omit the budget configuration, all programs are required by default.</p>
+<p>For SSH, use <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code> with the
+usual SSH settings. Program operations still use <code class="docutils literal notranslate"><span class="pre">PythonTask</span></code> because they call
+XML-RPC. Configure SSH-specific daemon steps using <code class="docutils literal notranslate"><span class="pre">SSHTask</span></code>:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nt">subtasks</span><span class="p">:</span>
+</span><span id="line-2"><span class="w">  </span><span class="nt">configure-supervisor</span><span class="p">:</span>
+</span><span id="line-3"><span class="w">    </span><span class="nt">_target_</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">airflow_pydantic.SSHTask</span>
+</span><span id="line-4"><span class="w">    </span><span class="nt">retries</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+</span><span id="line-5"><span class="w">    </span><span class="nt">cmd_timeout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">120</span>
+</span></code></pre></div>
+</div>
+<p>For inline Python, pass the same task models directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">PythonTask</span><span class="p">,</span> <span class="n">WaitSensor</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="n">service</span> <span class="o">=</span> <span class="n">Supervisor</span><span class="p">(</span>
+</span><span id="line-4">    <span class="n">dag</span><span class="o">=</span><span class="n">dag</span><span class="p">,</span>
+</span><span id="line-5">    <span class="n">cfg</span><span class="o">=</span><span class="n">cfg</span><span class="p">,</span>
+</span><span id="line-6">    <span class="n">subtasks</span><span class="o">=</span><span class="p">{</span>
+</span><span id="line-7">        <span class="s2">"start-A"</span><span class="p">:</span> <span class="n">PythonTask</span><span class="p">(</span><span class="n">retries</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+</span><span id="line-8">        <span class="s2">"wait-after-A"</span><span class="p">:</span> <span class="n">WaitSensor</span><span class="p">(</span><span class="n">time_to_wait</span><span class="o">=</span><span class="mi">600</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="s2">"start-A"</span><span class="p">]),</span>
+</span><span id="line-9">        <span class="s2">"start-B"</span><span class="p">:</span> <span class="n">PythonTask</span><span class="p">(</span><span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="s2">"wait-after-A"</span><span class="p">],</span> <span class="n">retries</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+</span><span id="line-10">        <span class="s2">"start-C"</span><span class="p">:</span> <span class="n">PythonTask</span><span class="p">(</span><span class="n">dependencies</span><span class="o">=</span><span class="p">[</span><span class="s2">"start-B"</span><span class="p">]),</span>
+</span><span id="line-11">    <span class="p">},</span>
+</span><span id="line-12"><span class="p">)</span>
+</span></code></pre></div>
+</div>
+</section>
+<section id="how-to-use-convenience-program-policies">
+<h2>How to use convenience program policies<a class="headerlink" href="#how-to-use-convenience-program-policies" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-use-convenience-program-policies'">¶</a></h2>
 <p>Set <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> to create separate start, delay, and stop tasks. This
 example starts A, waits ten minutes from A’s process start, starts B, then C.
 Shutdown follows C, B, A. C is disabled for the monitoring chain after three
@@ -549,7 +654,8 @@ monitoring. Inspect the relevant task log; set <code class="docutils literal not
 <li><a :data-current="activeSection === '#how-to-keep-a-service-running-between-dag-runs'" class="reference internal" href="#how-to-keep-a-service-running-between-dag-runs">How to keep a service running between DAG runs</a></li>
 <li><a :data-current="activeSection === '#how-to-select-a-host-with-airflow-balancer'" class="reference internal" href="#how-to-select-a-host-with-airflow-balancer">How to select a host with airflow-balancer</a></li>
 <li><a :data-current="activeSection === '#how-to-chain-the-lifecycle-with-other-tasks'" class="reference internal" href="#how-to-chain-the-lifecycle-with-other-tasks">How to chain the lifecycle with other tasks</a></li>
-<li><a :data-current="activeSection === '#how-to-order-programs-and-tolerate-an-optional-program-s-failure'" class="reference internal" href="#how-to-order-programs-and-tolerate-an-optional-program-s-failure">How to order programs and tolerate an optional program’s failure</a></li>
+<li><a :data-current="activeSection === '#how-to-configure-generated-tasks-with-subtasks'" class="reference internal" href="#how-to-configure-generated-tasks-with-subtasks">How to configure generated tasks with subtasks</a></li>
+<li><a :data-current="activeSection === '#how-to-use-convenience-program-policies'" class="reference internal" href="#how-to-use-convenience-program-policies">How to use convenience program policies</a></li>
 <li><a :data-current="activeSection === '#how-to-control-a-program-independently'" class="reference internal" href="#how-to-control-a-program-independently">How to control a program independently</a></li>
 </ul>
 </div>

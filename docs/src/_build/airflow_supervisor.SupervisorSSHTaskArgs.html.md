@@ -2,7 +2,7 @@
 
 ### *pydantic model* airflow_supervisor.SupervisorSSHTaskArgs[[source]](../../../_modules/airflow_supervisor/config/task_ssh.html.md#SupervisorSSHTaskArgs)
 
-Bases: `TaskArgs`
+Bases: `TaskArgs`, `SupervisorSubtasks`
 
 #### *field* cfg *: [SupervisorSSHAirflowConfiguration](airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md#airflow_supervisor.SupervisorSSHAirflowConfiguration)* *[Required]*
 

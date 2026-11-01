@@ -314,7 +314,119 @@ Upstream tasks precede configuration; downstream tasks follow unconfiguration.
 Keep stop and cleanup enabled if downstream tasks should run with the default
 `all_success` trigger rule. Disabling cleanup creates a skipped boundary task.
 
-## How to order programs and tolerate an optional program’s failure
+## How to configure generated tasks with subtasks
+
+Keep the Supervisor lifecycle as one outer task so normal tasks can run before
+configuration and after cleanup. Put internal task options under `subtasks`:
+
+```yaml
+# @package _global_
+supervisor:
+  _target_: airflow_supervisor.SupervisorAirflowConfiguration
+  working_dir: /tmp/ordered-services
+  runtime: 28800
+  reference_date: start_date
+  program:
+    A: {command: /opt/services/a}
+    B: {command: /opt/services/b}
+    C: {command: /opt/services/c}
+  program_lifecycle:
+    C:
+      required: false
+      max_consecutive_failures: 3
+
+dags:
+  ordered-services:
+    tasks:
+      prepare:
+        _target_: airflow_pydantic.BashTask
+        bash_command: echo prepare
+
+      service:
+        _target_: airflow_supervisor.SupervisorTask
+        cfg: ${supervisor}
+        dependencies: [prepare]
+        subtasks:
+          start-A:
+            _target_: airflow_pydantic.PythonTask
+            retries: 2
+            retry_delay: 15
+
+          wait-after-A:
+            _target_: airflow_pydantic.WaitSensor
+            time_to_wait: 600
+            deferrable: true
+            dependencies: [start-A]
+
+          start-B:
+            _target_: airflow_pydantic.PythonTask
+            dependencies: [wait-after-A]
+            retries: 3
+
+          start-C:
+            _target_: airflow_pydantic.PythonTask
+            dependencies: [start-B]
+            retries: 2
+
+          stop-C:
+            _target_: airflow_pydantic.PythonTask
+            dependencies: [shutdown]
+
+          stop-B:
+            _target_: airflow_pydantic.PythonTask
+            dependencies: [stop-C]
+
+          stop-A:
+            _target_: airflow_pydantic.PythonTask
+            dependencies: [stop-B]
+
+      publish:
+        _target_: airflow_pydantic.BashTask
+        bash_command: echo publish
+        dependencies: [service]
+```
+
+`start-A`, `start-B`, and `start-C` configure existing tasks. Their generated
+callables remain in place. `wait-after-A` adds a real Airflow sensor between A
+and B; it waits ten minutes after the sensor starts, following A’s successful
+start task. This differs from `program_lifecycle.start_delay`, measured from the
+Supervisor process start time.
+
+The `shutdown` gate selects terminal cleanup. The explicit stop dependencies
+choose C, B, A; change those dependencies to choose another order. The
+cross-retrigger budget for optional C remains separate from Airflow task retries.
+If you omit the budget configuration, all programs are required by default.
+
+For SSH, use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` with the
+usual SSH settings. Program operations still use `PythonTask` because they call
+XML-RPC. Configure SSH-specific daemon steps using `SSHTask`:
+
+```yaml
+subtasks:
+  configure-supervisor:
+    _target_: airflow_pydantic.SSHTask
+    retries: 2
+    cmd_timeout: 120
+```
+
+For inline Python, pass the same task models directly:
+
+```python
+from airflow_pydantic import PythonTask, WaitSensor
+
+service = Supervisor(
+    dag=dag,
+    cfg=cfg,
+    subtasks={
+        "start-A": PythonTask(retries=2),
+        "wait-after-A": WaitSensor(time_to_wait=600, deferrable=True, dependencies=["start-A"]),
+        "start-B": PythonTask(dependencies=["wait-after-A"], retries=3),
+        "start-C": PythonTask(dependencies=["start-B"]),
+    },
+)
+```
+
+## How to use convenience program policies
 
 Set `program_lifecycle` to create separate start, delay, and stop tasks. This
 example starts A, waits ten minutes from A’s process start, starts B, then C.

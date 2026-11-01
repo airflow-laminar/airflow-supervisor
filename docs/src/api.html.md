@@ -1,5 +1,38 @@
 # API reference
 
+## Typed subtask overrides
+
+`SupervisorTask` and `SupervisorSSHTask` accept `subtasks`, a mapping of names to
+ordinary `airflow-pydantic` task models. Inline `Supervisor` and `SupervisorSSH`
+constructors accept the same keyword. A nonempty mapping enables per-program task
+generation without requiring `program_lifecycle` to be set explicitly.
+
+An entry matching a generated task overrides only explicitly supplied fields.
+Use a model compatible with its operator: normally `PythonTask` for program
+start/stop operations and `SSHTask` for SSH daemon/configuration steps. Omitted
+callables, commands, and hooks remain generated. Operator type and task identity
+cannot be changed through an override.
+
+A complete model under a new name adds a task to the lifecycle. New Python tasks
+require a callable; new SSH tasks require a command. An incomplete entry under an
+unknown name is rejected. Custom task fields survive model serialization,
+`airflow-config` instantiation, and Python source generation.
+
+Names are local to the lifecycle: `start-my-program` resolves to the existing
+`<dag_id>-start-my-program` task. Full generated IDs are also accepted. Added tasks
+receive the same DAG prefix. Dependencies resolve local names first, then existing
+outer DAG task IDs. Attribute references such as `check-programs.stop_pass` use
+the normal task dependency syntax.
+
+Omitting `dependencies` retains default upstream edges. Supplying it replaces
+those edges; `[]` clears them. Startup and shutdown tasks can therefore be ordered
+independently. Unknown dependencies, duplicate aliases, incompatible operator
+types, and cycles fail during DAG construction. Whole-lifecycle upstream and
+downstream dependencies also cover added roots and leaves.
+
+Shutdown operations still follow the monitoring outcome: changing dependencies
+does not stop programs or remove configuration during a recovery retrigger.
+
 ## Per-program lifecycle
 
 `program_lifecycle=None` retains the grouped lifecycle. A mapping, including `{}`,

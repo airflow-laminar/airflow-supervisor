@@ -127,6 +127,34 @@
 <div id="content" role="main">
 <section class="tex2jax_ignore mathjax_ignore" id="api-reference">
 <h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h1>
+<section id="typed-subtask-overrides">
+<h2>Typed subtask overrides<a class="headerlink" href="#typed-subtask-overrides" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#typed-subtask-overrides'">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SupervisorTask</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> accept <code class="docutils literal notranslate"><span class="pre">subtasks</span></code>, a mapping of names to
+ordinary <code class="docutils literal notranslate"><span class="pre">airflow-pydantic</span></code> task models. Inline <code class="docutils literal notranslate"><span class="pre">Supervisor</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSH</span></code>
+constructors accept the same keyword. A nonempty mapping enables per-program task
+generation without requiring <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> to be set explicitly.</p>
+<p>An entry matching a generated task overrides only explicitly supplied fields.
+Use a model compatible with its operator: normally <code class="docutils literal notranslate"><span class="pre">PythonTask</span></code> for program
+start/stop operations and <code class="docutils literal notranslate"><span class="pre">SSHTask</span></code> for SSH daemon/configuration steps. Omitted
+callables, commands, and hooks remain generated. Operator type and task identity
+cannot be changed through an override.</p>
+<p>A complete model under a new name adds a task to the lifecycle. New Python tasks
+require a callable; new SSH tasks require a command. An incomplete entry under an
+unknown name is rejected. Custom task fields survive model serialization,
+<code class="docutils literal notranslate"><span class="pre">airflow-config</span></code> instantiation, and Python source generation.</p>
+<p>Names are local to the lifecycle: <code class="docutils literal notranslate"><span class="pre">start-my-program</span></code> resolves to the existing
+<code class="docutils literal notranslate"><span class="pre">&lt;dag_id&gt;-start-my-program</span></code> task. Full generated IDs are also accepted. Added tasks
+receive the same DAG prefix. Dependencies resolve local names first, then existing
+outer DAG task IDs. Attribute references such as <code class="docutils literal notranslate"><span class="pre">check-programs.stop_pass</span></code> use
+the normal task dependency syntax.</p>
+<p>Omitting <code class="docutils literal notranslate"><span class="pre">dependencies</span></code> retains default upstream edges. Supplying it replaces
+those edges; <code class="docutils literal notranslate"><span class="pre">[]</span></code> clears them. Startup and shutdown tasks can therefore be ordered
+independently. Unknown dependencies, duplicate aliases, incompatible operator
+types, and cycles fail during DAG construction. Whole-lifecycle upstream and
+downstream dependencies also cover added roots and leaves.</p>
+<p>Shutdown operations still follow the monitoring outcome: changing dependencies
+does not stop programs or remove configuration during a recovery retrigger.</p>
+</section>
 <section id="per-program-lifecycle">
 <h2>Per-program lifecycle<a class="headerlink" href="#per-program-lifecycle" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#per-program-lifecycle'">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">program_lifecycle=None</span></code> retains the grouped lifecycle. A mapping, including <code class="docutils literal notranslate"><span class="pre">{}</span></code>,
@@ -586,6 +614,7 @@ Python and YAML configurations.</p>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
+<li><a :data-current="activeSection === '#typed-subtask-overrides'" class="reference internal" href="#typed-subtask-overrides">Typed subtask overrides</a></li>
 <li><a :data-current="activeSection === '#per-program-lifecycle'" class="reference internal" href="#per-program-lifecycle">Per-program lifecycle</a></li>
 <li><a :data-current="activeSection === '#lifecycle-classes-and-task-models'" class="reference internal" href="#lifecycle-classes-and-task-models">Lifecycle classes and task models</a><ul>
 <li><a :data-current="activeSection === '#dag-constraints-and-boundaries'" class="reference internal" href="#dag-constraints-and-boundaries">DAG constraints and boundaries</a></li>
