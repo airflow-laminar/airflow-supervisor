@@ -1,3 +1,8 @@
+---
+myst:
+  heading_anchors: 3
+---
+
 # Why Airflow delegates process ownership
 
 An Airflow task instance owns a worker process for part of a workflow. A job
@@ -74,3 +79,37 @@ process ownership to the host's existing service manager. Supervisord runs an
 application-owned manager with its own configuration, logs, PID, and endpoint.
 Systemd fits hosts where services belong in system administration; supervisord
 fits workloads that need a separate manager installed with the application.
+
+## Why the viewer uses snapshots
+
+The Supervisor viewer separates observation from web requests. A scheduled task
+contacts instances independently and stores the latest snapshot. The page can
+then show an unreachable instance without making its connection timeout part of
+every page load. Probe timestamps also distinguish failed observation from a
+stopped collector. Retained process states are explicitly last-known data.
+
+Multivisor was the first option evaluated for the multi-instance proof of
+concept. Version 7.1.0 successfully connected three instances through its
+event-listener integration using `supervisor-pydantic` configuration. The
+listeners need `SUPERVISOR_USERNAME` and `SUPERVISOR_PASSWORD` when Supervisor's
+HTTP interface requires credentials. The SDK's workload controls exclude these
+event listeners, so starting or stopping configured programs leaves them running.
+
+Multivisor supplies live state updates and native process logs. Its
+[authenticated API](https://github.com/tiagocoutinho/multivisor/blob/55dccb3b6a16a9cb2cb0cca975224daffc687f46/multivisor/server/web.py)
+also permits stop, restart, and daemon-shutdown actions. A runtime test confirmed
+that a user named `reader` could invoke process stop after login. There is no
+separate read-only role in the evaluated version. Keeping its existing UI would
+therefore require an additional authorization layer and changes for Airflow
+workload links. The Airflow proof of concept uses a smaller view with no control
+routes instead.
+
+The snapshot is an operations view for users with Airflow website-view access.
+It does not implement per-program visibility rules. Credentials stay in the
+collection configuration; only process observations and links reach the viewer.
+Airflow's own run/log pages continue to enforce their DAG access rules.
+
+This proof of concept does not establish minimum-ready counts, recover failed
+hosts, or coordinate deployments. It also does not infer the latest workload
+run: supplied associations can become outdated. Shared workload observations
+and host identity can replace these manual associations in the fleet roadmap.

@@ -1,0 +1,24 @@
+services:
+  host-a:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: laminar-supervisor-viewer-demo:local
+    hostname: host-a
+    command: ["9001", "9011"]
+    ports:
+      - "127.0.0.1:19001:9001"
+      - "127.0.0.1:19011:9011"
+  host-b:
+    image: laminar-supervisor-viewer-demo:local
+    hostname: host-b
+    command: ["9001"]
+    ports:
+      - "127.0.0.1:19021:9001"
+  multivisor:
+    image: laminar-supervisor-viewer-demo:local
+    entrypoint: ["multivisor", "--bind", "0.0.0.0:22000", "-c", "/demo/multivisor.conf"]
+    environment:
+      MULTIVISOR_SECRET_KEY: disposable-local-demo-session-key
+    ports:
+      - "127.0.0.1:22000:22000"

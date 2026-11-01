@@ -5,6 +5,51 @@ myst:
 
 # API reference
 
+## Supervisor viewer
+
+`SupervisorViewerConfiguration` defines scheduled collection:
+
+| Field          | Default                        | Meaning                                                                       |
+| -------------- | ------------------------------ | ----------------------------------------------------------------------------- |
+| `instances`    | Required, nonempty             | Stable instance IDs mapped to `SupervisorViewerInstance` models.              |
+| `variable_key` | `airflow-supervisor:instances` | Airflow Variable storing the latest snapshot.                                 |
+| `timeout`      | `3` seconds                    | Positive socket timeout, at most 30 seconds, for each XML-RPC request.        |
+| `max_age`      | `120` seconds                  | Positive maximum age of the last probe before the UI marks an instance stale. |
+
+Each `SupervisorViewerInstance` contains `cfg` (a local or SSH Supervisor
+configuration), optional HTTP(S) `run_url`, and optional HTTP(S) `log_url`.
+`program={}` is valid when only endpoint settings are supplied. Collection reads
+all processes, including event listeners, regardless of configured program names.
+
+`collect_supervisor_status(cfg)` accepts a model or its serialized dictionary.
+It collects up to four instances concurrently, writes one JSON snapshot, and
+returns `{instance_id: reachable}`. Unreachable instances do not fail collection;
+storage failures fail the task. XML-RPC clients can retry a disconnected request,
+so `timeout` is not a deadline for the entire collection task.
+
+The snapshot contains collection time, maximum probe age, instance ID, host,
+port, probe time, last successful observation time, reachability, sanitized
+request-error type, process details, and configured links. Failed probes retain
+previous process details for the same instance ID and endpoint. Removed
+instances disappear on the next collection. Changed host/port settings discard
+the previous endpoint's process details. RPC usernames, passwords, and complete
+Supervisor configurations are not stored in the snapshot.
+
+The viewer reads the Variable selected by `AIRFLOW_SUPERVISOR_SNAPSHOT_KEY`
+(default `airflow-supervisor:instances`). It refreshes every 30 seconds and never
+initiates XML-RPC calls. Its only application route is GET
+`/airflow-supervisor/`; it provides no process-control endpoints.
+
+| Display state | Meaning                                                                                                    |
+| ------------- | ---------------------------------------------------------------------------------------------------------- |
+| `REACHABLE`   | The latest probe succeeded and is within `max_age`.                                                        |
+| `UNREACHABLE` | The latest probe failed and is within `max_age`. Process details, if present, are last-known observations. |
+| `STALE`       | The latest probe is older than `max_age`, regardless of its previous result.                               |
+
+Reachability is separate from individual process state and application readiness.
+A reachable instance can contain stopped or failed processes. The viewer does
+not evaluate replica availability or restart programs.
+
 ## Typed subtask overrides
 
 `SupervisorTask` and `SupervisorSSHTask` accept `subtasks`, a mapping of names to

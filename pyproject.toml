@@ -29,6 +29,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "jinja2>=3",
     "airflow-ha>=1.6.5,<1.7",
     "airflow-pydantic>=1.7.0,<1.8",
     "supervisor-pydantic>=1.5.1,<1.6",
@@ -74,6 +75,9 @@ airflow3 = [
 ]
 
 [project.scripts]
+
+[project.entry-points."airflow.plugins"]
+supervisor-viewer = "airflow_supervisor.ui.airflow:SupervisorViewerPlugin"
 
 [project.urls]
 Repository = "https://github.com/airflow-laminar/airflow-supervisor"
@@ -134,7 +138,7 @@ addopts = [
 testpaths = "airflow_supervisor/tests"
 
 [tool.ty.analysis]
-allowed-unresolved-imports = ["airflow.**"]
+allowed-unresolved-imports = ["airflow.**", "fastapi.**", "flask.**"]
 
 [tool.ruff]
 line-length = 120
@@ -172,6 +176,8 @@ pages = [
     "docs/src/tutorial.md",
     "docs/src/how-to.md",
     "docs/src/observability.md",
+    "docs/src/supervisor-viewer-tutorial.md",
+    "docs/src/supervisor-viewer-how-to.md",
     "docs/src/explanation.md",
     "docs/src/api.md",
 ]

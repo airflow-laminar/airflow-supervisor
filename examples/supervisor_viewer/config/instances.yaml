@@ -1,0 +1,26 @@
+# @package _global_
+_target_: airflow_config.Configuration
+
+extensions:
+  supervisor_viewer:
+    _target_: airflow_supervisor.SupervisorViewerConfiguration
+    instances:
+      host-a/primary:
+        cfg: {host: 127.0.0.1, port: "*:19001", username: demo, password: demo, program: {}}
+      host-a/secondary:
+        cfg: {host: 127.0.0.1, port: "*:19011", username: demo, password: demo, program: {}}
+      host-b/primary:
+        cfg: {host: 127.0.0.1, port: "*:19021", username: demo, password: demo, program: {}}
+
+dags:
+  supervisor-observations:
+    schedule: "* * * * *"
+    start_date: "2025-01-01"
+    catchup: false
+    max_active_runs: 1
+    tasks:
+      collect:
+        _target_: airflow_pydantic.PythonTask
+        python_callable: airflow_supervisor.collect_supervisor_status
+        op_kwargs:
+          cfg: ${extensions.supervisor_viewer}

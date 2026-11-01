@@ -1,6 +1,7 @@
 from .program import *
 from .supervisor import *
 from .task import *
+from .viewer import *
 
 try:
     from .supervisor_ssh import *
