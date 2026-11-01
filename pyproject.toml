@@ -61,16 +61,16 @@ develop = [
     "supervisor-pydantic>=1.5.1,<1.6",
 ]
 airflow = [
-    "apache-airflow>=2.8,<3",
+    "apache-airflow>=2.8,<4",
     "apache-airflow-providers-ssh",
     "apache-airflow-providers-standard",
 ]
 airflow3 = [
-    "apache-airflow>=3,<3.2",
+    "apache-airflow>=3,<3.4",
     "apache-airflow-providers-ssh",
     "apache-airflow-providers-standard",
     # SQLAlchemy 2.1 removes ScalarAttributeImpl, used by sqlalchemy-utils.
-    "sqlalchemy<2.1",
+    "sqlalchemy<2.2",
 ]
 
 [project.scripts]
