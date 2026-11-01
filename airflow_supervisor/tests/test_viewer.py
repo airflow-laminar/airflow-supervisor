@@ -230,7 +230,9 @@ def test_airflow_config_can_build_collection_task():
                                 "op_kwargs": {
                                     "cfg": {
                                         "_target_": "airflow_supervisor.SupervisorViewerConfiguration",
-                                        "instances": {"one": {"cfg": {"host": "host-a", "program": {}}}},
+                                        "instances": {
+                                            "one": {"cfg": {"host": "host-a", "program": {}, "password": "demo"}}
+                                        },
                                     }
                                 },
                             }
@@ -243,6 +245,10 @@ def test_airflow_config_can_build_collection_task():
     assert isinstance(cfg, Configuration)
     task = cfg.dags["supervisor-observations"].tasks["collect"]
     assert isinstance(task.op_kwargs["cfg"], SupervisorViewerConfiguration)
+    arguments = task.model_dump(exclude_unset=True)["op_kwargs"]["cfg"]
+    assert arguments["instances"]["one"]["cfg"]["password"] == "demo"
+    password = SupervisorViewerConfiguration.model_validate(arguments).instances["one"].cfg.password
+    assert password is not None and password.get_secret_value() == "demo"
     assert "collect_supervisor_status" in cfg.dags["supervisor-observations"].render()
 
 

@@ -19,4 +19,8 @@ with DAG(
     catchup=False,
     max_active_runs=1,
 ) as dag:
-    PythonOperator(task_id="collect", python_callable=collect_supervisor_status, op_kwargs={"cfg": inventory})
+    PythonOperator(
+        task_id="collect",
+        python_callable=collect_supervisor_status,
+        op_kwargs={"cfg": inventory.model_dump(mode="json")},
+    )
