@@ -91,7 +91,7 @@ jobs:
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-        if: ${{ matrix.pydantic == '>=2.11' && matrix.airflow == '2' }}
+        if: ${{ matrix.pydantic == '>=2.11' && matrix.airflow != '' }}
 
       - name: Build distributions
         run: make dist

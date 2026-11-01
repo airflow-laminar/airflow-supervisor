@@ -11,7 +11,7 @@ from supervisor_pydantic import ProcessInfo
 
 from airflow_supervisor import SupervisorViewerConfiguration, collect_supervisor_status
 from airflow_supervisor.airflow.viewer import InstanceObservation, SupervisorSnapshot
-from airflow_supervisor.ui.viewer import render_viewer
+from airflow_supervisor.ui.viewer import load_snapshot, render_viewer
 
 
 def process(state=20):
@@ -250,6 +250,39 @@ def test_airflow_config_can_build_collection_task():
     password = SupervisorViewerConfiguration.model_validate(arguments).instances["one"].cfg.password
     assert password is not None and password.get_secret_value() == "demo"
     assert "collect_supervisor_status" in cfg.dags["supervisor-observations"].render()
+
+
+def test_view_reads_selected_metadata_snapshot_without_contacting_instances(has_airflow, monkeypatch):
+    now = datetime.now(UTC)
+    snapshot = SupervisorSnapshot(
+        collected_at=now,
+        max_age=120,
+        instances=[
+            InstanceObservation(
+                instance_id="selected",
+                host="host-a",
+                port=9001,
+                attempted_at=now,
+                observed_at=now,
+                reachable=True,
+                processes=[process(0)],
+            )
+        ],
+    )
+    monkeypatch.setenv("AIRFLOW_SUPERVISOR_SNAPSHOT_KEY", "selected-snapshot")
+    with (
+        patch(
+            "airflow.models.Variable.get",
+            side_effect=lambda key, **kwargs: {"selected-snapshot": snapshot.model_dump(mode="json")}.get(key),
+        ) as read,
+        patch("airflow_supervisor.airflow.viewer.SupervisorRemoteXMLRPCClient") as rpc,
+    ):
+        html = render_viewer(load_snapshot())
+        assert "selected" in html and "STOPPED" in html
+        read.assert_called_once_with("selected-snapshot", default_var=None, deserialize_json=True)
+        monkeypatch.delenv("AIRFLOW_SUPERVISOR_SNAPSHOT_KEY")
+        assert "No observations yet" in render_viewer(load_snapshot())
+        rpc.assert_not_called()
 
 
 def test_airflow_view_requires_authentication_and_has_no_write_routes(has_airflow):
