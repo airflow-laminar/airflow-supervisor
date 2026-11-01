@@ -322,6 +322,10 @@ class ProgramLifecycle:
         return tasks
 
     def _stop(self, program, **context):
+        from airflow.exceptions import AirflowSkipException
+
+        if not self.shutdown_branch(**context):
+            raise AirflowSkipException("Supervisor shutdown is not selected for this run")
         if self.cfg.stop_on_exit:
             self._command(program, "stop", context)
 

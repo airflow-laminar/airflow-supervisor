@@ -16,6 +16,7 @@ from supervisor_pydantic.convenience import (
 )
 
 from airflow_supervisor.config import SupervisorAirflowConfiguration
+from airflow_supervisor.config.subtasks import SupervisorSubtasks
 
 from .observability import _RPC_ERRORS, _failure_details, _LogForwarder, _publish_status
 
@@ -41,6 +42,10 @@ class Supervisor:
         if isinstance(cfg, dict):
             # NOTE: used in airflow-pydantic rendering
             cfg = SupervisorAirflowConfiguration.model_validate(cfg)
+
+        subtasks = SupervisorSubtasks(subtasks=kwargs.pop("subtasks", {})).subtasks
+        if subtasks and cfg.program_lifecycle is None:
+            cfg = cfg.model_copy(update={"program_lifecycle": {}})
 
         # store config
         self._cfg = cfg
@@ -86,6 +91,10 @@ class Supervisor:
             self._program_lifecycle = ProgramLifecycle(self)
             self._program_lifecycle.build()
             cast(Any, dag)._supervisor_lifecycles = [self]
+            if subtasks:
+                from .subtasks import apply_subtasks
+
+                apply_subtasks(self, subtasks, existing_tasks)
             return
 
         # initialize tasks
@@ -262,8 +271,14 @@ class Supervisor:
             return str(error)
 
     def _run_step(self, step, context):
-        from airflow.exceptions import AirflowException
+        from airflow.exceptions import AirflowException, AirflowSkipException
 
+        if (
+            self._program_lifecycle is not None
+            and step in ("stop-supervisor", "unconfigure-supervisor")
+            and not self._program_lifecycle.shutdown_branch(**context)
+        ):
+            raise AirflowSkipException("Supervisor shutdown is not selected for this run")
         if (
             step in ("configure-supervisor", "start-supervisor", "start-programs")
             and self.check_programs.check_end_conditions(**context) is not None
@@ -386,19 +401,21 @@ class Supervisor:
 
     def __lshift__(self, other: "Operator") -> "Operator":
         """e.g. Supervisor() << b"""
-        self.configure_supervisor << other
+        self.set_upstream(other)
         return self.unconfigure_supervisor
 
     def __rshift__(self, other: "Operator") -> "Operator":
         """e.g. Supervisor() >> b"""
-        self.unconfigure_supervisor >> other
+        self.set_downstream(other)
         return other
 
     def set_upstream(self, other: "Operator"):
-        self.configure_supervisor.set_upstream(other)
+        for task in self.roots:
+            task.set_upstream(other)
 
     def set_downstream(self, other: "Operator"):
-        self.unconfigure_supervisor.set_downstream(other)
+        for task in self.leaves:
+            task.set_downstream(other)
 
     def update_relative(self, other, upstream: bool = True, edge_modifier=None):
         if upstream:
@@ -410,9 +427,9 @@ class Supervisor:
     @property
     def leaves(self):
         """Return the leaves of the DAG."""
-        return self.unconfigure_supervisor.leaves
+        return getattr(self, "_subtask_leaves", self.unconfigure_supervisor.leaves)
 
     @property
     def roots(self):
         """Return the roots of the DAG."""
-        return self.configure_supervisor.roots
+        return getattr(self, "_subtask_roots", self.configure_supervisor.roots)
