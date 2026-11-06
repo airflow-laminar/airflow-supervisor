@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="30">
+  <title>Supervisor instances</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { margin-bottom: .4rem; } h2 { font-size: 1.2rem; margin-bottom: .3rem; }
+    article { border-top: 1px solid #8888; margin-top: 2rem; padding-top: .5rem; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #8885; }
+    .status { font-weight: bold; } .REACHABLE { color: #18864b; }
+    .UNREACHABLE, .STALE { color: #b75b19; }
+    .detail { color: #777; } a { color: #367ac8; margin-right: 1rem; }
+    .scroll { overflow-x: auto; } code { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+  <nav><a href="../">Airflow</a></nav>
+  <h1>Supervisor instances</h1>
+  <p>Read-only observations. Refreshes every 30 seconds. <a href="">Refresh now</a></p>
+  {% if not snapshot %}
+  <p>No observations yet. Run the Supervisor collection task.</p>
+  {% else %}
+  <p>{{ rows|length }} instances · Collection completed {{ snapshot.collected_at.isoformat() }}</p>
+  {% for row in rows %}
+  {% set instance = row.value %}
+  <article>
+    <h2>{{ instance.instance_id }} <span class="status {{ row.status }}">{{ row.status }}</span></h2>
+    <p><code>{{ instance.host }}:{{ instance.port }}</code></p>
+    <p class="detail">Last attempted {{ instance.attempted_at.isoformat() }}.<br>
+      {% if instance.observed_at %}Last observed {{ instance.observed_at.isoformat() }} ({{ row.age }} seconds ago).
+      {% else %}No successful observation.{% endif %}
+    </p>
+    {% if instance.error %}<p>{{ instance.error }}</p>{% endif %}
+    {% if instance.run_url %}<a href="{{ instance.run_url }}">Airflow run</a>{% endif %}
+    {% if instance.log_url %}<a href="{{ instance.log_url }}">Airflow logs</a>{% endif %}
+    {% if not instance.run_url and not instance.log_url %}<p>No Airflow links configured.</p>{% endif %}
+    {% if row.status != "REACHABLE" and instance.processes %}
+    <p>Process states below are from the last successful observation.</p>
+    {% endif %}
+    <div class="scroll"><table>
+      <thead><tr><th>Group / process</th><th>State</th><th>PID</th><th>Exit status</th><th>Spawn error</th></tr></thead>
+      <tbody>
+      {% for process in instance.processes %}
+      <tr><td>{{ process.group }}:{{ process.name }}</td><td>{{ process.state.name }}</td>
+        <td>{{ process.pid }}</td><td>{{ process.exitstatus }}</td><td>{{ process.spawnerr or '—' }}</td></tr>
+      {% else %}<tr><td colspan="5">No processes observed.</td></tr>{% endfor %}
+      </tbody>
+    </table></div>
+  </article>
+  {% endfor %}
+  {% endif %}
+</body>
+</html>
