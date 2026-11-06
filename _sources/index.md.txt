@@ -12,6 +12,10 @@ docs/src/how-to.md
 
 docs/src/observability.md
 
+docs/src/supervisor-viewer-tutorial.md
+
+docs/src/supervisor-viewer-how-to.md
+
 docs/src/explanation.md
 
 docs/src/api.md
@@ -75,6 +79,11 @@ choices.
 
 Use the [log forwarding and health-check guide](docs/src/observability.md) to
 collect program output in task logs and monitor retained services between runs.
+
+Use the [multi-instance viewer tutorial](docs/src/supervisor-viewer-tutorial.md)
+to view three instances across two container hosts. For existing deployments,
+[configure a read-only Supervisor view](docs/src/supervisor-viewer-how-to.md)
+with status timestamps and Airflow run/log links.
 
 Published documentation is available at
 [airflow-laminar.github.io/airflow-supervisor](https://airflow-laminar.github.io/airflow-supervisor/).

@@ -83,6 +83,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: run your first supervised job</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to.html">How-to guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observability.html">How to forward program logs and check retained services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supervisor-viewer-tutorial.html">View three Supervisor instances across two container hosts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supervisor-viewer-how-to.html">How to view existing Supervisor instances in Airflow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="explanation.html">Why Airflow delegates process ownership</a></li>
 <li class="toctree-l1 current" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="current reference internal expandable" href="#">API reference<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
@@ -127,6 +129,77 @@
 <div id="content" role="main">
 <section class="tex2jax_ignore mathjax_ignore" id="api-reference">
 <h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">¶</a></h1>
+<section id="supervisor-viewer">
+<h2>Supervisor viewer<a class="headerlink" href="#supervisor-viewer" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#supervisor-viewer'">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">SupervisorViewerConfiguration</span></code> defines scheduled collection:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">instances</span></code></p></td>
+<td><p>Required, nonempty</p></td>
+<td><p>Stable instance IDs mapped to <code class="docutils literal notranslate"><span class="pre">SupervisorViewerInstance</span></code> models.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">variable_key</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">airflow-supervisor:instances</span></code></p></td>
+<td><p>Airflow Variable storing the latest snapshot.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">timeout</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3</span></code> seconds</p></td>
+<td><p>Positive socket timeout, at most 30 seconds, for each XML-RPC request.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_age</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">120</span></code> seconds</p></td>
+<td><p>Positive maximum age of the last probe before the UI marks an instance stale.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Each <code class="docutils literal notranslate"><span class="pre">SupervisorViewerInstance</span></code> contains <code class="docutils literal notranslate"><span class="pre">cfg</span></code> (a local or SSH Supervisor
+configuration), optional HTTP(S) <code class="docutils literal notranslate"><span class="pre">run_url</span></code>, and optional HTTP(S) <code class="docutils literal notranslate"><span class="pre">log_url</span></code>.
+<code class="docutils literal notranslate"><span class="pre">program={}</span></code> is valid when only endpoint settings are supplied. Collection reads
+all processes, including event listeners, regardless of configured program names.</p>
+<p><code class="docutils literal notranslate"><span class="pre">collect_supervisor_status(cfg)</span></code> accepts a model or its serialized dictionary.
+It collects up to four instances concurrently, writes one JSON snapshot, and
+returns <code class="docutils literal notranslate"><span class="pre">{instance_id:</span> <span class="pre">reachable}</span></code>. Unreachable instances do not fail collection;
+storage failures fail the task. XML-RPC clients can retry a disconnected request,
+so <code class="docutils literal notranslate"><span class="pre">timeout</span></code> is not a deadline for the entire collection task.</p>
+<p>The snapshot contains collection time, maximum probe age, instance ID, host,
+port, probe time, last successful observation time, reachability, sanitized
+request-error type, process details, and configured links. Failed probes retain
+previous process details for the same instance ID and endpoint. Removed
+instances disappear on the next collection. Changed host/port settings discard
+the previous endpoint’s process details. RPC usernames, passwords, and complete
+Supervisor configurations are not stored in the snapshot.</p>
+<p>The viewer reads the Variable selected by <code class="docutils literal notranslate"><span class="pre">AIRFLOW_SUPERVISOR_SNAPSHOT_KEY</span></code>
+(default <code class="docutils literal notranslate"><span class="pre">airflow-supervisor:instances</span></code>). It refreshes every 30 seconds and never
+initiates XML-RPC calls. Its only application route is GET
+<code class="docutils literal notranslate"><span class="pre">/airflow-supervisor/</span></code>; it provides no process-control endpoints.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Display state</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">REACHABLE</span></code></p></td>
+<td><p>The latest probe succeeded and is within <code class="docutils literal notranslate"><span class="pre">max_age</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">UNREACHABLE</span></code></p></td>
+<td><p>The latest probe failed and is within <code class="docutils literal notranslate"><span class="pre">max_age</span></code>. Process details, if present, are last-known observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">STALE</span></code></p></td>
+<td><p>The latest probe is older than <code class="docutils literal notranslate"><span class="pre">max_age</span></code>, regardless of its previous result.</p></td>
+</tr>
+</tbody>
+</table>
+<p>Reachability is separate from individual process state and application readiness.
+A reachable instance can contain stopped or failed processes. The viewer does
+not evaluate replica availability or restart programs.</p>
+</section>
 <section id="typed-subtask-overrides">
 <h2>Typed subtask overrides<a class="headerlink" href="#typed-subtask-overrides" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#typed-subtask-overrides'">¶</a></h2>
 <p><code class="docutils literal notranslate"><span class="pre">SupervisorTask</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> accept <code class="docutils literal notranslate"><span class="pre">subtasks</span></code>, a mapping of names to
@@ -614,6 +687,7 @@ Python and YAML configurations.</p>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
 <ul>
+<li><a :data-current="activeSection === '#supervisor-viewer'" class="reference internal" href="#supervisor-viewer">Supervisor viewer</a></li>
 <li><a :data-current="activeSection === '#typed-subtask-overrides'" class="reference internal" href="#typed-subtask-overrides">Typed subtask overrides</a></li>
 <li><a :data-current="activeSection === '#per-program-lifecycle'" class="reference internal" href="#per-program-lifecycle">Per-program lifecycle</a></li>
 <li><a :data-current="activeSection === '#lifecycle-classes-and-task-models'" class="reference internal" href="#lifecycle-classes-and-task-models">Lifecycle classes and task models</a><ul>

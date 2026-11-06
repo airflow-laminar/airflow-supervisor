@@ -38,7 +38,7 @@
 <link href="../../search.html" rel="search" title="Search"/>
 <link href="../../genindex.html" rel="index" title="Index"/>
 <link href="api.html" rel="next" title="API reference"/>
-<link href="observability.html" rel="prev" title="How to forward program logs and check retained services"/>
+<link href="supervisor-viewer-how-to.html" rel="prev" title="How to view existing Supervisor instances in Airflow"/>
 </head>
 <body :class="{ 'overflow-hidden': showSidebar }" class="min-h-screen font-sans antialiased bg-background text-foreground" x-data="{ showSidebar: false, showScrollTop: false }">
 <div @click.self="showSidebar = false" class="fixed inset-0 z-50 overflow-hidden bg-background/80 backdrop-blur-sm md:hidden" x-cloak="" x-show="showSidebar"></div><div class="relative flex flex-col min-h-screen" id="page"><a class="absolute top-0 left-0 z-[100] block bg-background p-4 text-xl transition -translate-x-full opacity-0 focus:translate-x-0 focus:opacity-100" href="#content">
@@ -83,6 +83,8 @@
 <li class="toctree-l1"><a class="reference internal" href="tutorial.html">Tutorial: run your first supervised job</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to.html">How-to guides</a></li>
 <li class="toctree-l1"><a class="reference internal" href="observability.html">How to forward program logs and check retained services</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supervisor-viewer-tutorial.html">View three Supervisor instances across two container hosts</a></li>
+<li class="toctree-l1"><a class="reference internal" href="supervisor-viewer-how-to.html">How to view existing Supervisor instances in Airflow</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Why Airflow delegates process ownership</a></li>
 <li class="toctree-l1" x-data="{ expanded: $el.classList.contains('current') ? true : false }"><a :class="{ 'expanded' : expanded }" @click="expanded = !expanded" class="reference internal expandable" href="api.html">API reference<button @click.prevent.stop="expanded = !expanded" type="button" x-cloak=""><span class="sr-only"></span><svg fill="currentColor" height="18px" stroke="none" viewbox="0 0 24 24" width="18px" xmlns="http://www.w3.org/2000/svg"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"></path></svg></button></a><ul x-cloak="" x-show="expanded">
 <li class="toctree-l2"><a class="reference internal" href="_build/airflow_supervisor.Supervisor.html">airflow_supervisor.Supervisor</a></li>
@@ -195,6 +197,36 @@ application-owned manager with its own configuration, logs, PID, and endpoint.
 Systemd fits hosts where services belong in system administration; supervisord
 fits workloads that need a separate manager installed with the application.</p>
 </section>
+<section id="why-the-viewer-uses-snapshots">
+<h2>Why the viewer uses snapshots<a class="headerlink" href="#why-the-viewer-uses-snapshots" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#why-the-viewer-uses-snapshots'">¶</a></h2>
+<p>The Supervisor viewer separates observation from web requests. A scheduled task
+contacts instances independently and stores the latest snapshot. The page can
+then show an unreachable instance without making its connection timeout part of
+every page load. Probe timestamps also distinguish failed observation from a
+stopped collector. Retained process states are explicitly last-known data.</p>
+<p>Multivisor was the first option evaluated for the multi-instance proof of
+concept. Version 7.1.0 successfully connected three instances through its
+event-listener integration using <code class="docutils literal notranslate"><span class="pre">supervisor-pydantic</span></code> configuration. The
+listeners need <code class="docutils literal notranslate"><span class="pre">SUPERVISOR_USERNAME</span></code> and <code class="docutils literal notranslate"><span class="pre">SUPERVISOR_PASSWORD</span></code> when Supervisor’s
+HTTP interface requires credentials. The SDK’s workload controls exclude these
+event listeners, so starting or stopping configured programs leaves them running.</p>
+<p>Multivisor supplies live state updates and native process logs. Its
+<a class="reference external" href="https://github.com/tiagocoutinho/multivisor/blob/55dccb3b6a16a9cb2cb0cca975224daffc687f46/multivisor/server/web.py">authenticated API</a>
+also permits stop, restart, and daemon-shutdown actions. A runtime test confirmed
+that a user named <code class="docutils literal notranslate"><span class="pre">reader</span></code> could invoke process stop after login. There is no
+separate read-only role in the evaluated version. Keeping its existing UI would
+therefore require an additional authorization layer and changes for Airflow
+workload links. The Airflow proof of concept uses a smaller view with no control
+routes instead.</p>
+<p>The snapshot is an operations view for users with Airflow website-view access.
+It does not implement per-program visibility rules. Credentials stay in the
+collection configuration; only process observations and links reach the viewer.
+Airflow’s own run/log pages continue to enforce their DAG access rules.</p>
+<p>This proof of concept does not establish minimum-ready counts, recover failed
+hosts, or coordinate deployments. It also does not infer the latest workload
+run: supplied associations can become outdated. Shared workload observations
+and host identity can replace these manual associations in the fleet roadmap.</p>
+</section>
 </section>
 </div></div><aside class="hidden text-sm xl:block" id="right-sidebar">
 <div class="sticky top-16 -mt-10 max-h-[calc(100vh-5rem)] h-full overflow-y-auto pt-6 space-y-2"><p class="font-medium">On this page</p>
@@ -204,6 +236,7 @@ fits workloads that need a separate manager installed with the application.</p>
 <li><a :data-current="activeSection === '#why-configuration-is-persisted'" class="reference internal" href="#why-configuration-is-persisted">Why configuration is persisted</a></li>
 <li><a :data-current="activeSection === '#python-and-airflow-config-describe-the-same-lifecycle'" class="reference internal" href="#python-and-airflow-config-describe-the-same-lifecycle">Python and airflow-config describe the same lifecycle</a></li>
 <li><a :data-current="activeSection === '#supervisord-and-systemd'" class="reference internal" href="#supervisord-and-systemd">Supervisord and systemd</a></li>
+<li><a :data-current="activeSection === '#why-the-viewer-uses-snapshots'" class="reference internal" href="#why-the-viewer-uses-snapshots">Why the viewer uses snapshots</a></li>
 </ul>
 </div>
 </aside>
