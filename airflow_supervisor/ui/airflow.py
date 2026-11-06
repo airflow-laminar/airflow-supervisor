@@ -28,7 +28,7 @@ if _airflow_3():
                 "name": "Supervisor Viewer",
                 "href": "/airflow-supervisor/",
                 "destination": "nav",
-                "category": "admin",
+                "category": "browse",
                 "url_route": "airflow-supervisor",
             }
         ]
@@ -50,5 +50,5 @@ else:
         name = "Supervisor Viewer"
         flask_blueprints = [bp]  # noqa: RUF012
         appbuilder_menu_items = [  # noqa: RUF012
-            {"name": "Supervisor Viewer", "href": "/airflow-supervisor/", "category": "Laminar"}
+            {"name": "Supervisor Viewer", "href": "/airflow-supervisor/", "category": "Browse"}
         ]
