@@ -1018,8 +1018,8 @@ Copy `collector.py` into your Airflow DAG folder. Restart the Airflow webserver
 (Airflow 2) or API server (Airflow 3) to load the installed plugin. Unpause and
 trigger `supervisor-observations`.
 
-Open **Supervisor Viewer** under **Laminar** on Airflow 2, or in the administration
-navigation on Airflow 3. The page is also at `/airflow-supervisor/`.
+Open **Supervisor Viewer** under **Browse** on Airflow 2 or 3.
+The page is also at `/airflow-supervisor/`.
 
 You should see `host-a/primary`, `host-a/secondary`, and `host-b/primary`, each
 marked `REACHABLE`. Their tables show `worker` and `multivisor-rpc` in `RUNNING`
