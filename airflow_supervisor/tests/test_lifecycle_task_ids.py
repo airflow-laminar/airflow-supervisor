@@ -67,9 +67,9 @@ def test_program_lifecycles_scope_controls_to_their_task_ids(cfg):
     ]
     assert dag._supervisor_lifecycles == lifecycles
     assert {"service-a-start-test", "service-b-start-test"} <= set(dag.task_ids)
-    assert lifecycles[0]._program_lifecycle._control_key("test") != lifecycles[1]._program_lifecycle._control_key(
-        "test"
-    )
+    first, second = (supervisor._program_lifecycle for supervisor in lifecycles)
+    assert first is not None and second is not None
+    assert first._control_key("test") != second._control_key("test")
     controls = create_supervisor_control_dags(dag)
     assert {"service-a-restart-test", "service-b-restart-test", "service-a-force-kill", "service-b-force-kill"} <= set(
         controls
