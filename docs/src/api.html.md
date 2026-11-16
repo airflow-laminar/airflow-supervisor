@@ -64,8 +64,8 @@ unknown name is rejected. Custom task fields survive model serialization,
 `airflow-config` instantiation, and Python source generation.
 
 Names are local to the lifecycle: `start-my-program` resolves to the existing
-`<dag_id>-start-my-program` task. Full generated IDs are also accepted. Added tasks
-receive the same DAG prefix. Dependencies resolve local names first, then existing
+`<task_id>-start-my-program` task. Full generated IDs are also accepted. Added tasks
+receive the same lifecycle prefix. Dependencies resolve local names first, then existing
 outer DAG task IDs. Attribute references such as `check-programs.stop_pass` use
 the normal task dependency syntax.
 
@@ -117,7 +117,7 @@ require `program_lifecycle` to be enabled.
 
 `supervisor_program_state` contains per-program failure counts, disabled flags,
 and manual-control revisions in monitoring XCom and retrigger configuration.
-`airflow-supervisor:<dag_id>:<program>:control` Variables retain explicit start/stop
+`airflow-supervisor:<task_id>:<program>:control` Variables retain explicit start/stop
 intent. Airflow 3 tasks use the Task SDK Variable interface.
 
 ## Lifecycle classes and task models
@@ -157,9 +157,10 @@ The `SupervisorOperator`, `SupervisorOperatorArgs`, `SupervisorSSHOperator`, and
 
 Both lifecycle classes set `catchup=False`, `concurrency=1`,
 `max_active_tasks=1`, and `max_active_runs=1` on their DAG.
-Generated task IDs use `<dag_id>-<step>`, independent of a task model’s `task_id`.
-A DAG supports one supervisor lifecycle; multiple programs belong in its
-`cfg.program` mapping.
+Generated task IDs, control DAG IDs, and control Variables use the lifecycle’s
+`task_id` as their prefix, e.g. `<task_id>-check-programs`. `task_id` defaults to the
+DAG ID. Task models pass their key as `task_id`, so a DAG can hold several
+lifecycles, such as one per host.
 
 The exposed boundaries are `configure_supervisor`, `start_supervisor`,
 `start_programs`, `check_programs`, `restart_programs`, `stop_programs`,
