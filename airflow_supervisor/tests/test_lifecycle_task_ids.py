@@ -1,5 +1,6 @@
 """Generated task IDs follow the lifecycle task ID, which defaults to the DAG ID."""
 
+from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -65,7 +66,7 @@ def test_program_lifecycles_scope_controls_to_their_task_ids(cfg):
         Supervisor(dag=dag, cfg=cfg.model_copy(deep=True, update={"program_lifecycle": {}}), task_id=name)
         for name in ("service-a", "service-b")
     ]
-    assert dag._supervisor_lifecycles == lifecycles
+    assert cast(Any, dag)._supervisor_lifecycles == lifecycles
     assert {"service-a-start-test", "service-b-start-test"} <= set(dag.task_ids)
     first, second = (supervisor._program_lifecycle for supervisor in lifecycles)
     assert first is not None and second is not None
