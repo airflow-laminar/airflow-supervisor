@@ -50,6 +50,8 @@ class Supervisor:
         # store config
         self._cfg = cfg
         self._program_tasks = {}
+        # Prefixes every generated task, so one DAG can hold several lifecycles.
+        self._task_id = kwargs.pop("task_id", None) or dag.dag_id
 
         # process pool
         self._pool = cfg.pool.pool if isinstance(cfg.pool, Pool) else cfg.pool
@@ -72,9 +74,9 @@ class Supervisor:
             cfg,
             self._xmlrpc_client,
             (
-                f"{dag.dag_id}-check-programs",
-                f"{dag.dag_id}-start-programs",
-                f"{dag.dag_id}-restart-programs",
+                f"{self._task_id}-check-programs",
+                f"{self._task_id}-start-programs",
+                f"{self._task_id}-restart-programs",
             ),
         )
 
@@ -90,7 +92,7 @@ class Supervisor:
 
             self._program_lifecycle = ProgramLifecycle(self)
             self._program_lifecycle.build()
-            cast(Any, dag)._supervisor_lifecycles = [self]
+            cast(Any, dag)._supervisor_lifecycles = [*getattr(dag, "_supervisor_lifecycles", []), self]
             if subtasks:
                 from .subtasks import apply_subtasks
 
@@ -121,14 +123,14 @@ class Supervisor:
 
         (
             PythonOperator(
-                task_id=f"{self._dag.dag_id}-force-kill-dag", python_callable=skip, **self.get_base_operator_kwargs()
+                task_id=f"{self._task_id}-force-kill-dag", python_callable=skip, **self.get_base_operator_kwargs()
             )
             >> self._force_kill
         )
 
         # Deal with any configuration or cleanup problems
         any_config_fail = PythonOperator(
-            task_id=f"{self._dag.dag_id}-check-config-failed",
+            task_id=f"{self._task_id}-check-config-failed",
             python_callable=fail,
             trigger_rule="one_failed",
             **self.get_base_operator_kwargs(),
@@ -170,7 +172,7 @@ class Supervisor:
             else:
                 _log.info("Skipping cleanup of supervisor config on exit")
                 self._unconfigure_supervisor = PythonOperator(
-                    task_id=f"{self._dag.dag_id}-unconfigure-supervisor",
+                    task_id=f"{self._task_id}-unconfigure-supervisor",
                     python_callable=skip,
                     **self.get_base_operator_kwargs(),
                 )
@@ -178,10 +180,10 @@ class Supervisor:
             _log.info("Not stopping programs on exit")
             _log.info("Skipping cleanup of supervisor config on exit")
             self._stop_programs = PythonOperator(
-                task_id=f"{self._dag.dag_id}-stop-programs", python_callable=skip, **self.get_base_operator_kwargs()
+                task_id=f"{self._task_id}-stop-programs", python_callable=skip, **self.get_base_operator_kwargs()
             )
             self._unconfigure_supervisor = PythonOperator(
-                task_id=f"{self._dag.dag_id}-unconfigure-supervisor",
+                task_id=f"{self._task_id}-unconfigure-supervisor",
                 python_callable=skip,
                 **self.get_base_operator_kwargs(),
             )
@@ -244,7 +246,7 @@ class Supervisor:
             raise ValueError("Select a configured program group and a start, stop, or restart action")
         operator_kwargs: dict[str, Any] = {
             **self.get_base_operator_kwargs(),
-            "task_id": f"{self._dag.dag_id}-{action}-{program}",
+            "task_id": f"{self._task_id}-{action}-{program}",
             **kwargs,
             "python_callable": partial(self._program_lifecycle.control, program, action),
         }
@@ -366,7 +368,7 @@ class Supervisor:
         if step == "check-programs":
             ha_operator_args: dict[str, Any] = {
                 # Sensor Args
-                "task_id": f"{self._dag.dag_id}-{step}",
+                "task_id": f"{self._task_id}-{step}",
                 "poke_interval": self._cfg.check_interval.total_seconds(),
                 "timeout": self._cfg.check_timeout.total_seconds(),
                 "mode": "poke",
@@ -392,7 +394,7 @@ class Supervisor:
             **cast(
                 dict[str, Any],
                 {
-                    "task_id": f"{self._dag.dag_id}-{step}",
+                    "task_id": f"{self._task_id}-{step}",
                     **self.get_base_operator_kwargs(),
                     **self.get_step_kwargs(step),
                 },
