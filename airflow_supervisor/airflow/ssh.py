@@ -133,7 +133,7 @@ _supervisor_convenience {step} --cfg {quote(str(self._cfg._pydantic_path))}
                 **cast(
                     dict[str, Any],
                     {
-                        "task_id": f"{self._dag.dag_id}-{step}",
+                        "task_id": f"{self._task_id}-{step}",
                         **self.get_base_operator_kwargs(),
                         **self.get_step_kwargs(step),
                     },

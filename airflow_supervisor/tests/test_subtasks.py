@@ -223,8 +223,8 @@ def test_config_instantiation_and_rendered_source(tmp_path, dag_type, task_type,
     namespace = {}
     exec(compile(source, "subtasks.py", "exec"), namespace)  # noqa: S102
     for dag in (model.instantiate(), namespace["dag"]):
-        assert dag.get_task("render-subtasks-start-A").retries == 2
-        assert dag.get_task("render-subtasks-start-B").upstream_task_ids == {"render-subtasks-wait"}
+        assert dag.get_task("service-start-A").retries == 2
+        assert dag.get_task("service-start-B").upstream_task_ids == {"service-wait"}
 
 
 def test_dependency_overrides_do_not_stop_programs_during_retrigger(tmp_path, dag_type):

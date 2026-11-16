@@ -327,7 +327,7 @@ def test_configuration_round_trip_and_python_rendering(tmp_path, config_type, op
     source = config.dags["program-render"].render(airflow_major_version=3)
     assert "program_lifecycle" in source
     dag = config.dags["program-render"].instantiate()
-    assert dag.get_task("program-render-start-A").retries == 2
+    assert dag.get_task("service-start-A").retries == 2
 
 
 @pytest.mark.parametrize(

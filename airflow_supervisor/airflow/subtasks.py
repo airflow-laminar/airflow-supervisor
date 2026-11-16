@@ -5,7 +5,7 @@ from airflow_pydantic.migration import _airflow_3
 def apply_subtasks(supervisor, subtasks, existing_tasks):
     """Merge task options, create additional tasks, then resolve local dependencies."""
     dag = supervisor._dag
-    prefix = f"{dag.dag_id}-"
+    prefix = f"{supervisor._task_id}-"
     generated = {task.task_id: task for task in dag.tasks if task.task_id not in existing_tasks}
     tasks = {task_id.removeprefix(prefix): task for task_id, task in generated.items()}
     overridden = set()

@@ -145,12 +145,10 @@ with DAG(
             + "\n    assert 'post' in run.unconfigure_supervisor.downstream_task_ids, run.unconfigure_supervisor.downstream_task_ids"
         )
         rendered = (
-            rendered
-            + "\n    assert post.upstream_task_ids == {'example_dag-unconfigure-supervisor'}, post.upstream_task_ids"
+            rendered + "\n    assert post.upstream_task_ids == {'run-unconfigure-supervisor'}, post.upstream_task_ids"
         )
         rendered = (
-            rendered
-            + "\n    assert pre.downstream_task_ids == {'example_dag-configure-supervisor'}, pre.downstream_task_ids"
+            rendered + "\n    assert pre.downstream_task_ids == {'run-configure-supervisor'}, pre.downstream_task_ids"
         )
         if _airflow_3() is not None:
             exec(rendered)  # noqa: S102

@@ -39,6 +39,7 @@ class ProgramLifecycle:
         self.supervisor = supervisor
         self.cfg = supervisor._cfg
         self.dag = supervisor._dag
+        self.prefix = supervisor._task_id
         self.client = supervisor.supervisor_client
         self.counts = {
             name: program.numprocs or 1
@@ -52,7 +53,7 @@ class ProgramLifecycle:
         self.tasks = {}
 
     def _control_key(self, program):
-        return f"airflow-supervisor:{self.dag.dag_id}:{program}:control"
+        return f"airflow-supervisor:{self.prefix}:{program}:control"
 
     def _inspect(self, context, flush=False):
         infos = [info for info in self.client.getAllProcessInfo() if info.group in self.policies]
@@ -230,21 +231,19 @@ class ProgramLifecycle:
         owner._stop_supervisor = (
             owner.get_step_operator("stop-supervisor")
             if self.cfg.stop_on_exit
-            else (EmptyOperator(task_id=f"{self.dag.dag_id}-stop-supervisor", **owner.get_base_operator_kwargs()))
+            else (EmptyOperator(task_id=f"{self.prefix}-stop-supervisor", **owner.get_base_operator_kwargs()))
         )
         owner._unconfigure_supervisor = (
             owner.get_step_operator("unconfigure-supervisor")
             if self.cfg.cleanup and self.cfg.stop_on_exit
-            else (
-                EmptyOperator(task_id=f"{self.dag.dag_id}-unconfigure-supervisor", **owner.get_base_operator_kwargs())
-            )
+            else (EmptyOperator(task_id=f"{self.prefix}-unconfigure-supervisor", **owner.get_base_operator_kwargs()))
         )
         for action in ("start", "stop"):
             setattr(
                 owner,
                 f"_{action}_programs",
                 EmptyOperator(
-                    task_id=f"{self.dag.dag_id}-{action}-programs",
+                    task_id=f"{self.prefix}-{action}-programs",
                     trigger_rule="all_done" if action == "start" else "none_failed_min_one_success",
                     **owner.get_base_operator_kwargs(),
                 ),
@@ -253,16 +252,16 @@ class ProgramLifecycle:
             kwargs = {**owner.get_base_operator_kwargs(), "retries": policy.retries, "retry_delay": policy.retry_delay}
             self.tasks[name] = SimpleNamespace(
                 start=PythonOperator(
-                    task_id=f"{self.dag.dag_id}-start-{name}", python_callable=partial(self.start, name), **kwargs
+                    task_id=f"{self.prefix}-start-{name}", python_callable=partial(self.start, name), **kwargs
                 ),
                 stop=PythonOperator(
-                    task_id=f"{self.dag.dag_id}-stop-{name}",
+                    task_id=f"{self.prefix}-stop-{name}",
                     python_callable=partial(self._stop, name),
                     trigger_rule="all_done",
                     **kwargs,
                 ),
                 delay=PythonSensor(
-                    task_id=f"{self.dag.dag_id}-delay-{name}",
+                    task_id=f"{self.prefix}-delay-{name}",
                     python_callable=partial(self.delay, name),
                     mode="reschedule",
                     poke_interval=30,
@@ -271,7 +270,7 @@ class ProgramLifecycle:
                 ),
             )
         gate = BranchPythonOperator(
-            task_id=f"{self.dag.dag_id}-shutdown",
+            task_id=f"{self.prefix}-shutdown",
             python_callable=self.shutdown_branch,
             trigger_rule="all_done",
             **owner.get_base_operator_kwargs(),
@@ -293,7 +292,7 @@ class ProgramLifecycle:
         from airflow_pydantic import fail
 
         terminal_failure = PythonOperator(
-            task_id=f"{self.dag.dag_id}-terminal-failure",
+            task_id=f"{self.prefix}-terminal-failure",
             python_callable=fail,
             trigger_rule="all_done",
             **owner.get_base_operator_kwargs(),
@@ -318,7 +317,7 @@ class ProgramLifecycle:
             return []
         tasks = [tasks.stop.task_id for tasks in self.tasks.values()]
         if result == Result.FAIL:
-            tasks.append(f"{self.dag.dag_id}-terminal-failure")
+            tasks.append(f"{self.prefix}-terminal-failure")
         return tasks
 
     def _stop(self, program, **context):
@@ -358,7 +357,7 @@ def create_supervisor_control_dags(supervisor):
     dags = {}
     for name in controller.policies:
         for action in ("start", "stop", "restart"):
-            dag_id = f"{supervisor._dag.dag_id}-{action}-{name}"
+            dag_id = f"{supervisor._task_id}-{action}-{name}"
             dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)
             PythonOperator(
                 task_id=action,
@@ -368,7 +367,7 @@ def create_supervisor_control_dags(supervisor):
             )
             dags[dag_id] = dag
     for action in ("start", "stop", "restart"):
-        dag_id = f"{supervisor._dag.dag_id}-{action}-programs"
+        dag_id = f"{supervisor._task_id}-{action}-programs"
         dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)
         stages = {}
         for stage in ("stop", "start") if action == "restart" else (action,):
@@ -409,7 +408,7 @@ def create_supervisor_control_dags(supervisor):
                     for delay in delays.values():
                         stopped >> delay
         dags[dag_id] = dag
-    dag_id = f"{supervisor._dag.dag_id}-force-kill"
+    dag_id = f"{supervisor._task_id}-force-kill"
     dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)
     type(supervisor._start_supervisor)(
         task_id="force-kill", dag=dag, pool=supervisor._pool, **supervisor.get_step_kwargs("force-kill")
