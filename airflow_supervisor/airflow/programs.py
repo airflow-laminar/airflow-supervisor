@@ -107,7 +107,8 @@ class ProgramLifecycle:
             raise AirflowException(f"Supervisor program {program} is missing configured processes")
         if action in ("stop", "restart"):
             for info in infos:
-                self.client.stopProcess(f"{info.group}:{info.name}")
+                if not info.stopped():
+                    self.client.stopProcess(f"{info.group}:{info.name}")
         if action in ("start", "restart"):
             for info in infos:
                 if action == "restart" or info.state not in (ProcessState.RUNNING, ProcessState.STARTING):
@@ -339,12 +340,68 @@ class ProgramLifecycle:
         self._command(program, action, context)
 
 
+def _control_stage(supervisor, stage, dag):
+    from airflow.providers.standard.sensors.python import PythonSensor
+
+    from .subtasks import apply_task_options
+
+    controller = supervisor._program_lifecycle
+    sources = {getattr(tasks, stage).task_id: name for name, tasks in controller.tasks.items()}
+    delays = {tasks.delay.task_id: name for name, tasks in controller.tasks.items()} if stage == "start" else {}
+    models = getattr(supervisor, "_subtask_models", {})
+    allowed = sources.keys() | delays.keys() | getattr(supervisor, "_added_subtasks", set())
+    selected = set(sources)
+    pending = list(sources)
+    while pending:
+        for parent in supervisor._dag.get_task(pending.pop()).upstream_task_ids & allowed:
+            if parent not in selected:
+                selected.add(parent)
+                pending.append(parent)
+    tasks = {}
+    for source_id in sorted(selected):
+        source = supervisor._dag.get_task(source_id)
+        task_id = source_id.removeprefix(f"{supervisor._task_id}-")
+        if source_id in sources:
+            task = supervisor.program_operator(
+                sources[source_id],
+                stage,
+                task_id=task_id,
+                dag=dag,
+                retries=source.retries,
+                retry_delay=source.retry_delay,
+            )
+        elif source_id in delays:
+            task = PythonSensor(
+                task_id=task_id,
+                dag=dag,
+                pool=supervisor._pool,
+                mode=source.mode,
+                poke_interval=source.poke_interval,
+                timeout=source.timeout,
+                retries=source.retries,
+                retry_delay=source.retry_delay,
+                python_callable=partial(controller.delay, delays[source_id], force=True),
+            )
+        else:
+            task = models[source_id].model_copy(update={"task_id": task_id}).instantiate(dag=dag)
+        if source_id in models:
+            apply_task_options(task, models[source_id])
+        tasks[source_id] = task
+    for source_id, task in tasks.items():
+        for parent in supervisor._dag.get_task(source_id).upstream_task_ids & tasks.keys():
+            tasks[parent] >> task
+    return tasks
+
+
 def create_supervisor_control_dags(supervisor):
     """Build independently triggerable control Dags for a Supervisor lifecycle."""
     from airflow.providers.standard.operators.python import PythonOperator
-    from airflow.providers.standard.sensors.python import PythonSensor
     from airflow_pydantic.airflow import DAG
 
+    if hasattr(supervisor, "_control_dags"):
+        for dag in supervisor._control_dags.values():
+            dag.fileloc = supervisor._dag.fileloc
+        return supervisor._control_dags
     if hasattr(supervisor, "_supervisor_lifecycles"):
         return {
             dag_id: dag
@@ -371,42 +428,12 @@ def create_supervisor_control_dags(supervisor):
         dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)
         stages = {}
         for stage in ("stop", "start") if action == "restart" else (action,):
-            tasks = {}
-            delays = {}
-            for name, policy in controller.policies.items():
-                tasks[name] = supervisor.program_operator(
-                    name,
-                    stage,
-                    task_id=f"{stage}-{name}",
-                    dag=dag,
-                    retries=policy.retries,
-                    retry_delay=policy.retry_delay,
-                )
-                if stage == "start":
-                    delays[name] = PythonSensor(
-                        task_id=f"delay-{name}",
-                        dag=dag,
-                        pool=supervisor._pool,
-                        mode="reschedule",
-                        poke_interval=30,
-                        timeout=controller.cfg.check_timeout.total_seconds(),
-                        python_callable=partial(controller.delay, name, force=True),
-                    )
-                    delays[name] >> tasks[name]
-            for name, policy in controller.policies.items():
-                for parent in policy.start_after:
-                    if stage == "stop":
-                        tasks[name] >> tasks[parent]
-                    else:
-                        tasks[parent] >> delays[name]
-                if stage == "stop":
-                    for after in policy.stop_before:
-                        tasks[name] >> tasks[after]
-            stages[stage] = tasks
+            stages[stage] = _control_stage(supervisor, stage, dag)
             if stage == "start" and "stop" in stages:
+                roots = [task for task in stages["start"].values() if not task.upstream_task_ids]
                 for stopped in stages["stop"].values():
-                    for delay in delays.values():
-                        stopped >> delay
+                    for task in roots:
+                        stopped >> task
         dags[dag_id] = dag
     dag_id = f"{supervisor._task_id}-force-kill"
     dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)

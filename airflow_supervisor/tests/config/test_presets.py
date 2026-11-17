@@ -71,7 +71,9 @@ def test_preset_controls_lifecycle_and_restart(tmp_path, has_airflow, preset):
     from airflow_pydantic import skip
     from airflow_pydantic.airflow import DAG
 
-    cfg = SupervisorAirflowConfiguration(preset=preset, working_dir=tmp_path, program={"demo": {"command": "sleep 1"}})
+    cfg = SupervisorAirflowConfiguration(
+        preset=preset, working_dir=tmp_path, program={"demo": {"command": "sleep 1"}}, program_lifecycle=None
+    )
     with DAG(dag_id="preset-check", schedule=None) as dag:
         supervisor = Supervisor(dag=dag, cfg=cfg)
     stop, cleanup = supervisor.stop_programs, supervisor.unconfigure_supervisor

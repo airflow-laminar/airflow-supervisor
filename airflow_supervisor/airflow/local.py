@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, ClassVar, cast
 
 from airflow_pydantic import Pool, fail, skip
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
@@ -31,6 +31,7 @@ _log = getLogger(__name__)
 
 
 class Supervisor:
+    generates_dags: ClassVar[bool] = True
     _cfg: SupervisorAirflowConfiguration
     _dag: "DAG"
     _kill_dag: "DAG"
@@ -87,8 +88,8 @@ class Supervisor:
         self.setup_dag()
 
         self._program_lifecycle = None
-        if cfg.program_lifecycle is not None:
-            from .programs import ProgramLifecycle
+        if cfg.program_lifecycle is not None and (cfg.program or cfg.fcgiprogram or cfg.group):
+            from .programs import ProgramLifecycle, create_supervisor_control_dags
 
             self._program_lifecycle = ProgramLifecycle(self)
             self._program_lifecycle.build()
@@ -97,6 +98,10 @@ class Supervisor:
                 from .subtasks import apply_subtasks
 
                 apply_subtasks(self, subtasks, existing_tasks)
+            self._control_dags = create_supervisor_control_dags(self)
+            generated_dags = getattr(dag, "_generated_dags", {})
+            generated_dags.update(self._control_dags)
+            cast(Any, dag)._generated_dags = generated_dags
             return
 
         # initialize tasks
