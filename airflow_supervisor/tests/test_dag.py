@@ -4,14 +4,15 @@ from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration
 
 
 class TestDag:
-    def test_instantiation(self, supervisor_airflow_configuration: SupervisorAirflowConfiguration):
+    def test_grouped_instantiation(self, supervisor_airflow_configuration: SupervisorAirflowConfiguration):
         try:
             from airflow.models.dag import DAG
         except ImportError:
             pytest.skip("DAG not available")
 
         dag = DAG(dag_id="test_dag", default_args={}, schedule=None, params={}, max_active_tasks=8)
-        s = Supervisor(dag=dag, cfg=supervisor_airflow_configuration)
+        cfg = supervisor_airflow_configuration.model_copy(update={"program_lifecycle": None})
+        s = Supervisor(dag=dag, cfg=cfg)
         assert len(dag.tasks) == 17
         assert dag.catchup is False
         assert dag.max_active_tasks == 8

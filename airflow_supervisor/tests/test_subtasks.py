@@ -72,7 +72,9 @@ def dag_type(has_airflow):
     [(Supervisor, SupervisorAirflowConfiguration), (SupervisorSSH, SupervisorSSHAirflowConfiguration)],
 )
 def test_overrides_preserve_generated_actions_and_insert_delay(tmp_path, dag_type, operator, config_type):
-    cfg = config_type(working_dir=tmp_path, program={name: {"command": "sleep 1"} for name in "ABC"})
+    cfg = config_type(
+        working_dir=tmp_path, program={name: {"command": "sleep 1"} for name in "ABC"}, program_lifecycle=None
+    )
     dag = dag_type(dag_id="overrides", schedule=None)
     lifecycle = operator(
         dag=dag,

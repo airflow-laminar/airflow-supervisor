@@ -90,6 +90,7 @@ def setup(tmp_path, forward_logs=True, **kwargs):
         working_dir=tmp_path,
         program={"demo": {"command": "/bin/sleep 1"}},
         forward_logs=forward_logs,
+        program_lifecycle=None,
         **kwargs,
     )
     return cfg, client(cfg)

@@ -101,7 +101,8 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
     )
 
     program_lifecycle: dict[str, ProgramLifecycleConfiguration] | None = Field(
-        default=None, description="Enable discrete Airflow tasks and policies for configured Supervisor program groups"
+        default_factory=dict,
+        description="Policies for discrete Supervisor program tasks; set null to retain the grouped lifecycle",
     )
 
     @model_validator(mode="after")
@@ -113,7 +114,9 @@ class SupervisorAirflowConfiguration(SupervisorConvenienceConfiguration):
             names.difference_update(group.programs)
         names.update(self.group or {})
         if not names:
-            raise ValueError("program_lifecycle requires at least one Supervisor program group")
+            if self.program_lifecycle:
+                raise ValueError("program_lifecycle requires at least one Supervisor program group")
+            return self
         unknown = set(self.program_lifecycle) - names
         if unknown:
             raise ValueError(f"Unknown Supervisor program groups: {sorted(unknown)}")

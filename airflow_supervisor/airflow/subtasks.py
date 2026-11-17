@@ -2,6 +2,18 @@ from airflow_pydantic import Pool, PythonTask, SSHTask
 from airflow_pydantic.migration import _airflow_3
 
 
+def apply_task_options(task, model):
+    for field in model.model_fields_set - {"operator", "task_id", "dependencies"}:
+        if type(model).model_fields[field].exclude:
+            continue
+        value = getattr(model, field)
+        if field == "pool" and isinstance(value, Pool):
+            value = value.pool
+        if field == "task_display_name":
+            field = "_task_display_name" if _airflow_3() else "_task_display_property_value"
+        setattr(task, field, value)
+
+
 def apply_subtasks(supervisor, subtasks, existing_tasks):
     """Merge task options, create additional tasks, then resolve local dependencies."""
     dag = supervisor._dag
@@ -28,15 +40,7 @@ def apply_subtasks(supervisor, subtasks, existing_tasks):
         else:
             if not isinstance(task, model.operator):
                 raise TypeError(f"Subtask {name} is {type(task).__name__}, incompatible with {model.operator.__name__}")
-            for field in model.model_fields_set - {"operator", "task_id", "dependencies"}:
-                if type(model).model_fields[field].exclude:
-                    continue
-                value = getattr(model, field)
-                if field == "pool" and isinstance(value, Pool):
-                    value = value.pool
-                if field == "task_display_name":
-                    field = "_task_display_name" if _airflow_3() else "_task_display_property_value"
-                setattr(task, field, value)
+            apply_task_options(task, model)
         tasks[name] = task
         generated[task_id] = task
 
@@ -56,6 +60,8 @@ def apply_subtasks(supervisor, subtasks, existing_tasks):
                 parent = getattr(parent, attribute)
             parent >> task
     dag.topological_sort()
+    supervisor._subtask_models = {tasks[name].task_id: model for name, model in subtasks.items()}
+    supervisor._added_subtasks = {task.task_id for task in added}
     owned = {task.task_id for task in dag.tasks if task.task_id not in existing_tasks}
     supervisor._subtask_roots = [
         task for task in dag.tasks if task.task_id in owned and not task.upstream_task_ids & owned

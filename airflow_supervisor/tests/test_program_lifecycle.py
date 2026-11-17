@@ -251,6 +251,20 @@ def test_program_operator_can_be_composed_in_another_dag(lifecycle):
     assert stop.task_id in restart.upstream_task_ids
 
 
+@pytest.mark.parametrize("state", ["STOPPED", "EXITED", "FATAL"])
+@pytest.mark.parametrize("action", ["stop", "restart"])
+def test_control_does_not_stop_an_already_stopped_program(lifecycle, state, action):
+    from xmlrpc.client import Fault
+
+    supervisor, infos, client, _ = lifecycle
+    infos[2].state = ProcessState[state]
+    client.stopProcess.side_effect = Fault(70, "NOT_RUNNING")
+    supervisor._program_lifecycle._command("C", action, context(supervisor))
+    client.stopProcess.assert_not_called()
+    if action == "restart":
+        client.startProcess.assert_called_once_with("C:C")
+
+
 def test_default_forwarding_with_real_supervisord(tmp_path, open_port, monkeypatch, caplog):
     import logging
     import subprocess
