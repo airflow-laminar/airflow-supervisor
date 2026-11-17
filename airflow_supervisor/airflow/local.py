@@ -149,11 +149,6 @@ class Supervisor:
     def setup_dag(self):
         # override dag kwargs that dont make sense
         self._dag.catchup = False
-        # One active task per lifecycle, so one lifecycle's sensor cannot block another.
-        task_ids = {*getattr(self._dag, "_supervisor_task_ids", ()), self._task_id}
-        cast(Any, self._dag)._supervisor_task_ids = task_ids
-        self._dag.concurrency = len(task_ids)
-        self._dag.max_active_tasks = len(task_ids)
         self._dag.max_active_runs = 1
 
     def initialize_tasks(self):

@@ -53,12 +53,11 @@ def test_lifecycles_in_one_dag_are_named_by_their_task_ids(ssh_cfg):
     assert not {task_id for task_id in dag.task_ids if task_id.startswith("service-check")}
 
 
-def test_each_lifecycle_in_a_dag_gets_one_active_task(ssh_cfg):
+def test_lifecycles_keep_the_dag_task_limit(ssh_cfg):
     dag = DAG(dag_id="service", schedule=None, max_active_tasks=8)
     SupervisorSSH(dag=dag, cfg=ssh_cfg, task_id="service-a")
-    assert dag.max_active_tasks == 1
     SupervisorSSH(dag=dag, cfg=ssh_cfg.model_copy(deep=True), task_id="service-b")
-    assert dag.max_active_tasks == 2
+    assert dag.max_active_tasks == 8
 
 
 def test_configured_tasks_pass_their_key_as_the_lifecycle_id(cfg):

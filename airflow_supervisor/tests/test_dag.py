@@ -10,12 +10,11 @@ class TestDag:
         except ImportError:
             pytest.skip("DAG not available")
 
-        dag = DAG(dag_id="test_dag", default_args={}, schedule=None, params={})
+        dag = DAG(dag_id="test_dag", default_args={}, schedule=None, params={}, max_active_tasks=8)
         s = Supervisor(dag=dag, cfg=supervisor_airflow_configuration)
         assert len(dag.tasks) == 17
         assert dag.catchup is False
-        assert dag.concurrency == 1
-        assert dag.max_active_tasks == 1
+        assert dag.max_active_tasks == 8
         assert dag.max_active_runs == 1
 
         assert s.configure_supervisor in dag.tasks
