@@ -149,8 +149,6 @@ class Supervisor:
     def setup_dag(self):
         # override dag kwargs that dont make sense
         self._dag.catchup = False
-        self._dag.concurrency = 1
-        self._dag.max_active_tasks = 1
         self._dag.max_active_runs = 1
 
     def initialize_tasks(self):
