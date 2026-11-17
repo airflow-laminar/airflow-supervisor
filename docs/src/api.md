@@ -160,8 +160,9 @@ The `SupervisorOperator`, `SupervisorOperatorArgs`, `SupervisorSSHOperator`, and
 
 ### DAG constraints and boundaries
 
-Both lifecycle classes set `catchup=False`, `concurrency=1`,
-`max_active_tasks=1`, and `max_active_runs=1` on their DAG.
+Both lifecycle classes set `catchup=False` and `max_active_runs=1` on their DAG.
+They set `concurrency` and `max_active_tasks` to the number of lifecycles in the
+DAG, so each lifecycle has one active task.
 Generated task IDs, control DAG IDs, and control Variables use the lifecycle's
 `task_id` as their prefix, e.g. `<task_id>-check-programs`. `task_id` defaults to the
 DAG ID. Task models pass their key as `task_id`, so a DAG can hold several
