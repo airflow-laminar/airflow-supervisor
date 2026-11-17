@@ -12,6 +12,7 @@ from airflow_supervisor import (
     SupervisorAirflowConfiguration,
     SupervisorSSH,
     SupervisorSSHAirflowConfiguration,
+    create_supervisor_control_dags,
 )
 
 
@@ -81,8 +82,7 @@ def test_yaml_generation_registers_ordered_program_controls(tmp_path, task_type,
     from airflow_config import Configuration
     from airflow_pydantic.migration import _airflow_3
 
-    if not hasattr(Configuration, "_register_generated_dags"):
-        pytest.skip("Requires airflow-config generated DAG registration")
+    automatic_controls = hasattr(Configuration, "_register_generated_dags")
     config_dir = tmp_path / "config"
     config_dir.mkdir()
     (config_dir / "services.yaml").write_text(
@@ -126,13 +126,22 @@ dags:
 """
     )
     config = Configuration.load("config", "services", basepath=str(tmp_path))
-    namespace = {}
+    namespace: dict[str, Any] = {}
     if generation == "memory":
         namespace.update(config=config, directory=tmp_path)
         exec("config.generate_in_mem(directory)", namespace)  # noqa: S102
         main = namespace["ordered"]
+        if not automatic_controls:
+            namespace.update(create_supervisor_control_dags(main))
     else:
         config.generate(tmp_path, airflow_major_version=3 if _airflow_3() else 2)
+        if not automatic_controls:
+            path = tmp_path / "ordered.py"
+            path.write_text(
+                path.read_text()
+                + "\nfrom airflow_supervisor import create_supervisor_control_dags\n"
+                + "globals().update(create_supervisor_control_dags(dag))\n"
+            )
         exec(compile((tmp_path / "ordered.py").read_text(), "ordered.py", "exec"), namespace)  # noqa: S102
         main = namespace["dag"]
     assert main.get_task("service-start-B").upstream_task_ids == {"service-wait-after-A"}

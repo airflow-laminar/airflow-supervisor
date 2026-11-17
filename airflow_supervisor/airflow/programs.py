@@ -399,6 +399,8 @@ def create_supervisor_control_dags(supervisor):
     from airflow_pydantic.airflow import DAG
 
     if hasattr(supervisor, "_control_dags"):
+        for dag in supervisor._control_dags.values():
+            dag.fileloc = supervisor._dag.fileloc
         return supervisor._control_dags
     if hasattr(supervisor, "_supervisor_lifecycles"):
         return {
