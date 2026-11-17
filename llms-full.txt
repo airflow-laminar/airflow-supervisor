@@ -137,8 +137,9 @@ airflow tasks list supervisor-demo
 ```
 
 Look for `supervisor-demo-configure-supervisor`,
-`supervisor-demo-start-programs`, and `supervisor-demo-check-programs`.
-The DAG also contains restart, shutdown, cleanup, and failure-handling tasks.
+`supervisor-demo-start-demo`, `supervisor-demo-stop-demo`, and
+`supervisor-demo-check-programs`. Each configured program gets separate startup
+and shutdown tasks. The DAG also contains cleanup and failure-handling tasks.
 
 ## Run the job
 
@@ -151,8 +152,9 @@ airflow dags test supervisor-demo 2025-01-01
 The configure task writes `supervisord.conf` and `pydantic.json`. The startup
 tasks launch supervisord and `/bin/sleep`. After the program exits with status 0,
 the check task takes its success branch. The shutdown tasks stop the daemon and
-remove the working directory. The DAG run finishes with state `success`;
-restart and force-kill branches are skipped during this run.
+remove the working directory. The DAG run finishes with state `success`.
+Manual restart and force-kill controls are separate DAGs; see the
+[program control guide](how-to.html.md#how-to-control-a-program-independently).
 
 Check that cleanup completed:
 
@@ -597,7 +599,9 @@ service = Supervisor(
 
 ## How to use convenience program policies
 
-Set `program_lifecycle` to create separate start, delay, and stop tasks. This
+Supervisor creates separate start, delay, and stop tasks by default. Use
+`subtasks` for Airflow task dependencies and retries as shown above. Set
+`program_lifecycle` for program failure budgets or process-start-based delays. This
 example starts A, waits ten minutes from A’s process start, starts B, then C.
 Shutdown follows C, B, A. C is disabled for the monitoring chain after three
 consecutive failures; A and B keep running across recovery retriggers.
@@ -686,24 +690,31 @@ dags:
               retry_delay: 30
 ```
 
-Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH. After
-generating the configured DAGs in memory, register controls from the native DAG:
+Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH.
+`airflow-config` registers program controls automatically during in-memory or
+file generation when using its generated-DAG registration support:
 
 ```python
 from airflow_config import load_config
-from airflow_supervisor import create_supervisor_control_dags
 
 load_config("config", "ordered_services").generate_in_mem()
-globals().update(create_supervisor_control_dags(globals()["ordered-services"]))
 ```
+
+For an older Config release, register controls explicitly after generation with
+`globals().update(create_supervisor_control_dags(globals()["ordered-services"]))`.
+Import the helper from `airflow_supervisor`. For the grouped lifecycle, set
+`program_lifecycle: null` under `cfg` and omit `subtasks`; no program control DAGs
+are generated in that mode.
 
 ## How to control a program independently
 
-The registration above exports unscheduled `ordered-services-start-C`,
-`ordered-services-stop-C`, and `ordered-services-restart-C` DAGs, with equivalent
+The YAML task key `run` above produces unscheduled `run-start-C`,
+`run-stop-C`, and `run-restart-C` DAGs, with equivalent
 controls for A and B. Aggregate `start-programs`, `stop-programs`, `restart-programs`,
 and `force-kill` DAGs are also exported. Aggregate restart stops programs in shutdown
-order, then starts them in startup order with the configured delays.
+order, then starts them in startup order with the configured delays and subtask
+retry settings. Use distinct lifecycle task keys across DAGs so their control
+DAG IDs remain unique.
 
 A stop control suspends that program through an Airflow Variable, so monitoring
 does not immediately recover it. Start and restart controls re-enable it and reset
@@ -1348,7 +1359,7 @@ not evaluate replica availability or restart programs.
 `SupervisorTask` and `SupervisorSSHTask` accept `subtasks`, a mapping of names to
 ordinary `airflow-pydantic` task models. Inline `Supervisor` and `SupervisorSSH`
 constructors accept the same keyword. A nonempty mapping enables per-program task
-generation without requiring `program_lifecycle` to be set explicitly.
+generation even when `program_lifecycle` was explicitly set to `None`.
 
 An entry matching a generated task overrides only explicitly supplied fields.
 Use a model compatible with its operator: normally `PythonTask` for program
@@ -1378,8 +1389,9 @@ does not stop programs or remove configuration during a recovery retrigger.
 
 ## Per-program lifecycle
 
-`program_lifecycle=None` retains the grouped lifecycle. A mapping, including `{}`,
-enables discrete program tasks. Omitted policies receive defaults. Policy keys are
+`program_lifecycle` defaults to `{}`, creating discrete program tasks.
+Set `program_lifecycle=None` (`null` in YAML) and omit subtask overrides to retain
+the grouped lifecycle. Omitted policies receive defaults. Policy keys are
 Supervisor process-group names: normally a `[program:name]` name, or an explicit
 `[group:name]` name when programs are grouped. A `numprocs` group is controlled as
 one unit; event listeners are excluded.
@@ -1410,8 +1422,16 @@ XML-RPC operation.
 
 `create_supervisor_control_dags(supervisor_or_dag)` returns native DAGs keyed by
 their IDs. Pass a managed lifecycle or its native DAG, then register the returned
-mapping in the DAG module’s globals. All controls are unscheduled. Program controls
-require `program_lifecycle` to be enabled.
+mapping in the DAG module’s globals for inline Python. Repeated calls return the
+same controls. All controls are unscheduled. `airflow-config` registers controls
+automatically in both `generate_in_mem()` and generated Python files when using
+its generated-DAG registration support. Older Config releases require the manual
+helper call. Controls use the lifecycle task ID as their prefix; choose distinct
+task IDs across configured DAGs to avoid control DAG ID collisions.
+
+Aggregate start/stop/restart controls follow the lifecycle’s configured task
+dependencies, added wait tasks, and retry overrides. Single-program controls
+operate independently. Controls are not generated for the grouped lifecycle.
 
 `supervisor_program_state` contains per-program failure counts, disabled flags,
 and manual-control revisions in monitoring XCom and retrigger configuration.
@@ -1640,6 +1660,7 @@ Bases: `object`
 | `check_programs`         |                                                                           |
 |--------------------------|---------------------------------------------------------------------------|
 | `configure_supervisor`   |                                                                           |
+| `generates_dags`         |                                                                           |
 | `leaves`                 | Return the leaves of the DAG.                                             |
 | `program_tasks`          | Discrete start, delay, and stop tasks, keyed by Supervisor program group. |
 | `restart_programs`       |                                                                           |
@@ -1680,6 +1701,7 @@ Bases: [`Supervisor`](airflow_supervisor.Supervisor.html.md#airflow_supervisor.S
 | `check_programs`         |                                                                           |
 |--------------------------|---------------------------------------------------------------------------|
 | `configure_supervisor`   |                                                                           |
+| `generates_dags`         |                                                                           |
 | `leaves`                 | Return the leaves of the DAG.                                             |
 | `program_tasks`          | Discrete start, delay, and stop tasks, keyed by Supervisor program group. |
 | `restart_programs`       |                                                                           |
@@ -1759,9 +1781,9 @@ Restart the job when the DAG is retriggered. This is useful for jobs that do not
 
 Lifecycle defaults applied before explicit configuration values
 
-#### *field* program_lifecycle *: dict[str, ProgramLifecycleConfiguration] | None* *= None*
+#### *field* program_lifecycle *: dict[str, ProgramLifecycleConfiguration] | None* *[Optional]*
 
-Enable discrete Airflow tasks and policies for configured Supervisor program groups
+Policies for discrete Supervisor program tasks; set null to retain the grouped lifecycle
 
 <!-- docs/src/_build/airflow_supervisor.SupervisorSSHAirflowConfiguration.html.md -->
 

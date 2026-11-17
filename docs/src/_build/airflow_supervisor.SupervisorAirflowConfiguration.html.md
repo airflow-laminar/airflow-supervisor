@@ -64,6 +64,6 @@ Restart the job when the DAG is retriggered. This is useful for jobs that do not
 
 Lifecycle defaults applied before explicit configuration values
 
-#### *field* program_lifecycle *: dict[str, ProgramLifecycleConfiguration] | None* *= None*
+#### *field* program_lifecycle *: dict[str, ProgramLifecycleConfiguration] | None* *[Optional]*
 
-Enable discrete Airflow tasks and policies for configured Supervisor program groups
+Policies for discrete Supervisor program tasks; set null to retain the grouped lifecycle

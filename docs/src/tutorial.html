@@ -175,8 +175,9 @@ able to write <code class="docutils literal notranslate"><span class="pre">/var/
 </span></code></pre></div>
 </div>
 <p>Look for <code class="docutils literal notranslate"><span class="pre">supervisor-demo-configure-supervisor</span></code>,
-<code class="docutils literal notranslate"><span class="pre">supervisor-demo-start-programs</span></code>, and <code class="docutils literal notranslate"><span class="pre">supervisor-demo-check-programs</span></code>.
-The DAG also contains restart, shutdown, cleanup, and failure-handling tasks.</p>
+<code class="docutils literal notranslate"><span class="pre">supervisor-demo-start-demo</span></code>, <code class="docutils literal notranslate"><span class="pre">supervisor-demo-stop-demo</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">supervisor-demo-check-programs</span></code>. Each configured program gets separate startup
+and shutdown tasks. The DAG also contains cleanup and failure-handling tasks.</p>
 </section>
 <section id="run-the-job">
 <h2>Run the job<a class="headerlink" href="#run-the-job" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#run-the-job'">¶</a></h2>
@@ -187,8 +188,9 @@ The DAG also contains restart, shutdown, cleanup, and failure-handling tasks.</p
 <p>The configure task writes <code class="docutils literal notranslate"><span class="pre">supervisord.conf</span></code> and <code class="docutils literal notranslate"><span class="pre">pydantic.json</span></code>. The startup
 tasks launch supervisord and <code class="docutils literal notranslate"><span class="pre">/bin/sleep</span></code>. After the program exits with status 0,
 the check task takes its success branch. The shutdown tasks stop the daemon and
-remove the working directory. The DAG run finishes with state <code class="docutils literal notranslate"><span class="pre">success</span></code>;
-restart and force-kill branches are skipped during this run.</p>
+remove the working directory. The DAG run finishes with state <code class="docutils literal notranslate"><span class="pre">success</span></code>.
+Manual restart and force-kill controls are separate DAGs; see the
+<a class="reference internal" href="how-to.html#how-to-control-a-program-independently"><span class="std std-ref">program control guide</span></a>.</p>
 <p>Check that cleanup completed:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="nb">test</span><span class="w"> </span>!<span class="w"> </span>-d<span class="w"> </span>/var/tmp/airflow-supervisor-demo<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Cleanup complete"</span>
 </span></code></pre></div>

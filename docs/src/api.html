@@ -205,7 +205,7 @@ not evaluate replica availability or restart programs.</p>
 <p><code class="docutils literal notranslate"><span class="pre">SupervisorTask</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> accept <code class="docutils literal notranslate"><span class="pre">subtasks</span></code>, a mapping of names to
 ordinary <code class="docutils literal notranslate"><span class="pre">airflow-pydantic</span></code> task models. Inline <code class="docutils literal notranslate"><span class="pre">Supervisor</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSH</span></code>
 constructors accept the same keyword. A nonempty mapping enables per-program task
-generation without requiring <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> to be set explicitly.</p>
+generation even when <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> was explicitly set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>An entry matching a generated task overrides only explicitly supplied fields.
 Use a model compatible with its operator: normally <code class="docutils literal notranslate"><span class="pre">PythonTask</span></code> for program
 start/stop operations and <code class="docutils literal notranslate"><span class="pre">SSHTask</span></code> for SSH daemon/configuration steps. Omitted
@@ -230,8 +230,9 @@ does not stop programs or remove configuration during a recovery retrigger.</p>
 </section>
 <section id="per-program-lifecycle">
 <h2>Per-program lifecycle<a class="headerlink" href="#per-program-lifecycle" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#per-program-lifecycle'">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">program_lifecycle=None</span></code> retains the grouped lifecycle. A mapping, including <code class="docutils literal notranslate"><span class="pre">{}</span></code>,
-enables discrete program tasks. Omitted policies receive defaults. Policy keys are
+<p><code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> defaults to <code class="docutils literal notranslate"><span class="pre">{}</span></code>, creating discrete program tasks.
+Set <code class="docutils literal notranslate"><span class="pre">program_lifecycle=None</span></code> (<code class="docutils literal notranslate"><span class="pre">null</span></code> in YAML) and omit subtask overrides to retain
+the grouped lifecycle. Omitted policies receive defaults. Policy keys are
 Supervisor process-group names: normally a <code class="docutils literal notranslate"><span class="pre">[program:name]</span></code> name, or an explicit
 <code class="docutils literal notranslate"><span class="pre">[group:name]</span></code> name when programs are grouped. A <code class="docutils literal notranslate"><span class="pre">numprocs</span></code> group is controlled as
 one unit; event listeners are excluded.</p>
@@ -286,8 +287,15 @@ task ID, and DAG. Control tasks update the desired state as well as issuing the
 XML-RPC operation.</p>
 <p><code class="docutils literal notranslate"><span class="pre">create_supervisor_control_dags(supervisor_or_dag)</span></code> returns native DAGs keyed by
 their IDs. Pass a managed lifecycle or its native DAG, then register the returned
-mapping in the DAG module’s globals. All controls are unscheduled. Program controls
-require <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> to be enabled.</p>
+mapping in the DAG module’s globals for inline Python. Repeated calls return the
+same controls. All controls are unscheduled. <code class="docutils literal notranslate"><span class="pre">airflow-config</span></code> registers controls
+automatically in both <code class="docutils literal notranslate"><span class="pre">generate_in_mem()</span></code> and generated Python files when using
+its generated-DAG registration support. Older Config releases require the manual
+helper call. Controls use the lifecycle task ID as their prefix; choose distinct
+task IDs across configured DAGs to avoid control DAG ID collisions.</p>
+<p>Aggregate start/stop/restart controls follow the lifecycle’s configured task
+dependencies, added wait tasks, and retry overrides. Single-program controls
+operate independently. Controls are not generated for the grouped lifecycle.</p>
 <p><code class="docutils literal notranslate"><span class="pre">supervisor_program_state</span></code> contains per-program failure counts, disabled flags,
 and manual-control revisions in monitoring XCom and retrigger configuration.
 <code class="docutils literal notranslate"><span class="pre">airflow-supervisor:&lt;task_id&gt;:&lt;program&gt;:control</span></code> Variables retain explicit start/stop

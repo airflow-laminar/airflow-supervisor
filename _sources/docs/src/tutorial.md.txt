@@ -56,8 +56,9 @@ airflow tasks list supervisor-demo
 ```
 
 Look for `supervisor-demo-configure-supervisor`,
-`supervisor-demo-start-programs`, and `supervisor-demo-check-programs`.
-The DAG also contains restart, shutdown, cleanup, and failure-handling tasks.
+`supervisor-demo-start-demo`, `supervisor-demo-stop-demo`, and
+`supervisor-demo-check-programs`. Each configured program gets separate startup
+and shutdown tasks. The DAG also contains cleanup and failure-handling tasks.
 
 ## Run the job
 
@@ -70,8 +71,9 @@ airflow dags test supervisor-demo 2025-01-01
 The configure task writes `supervisord.conf` and `pydantic.json`. The startup
 tasks launch supervisord and `/bin/sleep`. After the program exits with status 0,
 the check task takes its success branch. The shutdown tasks stop the daemon and
-remove the working directory. The DAG run finishes with state `success`;
-restart and force-kill branches are skipped during this run.
+remove the working directory. The DAG run finishes with state `success`.
+Manual restart and force-kill controls are separate DAGs; see the
+[program control guide](how-to.md#how-to-control-a-program-independently).
 
 Check that cleanup completed:
 

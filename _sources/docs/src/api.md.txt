@@ -55,7 +55,7 @@ not evaluate replica availability or restart programs.
 `SupervisorTask` and `SupervisorSSHTask` accept `subtasks`, a mapping of names to
 ordinary `airflow-pydantic` task models. Inline `Supervisor` and `SupervisorSSH`
 constructors accept the same keyword. A nonempty mapping enables per-program task
-generation without requiring `program_lifecycle` to be set explicitly.
+generation even when `program_lifecycle` was explicitly set to `None`.
 
 An entry matching a generated task overrides only explicitly supplied fields.
 Use a model compatible with its operator: normally `PythonTask` for program
@@ -85,8 +85,9 @@ does not stop programs or remove configuration during a recovery retrigger.
 
 ## Per-program lifecycle
 
-`program_lifecycle=None` retains the grouped lifecycle. A mapping, including `{}`,
-enables discrete program tasks. Omitted policies receive defaults. Policy keys are
+`program_lifecycle` defaults to `{}`, creating discrete program tasks.
+Set `program_lifecycle=None` (`null` in YAML) and omit subtask overrides to retain
+the grouped lifecycle. Omitted policies receive defaults. Policy keys are
 Supervisor process-group names: normally a `[program:name]` name, or an explicit
 `[group:name]` name when programs are grouped. A `numprocs` group is controlled as
 one unit; event listeners are excluded.
@@ -117,8 +118,16 @@ XML-RPC operation.
 
 `create_supervisor_control_dags(supervisor_or_dag)` returns native DAGs keyed by
 their IDs. Pass a managed lifecycle or its native DAG, then register the returned
-mapping in the DAG module's globals. All controls are unscheduled. Program controls
-require `program_lifecycle` to be enabled.
+mapping in the DAG module's globals for inline Python. Repeated calls return the
+same controls. All controls are unscheduled. `airflow-config` registers controls
+automatically in both `generate_in_mem()` and generated Python files when using
+its generated-DAG registration support. Older Config releases require the manual
+helper call. Controls use the lifecycle task ID as their prefix; choose distinct
+task IDs across configured DAGs to avoid control DAG ID collisions.
+
+Aggregate start/stop/restart controls follow the lifecycle's configured task
+dependencies, added wait tasks, and retry overrides. Single-program controls
+operate independently. Controls are not generated for the grouped lifecycle.
 
 `supervisor_program_state` contains per-program failure counts, disabled flags,
 and manual-control revisions in monitoring XCom and retrigger configuration.

@@ -527,7 +527,9 @@ XML-RPC. Configure SSH-specific daemon steps using <code class="docutils literal
 </section>
 <section id="how-to-use-convenience-program-policies">
 <h2>How to use convenience program policies<a class="headerlink" href="#how-to-use-convenience-program-policies" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-use-convenience-program-policies'">¶</a></h2>
-<p>Set <code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> to create separate start, delay, and stop tasks. This
+<p>Supervisor creates separate start, delay, and stop tasks by default. Use
+<code class="docutils literal notranslate"><span class="pre">subtasks</span></code> for Airflow task dependencies and retries as shown above. Set
+<code class="docutils literal notranslate"><span class="pre">program_lifecycle</span></code> for program failure budgets or process-start-based delays. This
 example starts A, waits ten minutes from A’s process start, starts B, then C.
 Shutdown follows C, B, A. C is disabled for the monitoring chain after three
 consecutive failures; A and B keep running across recovery retriggers.</p>
@@ -609,23 +611,29 @@ XML-RPC, so workers need access to that endpoint.</p>
 </span><span id="line-23"><span class="w">              </span><span class="nt">retry_delay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30</span>
 </span></code></pre></div>
 </div>
-<p>Use <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code> for SSH. After
-generating the configured DAGs in memory, register controls from the native DAG:</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">SupervisorSSHTask</span></code> and <code class="docutils literal notranslate"><span class="pre">SupervisorSSHAirflowConfiguration</span></code> for SSH.
+<code class="docutils literal notranslate"><span class="pre">airflow-config</span></code> registers program controls automatically during in-memory or
+file generation when using its generated-DAG registration support:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><code><span id="line-1"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_config</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config</span>
-</span><span id="line-2"><span class="kn">from</span><span class="w"> </span><span class="nn">airflow_supervisor</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_supervisor_control_dags</span>
-</span><span id="line-3">
-</span><span id="line-4"><span class="n">load_config</span><span class="p">(</span><span class="s2">"config"</span><span class="p">,</span> <span class="s2">"ordered_services"</span><span class="p">)</span><span class="o">.</span><span class="n">generate_in_mem</span><span class="p">()</span>
-</span><span id="line-5"><span class="nb">globals</span><span class="p">()</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">create_supervisor_control_dags</span><span class="p">(</span><span class="nb">globals</span><span class="p">()[</span><span class="s2">"ordered-services"</span><span class="p">]))</span>
+</span><span id="line-2">
+</span><span id="line-3"><span class="n">load_config</span><span class="p">(</span><span class="s2">"config"</span><span class="p">,</span> <span class="s2">"ordered_services"</span><span class="p">)</span><span class="o">.</span><span class="n">generate_in_mem</span><span class="p">()</span>
 </span></code></pre></div>
 </div>
+<p>For an older Config release, register controls explicitly after generation with
+<code class="docutils literal notranslate"><span class="pre">globals().update(create_supervisor_control_dags(globals()["ordered-services"]))</span></code>.
+Import the helper from <code class="docutils literal notranslate"><span class="pre">airflow_supervisor</span></code>. For the grouped lifecycle, set
+<code class="docutils literal notranslate"><span class="pre">program_lifecycle:</span> <span class="pre">null</span></code> under <code class="docutils literal notranslate"><span class="pre">cfg</span></code> and omit <code class="docutils literal notranslate"><span class="pre">subtasks</span></code>; no program control DAGs
+are generated in that mode.</p>
 </section>
 <section id="how-to-control-a-program-independently">
 <h2>How to control a program independently<a class="headerlink" href="#how-to-control-a-program-independently" title="Link to this heading" x-intersect.margin.0%.0%.-70%.0%="activeSection = '#how-to-control-a-program-independently'">¶</a></h2>
-<p>The registration above exports unscheduled <code class="docutils literal notranslate"><span class="pre">ordered-services-start-C</span></code>,
-<code class="docutils literal notranslate"><span class="pre">ordered-services-stop-C</span></code>, and <code class="docutils literal notranslate"><span class="pre">ordered-services-restart-C</span></code> DAGs, with equivalent
+<p>The YAML task key <code class="docutils literal notranslate"><span class="pre">run</span></code> above produces unscheduled <code class="docutils literal notranslate"><span class="pre">run-start-C</span></code>,
+<code class="docutils literal notranslate"><span class="pre">run-stop-C</span></code>, and <code class="docutils literal notranslate"><span class="pre">run-restart-C</span></code> DAGs, with equivalent
 controls for A and B. Aggregate <code class="docutils literal notranslate"><span class="pre">start-programs</span></code>, <code class="docutils literal notranslate"><span class="pre">stop-programs</span></code>, <code class="docutils literal notranslate"><span class="pre">restart-programs</span></code>,
 and <code class="docutils literal notranslate"><span class="pre">force-kill</span></code> DAGs are also exported. Aggregate restart stops programs in shutdown
-order, then starts them in startup order with the configured delays.</p>
+order, then starts them in startup order with the configured delays and subtask
+retry settings. Use distinct lifecycle task keys across DAGs so their control
+DAG IDs remain unique.</p>
 <p>A stop control suspends that program through an Airflow Variable, so monitoring
 does not immediately recover it. Start and restart controls re-enable it and reset
 its failure budget. The stop intent persists across fresh runs until explicitly

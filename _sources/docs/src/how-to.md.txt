@@ -433,7 +433,9 @@ service = Supervisor(
 
 ## How to use convenience program policies
 
-Set `program_lifecycle` to create separate start, delay, and stop tasks. This
+Supervisor creates separate start, delay, and stop tasks by default. Use
+`subtasks` for Airflow task dependencies and retries as shown above. Set
+`program_lifecycle` for program failure budgets or process-start-based delays. This
 example starts A, waits ten minutes from A's process start, starts B, then C.
 Shutdown follows C, B, A. C is disabled for the monitoring chain after three
 consecutive failures; A and B keep running across recovery retriggers.
@@ -522,24 +524,31 @@ dags:
               retry_delay: 30
 ```
 
-Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH. After
-generating the configured DAGs in memory, register controls from the native DAG:
+Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH.
+`airflow-config` registers program controls automatically during in-memory or
+file generation when using its generated-DAG registration support:
 
 ```python
 from airflow_config import load_config
-from airflow_supervisor import create_supervisor_control_dags
 
 load_config("config", "ordered_services").generate_in_mem()
-globals().update(create_supervisor_control_dags(globals()["ordered-services"]))
 ```
+
+For an older Config release, register controls explicitly after generation with
+`globals().update(create_supervisor_control_dags(globals()["ordered-services"]))`.
+Import the helper from `airflow_supervisor`. For the grouped lifecycle, set
+`program_lifecycle: null` under `cfg` and omit `subtasks`; no program control DAGs
+are generated in that mode.
 
 ## How to control a program independently
 
-The registration above exports unscheduled `ordered-services-start-C`,
-`ordered-services-stop-C`, and `ordered-services-restart-C` DAGs, with equivalent
+The YAML task key `run` above produces unscheduled `run-start-C`,
+`run-stop-C`, and `run-restart-C` DAGs, with equivalent
 controls for A and B. Aggregate `start-programs`, `stop-programs`, `restart-programs`,
 and `force-kill` DAGs are also exported. Aggregate restart stops programs in shutdown
-order, then starts them in startup order with the configured delays.
+order, then starts them in startup order with the configured delays and subtask
+retry settings. Use distinct lifecycle task keys across DAGs so their control
+DAG IDs remain unique.
 
 A stop control suspends that program through an Airflow Variable, so monitoring
 does not immediately recover it. Start and restart controls re-enable it and reset
