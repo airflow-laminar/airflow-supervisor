@@ -1,5 +1,6 @@
 from json import loads
 from logging import getLogger
+from xml.parsers.expat import ExpatError
 from xmlrpc.client import Fault, ProtocolError
 
 from supervisor_pydantic import ProcessState, SupervisorRemoteXMLRPCClient
@@ -11,7 +12,7 @@ __all__ = ("check_supervisor_health",)
 _log = getLogger(__name__)
 _LOG_OFFSETS = "supervisor_log_offsets"
 _STATUS = "supervisor_process_status"
-_RPC_ERRORS = (OSError, Fault, ProtocolError, ValueError, RuntimeError)
+_RPC_ERRORS = (OSError, Fault, ProtocolError, ExpatError, ValueError, RuntimeError)
 
 
 def _status(infos):

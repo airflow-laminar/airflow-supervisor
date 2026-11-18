@@ -1,6 +1,7 @@
 import logging
 from datetime import UTC, datetime
 from unittest.mock import Mock, patch
+from xml.parsers.expat import ExpatError
 from xmlrpc.client import Fault
 
 import pytest
@@ -166,9 +167,12 @@ def test_disabled_forwarding_does_not_read_logs(tmp_path):
     value.readProcessLogChunk.assert_not_called()
 
 
-def test_unavailable_logs_warn_without_failing_healthy_workload(tmp_path, caplog):
+@pytest.mark.parametrize(
+    "error", [Fault(70, "NO_FILE"), ExpatError("not well-formed (invalid token): line 5, column 16")]
+)
+def test_unavailable_logs_warn_without_failing_healthy_workload(tmp_path, caplog, error):
     cfg, value = setup(tmp_path)
-    value.readProcessLogChunk = Mock(side_effect=Fault(70, "NO_FILE"))
+    value.readProcessLogChunk = Mock(side_effect=error)
     result = check_supervisor_health(cfg, supervisor_client=value)
     assert result["healthy"]
     assert "Cannot forward supervisor log" in caplog.text
