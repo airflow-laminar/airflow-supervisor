@@ -18,7 +18,6 @@ from airflow_supervisor import (
     SupervisorAirflowConfiguration,
     SupervisorSSH,
     SupervisorSSHAirflowConfiguration,
-    create_supervisor_control_dags,
 )
 from airflow_supervisor.airflow import programs
 
@@ -187,30 +186,48 @@ def test_start_delay_uses_predecessor_start_time(lifecycle):
 def test_control_stop_suspends_monitoring_until_explicit_start(lifecycle):
     supervisor, infos, client, controls = lifecycle
     controller = supervisor._program_lifecycle
-    controller.control("C", "stop", **context(supervisor, run_id="stop-control"))
+    stop = supervisor._dag.get_task("programs-control-stop-C.stop")
+    stop.python_callable(**context(supervisor, task=stop, run_id="stop-control"))
     assert controls[controller._control_key("C")]["enabled"] is False
     assert controller.monitor(**context(supervisor)) == (Result.PASS, Action.CONTINUE)
     client.startProcess.assert_not_called()
-    controller.control("C", "start", **context(supervisor, run_id="start-control"))
+    start = supervisor._dag.get_task("programs-control-start-C.start")
+    start.python_callable(**context(supervisor, task=start, run_id="start-control"))
     assert infos[2].state == ProcessState.RUNNING
     assert controls[controller._control_key("C")]["enabled"] is True
 
 
-def test_controls_are_separate_unscheduled_dags(lifecycle):
+def test_controls_are_isolated_branches_in_the_lifecycle_dag(lifecycle):
     supervisor, _, _, _ = lifecycle
-    dags = create_supervisor_control_dags(supervisor)
-    assert len(dags) == 13
-    assert "programs-restart-C" in dags and "programs-force-kill" in dags
-    assert all(type(dag.timetable).__name__ == "NullTimetable" for dag in dags.values())
-    assert create_supervisor_control_dags(supervisor._dag).keys() == dags.keys()
-    for dag in dags.values():
-        dag.topological_sort()
-    stop = dags["programs-stop-programs"]
-    assert "stop-B" in stop.get_task("stop-A").upstream_task_ids
-    restart = dags["programs-restart-programs"]
-    assert "stop-B" in restart.get_task("stop-A").upstream_task_ids
-    assert "stop-A" in restart.get_task("delay-A").upstream_task_ids
-    assert "start-A" in restart.get_task("delay-B").upstream_task_ids
+    dag = supervisor._dag
+    assert not getattr(dag, "_generated_dags", {})
+    assert {"programs-control-restart-C.restart", "programs-force-kill"} <= set(dag.task_ids)
+    dag.topological_sort()
+    assert (
+        "programs-control-stop-programs.stop-B"
+        in dag.get_task("programs-control-stop-programs.stop-A").upstream_task_ids
+    )
+    restart = "programs-control-restart-programs"
+    assert f"{restart}.stop-B" in dag.get_task(f"{restart}.stop-A").upstream_task_ids
+    assert f"{restart}.stop-A" in dag.get_task(f"{restart}.delay-A").upstream_task_ids
+    assert f"{restart}.start-A" in dag.get_task(f"{restart}.delay-B").upstream_task_ids
+
+
+def test_repeated_manual_restart_in_one_run_resets_the_failure_budget(lifecycle):
+    supervisor, _, _, controls = lifecycle
+    controller = supervisor._program_lifecycle
+    restart = supervisor._dag.get_task("programs-control-restart-C.restart")
+    values = {}
+    ctx = context(supervisor, values=values, run_id="same-dag-run")
+    restart.python_callable(**context(supervisor, task=restart, run_id="same-dag-run"))
+    first_revision = controls[controller._control_key("C")]["revision"]
+    state = controller._load("C", ctx)
+    state.update(failures=3, disabled=True)
+    controller._save("C", state, ctx)
+    restart.python_callable(**context(supervisor, task=restart, run_id="same-dag-run"))
+    state = controller._load("C", ctx)
+    assert controls[controller._control_key("C")]["revision"] != first_revision
+    assert state["failures"] == 0 and state["disabled"] is False
 
 
 def test_retrigger_conf_renders_program_state_and_log_cursors(lifecycle):

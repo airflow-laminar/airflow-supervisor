@@ -2,6 +2,7 @@ import json
 from datetime import UTC, datetime
 from functools import partial
 from types import SimpleNamespace
+from uuid import uuid4
 
 from supervisor_pydantic import ProcessState
 
@@ -334,7 +335,7 @@ class ProgramLifecycle:
             self._control_key(program),
             {
                 "enabled": action != "stop",
-                "revision": context["run_id"],
+                "revision": uuid4().hex,
             },
         )
         self._command(program, action, context)
@@ -373,8 +374,7 @@ def _control_stage(supervisor, stage, dag):
         elif source_id in delays:
             task = PythonSensor(
                 task_id=task_id,
-                dag=dag,
-                pool=supervisor._pool,
+                **{**supervisor.get_base_operator_kwargs(), "dag": dag},
                 mode=source.mode,
                 poke_interval=source.poke_interval,
                 timeout=source.timeout,
@@ -393,52 +393,45 @@ def _control_stage(supervisor, stage, dag):
     return tasks
 
 
-def create_supervisor_control_dags(supervisor):
-    """Build independently triggerable control Dags for a Supervisor lifecycle."""
+def _add_control_guard(supervisor, tasks, task_id="trigger"):
     from airflow.providers.standard.operators.python import PythonOperator
-    from airflow_pydantic.airflow import DAG
+    from airflow_pydantic import skip
 
-    if hasattr(supervisor, "_control_dags"):
-        for dag in supervisor._control_dags.values():
-            dag.fileloc = supervisor._dag.fileloc
-        return supervisor._control_dags
-    if hasattr(supervisor, "_supervisor_lifecycles"):
-        return {
-            dag_id: dag
-            for lifecycle in supervisor._supervisor_lifecycles
-            for dag_id, dag in create_supervisor_control_dags(lifecycle).items()
-        }
+    guard = PythonOperator(task_id=task_id, python_callable=skip, **supervisor.get_base_operator_kwargs())
+    for task in tasks:
+        task.trigger_rule = "all_success"
+        guard >> task
+
+
+def _add_supervisor_controls(supervisor):
+    """Add isolated manual control branches, each protected by its own skip task."""
+    from airflow_pydantic.migration import _airflow_3
+
+    if _airflow_3():
+        from airflow.sdk import TaskGroup
+    else:
+        from airflow.utils.task_group import TaskGroup
+
+    dag = supervisor._dag
     controller = supervisor._program_lifecycle
-    if controller is None:
-        raise ValueError("Control Dags require program_lifecycle configuration")
-    dags = {}
     for name in controller.policies:
         for action in ("start", "stop", "restart"):
-            dag_id = f"{supervisor._task_id}-{action}-{name}"
-            dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)
-            PythonOperator(
-                task_id=action,
-                dag=dag,
-                pool=supervisor._pool,
-                python_callable=partial(controller.control, name, action),
-            )
-            dags[dag_id] = dag
+            with TaskGroup(group_id=f"{supervisor._task_id}-control-{action}-{name}", dag=dag):
+                source = getattr(controller.tasks[name], "stop" if action == "stop" else "start")
+                task = supervisor.program_operator(
+                    name, action, task_id=action, retries=source.retries, retry_delay=source.retry_delay
+                )
+                _add_control_guard(supervisor, [task])
     for action in ("start", "stop", "restart"):
-        dag_id = f"{supervisor._task_id}-{action}-programs"
-        dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)
-        stages = {}
-        for stage in ("stop", "start") if action == "restart" else (action,):
-            stages[stage] = _control_stage(supervisor, stage, dag)
-            if stage == "start" and "stop" in stages:
-                roots = [task for task in stages["start"].values() if not task.upstream_task_ids]
-                for stopped in stages["stop"].values():
-                    for task in roots:
-                        stopped >> task
-        dags[dag_id] = dag
-    dag_id = f"{supervisor._task_id}-force-kill"
-    dag = DAG(dag_id=dag_id, schedule=None, catchup=False, max_active_runs=1)
-    type(supervisor._start_supervisor)(
-        task_id="force-kill", dag=dag, pool=supervisor._pool, **supervisor.get_step_kwargs("force-kill")
-    )
-    dags[dag_id] = dag
-    return dags
+        with TaskGroup(group_id=f"{supervisor._task_id}-control-{action}-programs", dag=dag):
+            stages = {}
+            for stage in ("stop", "start") if action == "restart" else (action,):
+                stages[stage] = _control_stage(supervisor, stage, dag)
+                if stage == "start" and "stop" in stages:
+                    roots = [task for task in stages["start"].values() if not task.upstream_task_ids]
+                    for stopped in stages["stop"].values():
+                        for task in roots:
+                            stopped >> task
+            _add_control_guard(supervisor, [task for tasks in stages.values() for task in tasks.values()])
+    supervisor._force_kill = supervisor.get_step_operator("force-kill")
+    _add_control_guard(supervisor, [supervisor._force_kill], task_id=f"{supervisor._task_id}-force-kill-dag")
