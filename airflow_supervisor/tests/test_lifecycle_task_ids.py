@@ -1,6 +1,5 @@
 """Generated task IDs follow the lifecycle task ID, which defaults to the DAG ID."""
 
-from typing import Any, cast
 from unittest.mock import patch
 
 import pytest
@@ -16,7 +15,6 @@ from airflow_supervisor import (
     SupervisorSSH,
     SupervisorSSHAirflowConfiguration,
     SupervisorTask,
-    create_supervisor_control_dags,
 )
 
 
@@ -73,12 +71,13 @@ def test_program_lifecycles_scope_controls_to_their_task_ids(cfg):
         Supervisor(dag=dag, cfg=cfg.model_copy(deep=True, update={"program_lifecycle": {}}), task_id=name)
         for name in ("service-a", "service-b")
     ]
-    assert cast(Any, dag)._supervisor_lifecycles == lifecycles
     assert {"service-a-start-test", "service-b-start-test"} <= set(dag.task_ids)
     first, second = (supervisor._program_lifecycle for supervisor in lifecycles)
     assert first is not None and second is not None
     assert first._control_key("test") != second._control_key("test")
-    controls = create_supervisor_control_dags(dag)
-    assert {"service-a-restart-test", "service-b-restart-test", "service-a-force-kill", "service-b-force-kill"} <= set(
-        controls
-    )
+    assert {
+        "service-a-control-restart-test.restart",
+        "service-b-control-restart-test.restart",
+        "service-a-force-kill",
+        "service-b-force-kill",
+    } <= set(dag.task_ids)

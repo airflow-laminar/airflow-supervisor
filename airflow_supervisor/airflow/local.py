@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import TYPE_CHECKING, Any, ClassVar, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from airflow_pydantic import Pool, fail, skip
 from supervisor_pydantic.client import SupervisorRemoteXMLRPCClient
@@ -31,7 +31,6 @@ _log = getLogger(__name__)
 
 
 class Supervisor:
-    generates_dags: ClassVar[bool] = True
     _cfg: SupervisorAirflowConfiguration
     _dag: "DAG"
     _kill_dag: "DAG"
@@ -89,19 +88,15 @@ class Supervisor:
 
         self._program_lifecycle = None
         if cfg.program_lifecycle is not None and (cfg.program or cfg.fcgiprogram or cfg.group):
-            from .programs import ProgramLifecycle, create_supervisor_control_dags
+            from .programs import ProgramLifecycle, _add_supervisor_controls
 
             self._program_lifecycle = ProgramLifecycle(self)
             self._program_lifecycle.build()
-            cast(Any, dag)._supervisor_lifecycles = [*getattr(dag, "_supervisor_lifecycles", []), self]
             if subtasks:
                 from .subtasks import apply_subtasks
 
                 apply_subtasks(self, subtasks, existing_tasks)
-            self._control_dags = create_supervisor_control_dags(self)
-            generated_dags = getattr(dag, "_generated_dags", {})
-            generated_dags.update(self._control_dags)
-            cast(Any, dag)._generated_dags = generated_dags
+            _add_supervisor_controls(self)
             return
 
         # initialize tasks
@@ -217,7 +212,7 @@ class Supervisor:
     @property
     def restart_programs(self) -> "Operator":
         if self._program_lifecycle is not None:
-            raise ValueError("Use program_operator or a restart control DAG for per-program lifecycles")
+            raise ValueError("Use program_operator or a restart control branch for per-program lifecycles")
         return self._restart_programs
 
     @property
