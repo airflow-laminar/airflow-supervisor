@@ -1,7 +1,7 @@
 from airflow_pydantic import ImportPath, Task, TaskArgs
 from pydantic import Field, field_validator
 
-from .subtasks import SupervisorSubtasks
+from .subtasks import SupervisorSubtasks, SupervisorSubtasksRender
 from .supervisor import SupervisorAirflowConfiguration
 
 __all__ = (
@@ -20,7 +20,7 @@ class SupervisorTaskArgs(TaskArgs, SupervisorSubtasks):
 SupervisorOperatorArgs = SupervisorTaskArgs
 
 
-class SupervisorTask(Task, SupervisorTaskArgs):
+class SupervisorTask(SupervisorSubtasksRender, Task, SupervisorTaskArgs):
     operator: ImportPath = Field(default="airflow_supervisor.Supervisor", validate_default=True)
 
     @field_validator("operator")

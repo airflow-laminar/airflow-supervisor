@@ -229,6 +229,31 @@ def test_config_instantiation_and_rendered_source(tmp_path, dag_type, task_type,
         assert dag.get_task("service-start-B").upstream_task_ids == {"service-wait"}
 
 
+def test_rendered_ssh_subtask_reads_host_password_variable(tmp_path, dag_type):
+    from airflow_config import Configuration
+    from airflow_pydantic import Host, Variable
+    from airflow_pydantic.extras.balancer.host import UNRESOLVED_PASSWORD
+    from airflow_pydantic.migration import _airflow_3
+
+    host = Host(name="remote.example.com", username="svc", password=Variable(key="CREDS", deserialize_json=True))
+    task = SupervisorSSHTask(
+        task_id="service",
+        cfg=SupervisorSSHAirflowConfiguration(working_dir=tmp_path, program={"A": {"command": "sleep 1"}}),
+        subtasks={"ready": SSHTask(ssh_hook=host, command="true", dependencies=["start-A"])},
+    )
+    config = Configuration(dags={"render-ssh": {"dag_id": "render-ssh", "tasks": {"service": task}}})
+    source = config.dags["render-ssh"].render(airflow_major_version=3 if _airflow_3() else 2)
+    assert UNRESOLVED_PASSWORD not in source
+    assert 'AirflowVariable.get("CREDS", deserialize_json=True)["password"]' in source
+
+    namespace = {}
+    with patch("airflow.models.variable.Variable.get", return_value={"password": "secret"}):
+        exec(compile(source, "subtasks.py", "exec"), namespace)  # noqa: S102
+    ready = namespace["dag"].get_task("service-ready")
+    assert ready.ssh_hook.password == "secret"
+    assert ready.upstream_task_ids == {"service-start-A"}
+
+
 def test_dependency_overrides_do_not_stop_programs_during_retrigger(tmp_path, dag_type):
     from airflow.exceptions import AirflowSkipException
     from airflow_ha import Action, Result
