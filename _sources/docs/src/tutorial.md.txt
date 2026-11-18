@@ -72,7 +72,7 @@ The configure task writes `supervisord.conf` and `pydantic.json`. The startup
 tasks launch supervisord and `/bin/sleep`. After the program exits with status 0,
 the check task takes its success branch. The shutdown tasks stop the daemon and
 remove the working directory. The DAG run finishes with state `success`.
-Manual restart and force-kill controls are separate DAGs; see the
+Manual restart and force-kill controls are normally skipped branches in this DAG; see the
 [program control guide](how-to.md#how-to-control-a-program-independently).
 
 Check that cleanup completed:

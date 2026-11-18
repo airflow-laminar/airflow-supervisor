@@ -153,7 +153,7 @@ The configure task writes `supervisord.conf` and `pydantic.json`. The startup
 tasks launch supervisord and `/bin/sleep`. After the program exits with status 0,
 the check task takes its success branch. The shutdown tasks stop the daemon and
 remove the working directory. The DAG run finishes with state `success`.
-Manual restart and force-kill controls are separate DAGs; see the
+Manual restart and force-kill controls are normally skipped branches in this DAG; see the
 [program control guide](how-to.html.md#how-to-control-a-program-independently).
 
 Check that cleanup completed:
@@ -610,7 +610,7 @@ consecutive failures; A and B keep running across recovery retriggers.
 from datetime import datetime, timedelta, timezone
 
 from airflow import DAG
-from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration, create_supervisor_control_dags
+from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration
 
 with DAG(
     dag_id="ordered-services",
@@ -642,7 +642,6 @@ with DAG(
         ),
     )
 
-globals().update(create_supervisor_control_dags(service))
 ```
 
 The delay uses a rescheduling sensor, releasing its worker slot between checks.
@@ -691,8 +690,8 @@ dags:
 ```
 
 Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH.
-`airflow-config` registers program controls automatically during in-memory or
-file generation when using its generated-DAG registration support:
+Both in-memory and file generation include normally skipped program controls in
+the configured DAG:
 
 ```python
 from airflow_config import load_config
@@ -700,38 +699,48 @@ from airflow_config import load_config
 load_config("config", "ordered_services").generate_in_mem()
 ```
 
-For an older Config release, register controls explicitly after generation with
-`globals().update(create_supervisor_control_dags(globals()["ordered-services"]))`.
-Import the helper from `airflow_supervisor`. For the grouped lifecycle, set
-`program_lifecycle: null` under `cfg` and omit `subtasks`; no program control DAGs
-are generated in that mode.
+Remove imports and calls to `create_supervisor_control_dags` when upgrading from
+1.13.0. No extra DAG registration is needed. For the grouped lifecycle, set
+`program_lifecycle: null` under `cfg` and omit `subtasks`; it retains only the
+existing force-kill control branch.
 
 ## How to control a program independently
 
-The YAML task key `run` above produces unscheduled `run-start-C`,
-`run-stop-C`, and `run-restart-C` DAGs, with equivalent
-controls for A and B. Aggregate `start-programs`, `stop-programs`, `restart-programs`,
-and `force-kill` DAGs are also exported. Aggregate restart stops programs in shutdown
-order, then starts them in startup order with the configured delays and subtask
-retry settings. Use distinct lifecycle task keys across DAGs so their control
-DAG IDs remain unique.
+Open an existing run of the workload DAG. For the YAML task key `run` above,
+the Graph view contains `run-control-start-C`, `run-control-stop-C`, and
+`run-control-restart-C` TaskGroups, with equivalent groups for A and B.
+Each group has its own normally skipped `trigger` task.
+
+To stop C:
+
+1. Mark `run-control-stop-C.trigger` successful.
+2. Clear `run-control-stop-C.stop` so Airflow schedules it. Leave the trigger
+   successful; do not clear it with the operation task.
+3. Resume the DAG run if it has already finished.
+4. After the operation finishes, mark the trigger skipped again before clearing
+   operation tasks in a later maintenance action.
+
+Use the corresponding start or restart group for those actions. Enabling one
+group does not enable other controls. These operations use the selected DAG run;
+they do not create another run or repeat the normal startup/cleanup pipeline.
+If monitoring is still running, leave a spare DAG task slot and pool slot for
+the control operation.
+
+The all-program groups are `run-control-start-programs`,
+`run-control-stop-programs`, and `run-control-restart-programs`. Mark the selected
+group’s trigger successful, then clear its operation tasks while excluding the
+trigger. Aggregate restart stops programs in shutdown order, then starts them in
+startup order with the configured waits and retries. For force kill, use
+`run-force-kill-dag` as the guard and `run-force-kill` as the operation task.
 
 A stop control suspends that program through an Airflow Variable, so monitoring
 does not immediately recover it. Start and restart controls re-enable it and reset
 its failure budget. The stop intent persists across fresh runs until explicitly
-re-enabled. Trigger one control operation at a time for a lifecycle; separate
-control DAGs do not provide a transaction or distributed lock around remote actions.
+re-enabled. Repeated start/restart actions within the same DAG run reset the
+failure budget again. Run one control operation at a time for a lifecycle; the
+branches do not provide a transaction or distributed lock around remote actions.
 The daemon must already exist for program controls. Force kill terminates the
 daemon and remains an emergency operation, not an orderly shutdown.
-
-To compose a control with other Airflow tasks, create it in another DAG:
-
-```python
-with DAG(dag_id="maintenance", schedule=None) as maintenance:
-    stop_b = service.program_operator("B", "stop", dag=maintenance)
-    restart_a = service.program_operator("A", "restart", dag=maintenance, retries=2)
-    stop_b >> restart_a
-```
 
 Program stdout and stderr are forwarded by default during operations and
 monitoring. Inspect the relevant task log; set `forward_logs=False` to opt out.
@@ -1412,7 +1421,7 @@ Unknown dependencies and startup/shutdown cycles are rejected. A failure limit
 requires `required=False`. Duration fields accept `timedelta` or numeric seconds.
 `stop_on_exit` and `cleanup` still control terminal shutdown and file removal.
 The grouped `restart_programs` property is replaced by individual control tasks
-and generated restart control DAGs in this mode.
+and normally skipped restart control branches in this mode.
 
 `Supervisor.program_tasks[name]` exposes `start`, `delay`, and `stop` operators.
 `Supervisor.program_operator(name, action, **kwargs)` creates a separately composable
@@ -1420,18 +1429,32 @@ control task; action is `start`, `stop`, or `restart`. Task kwargs include retri
 task ID, and DAG. Control tasks update the desired state as well as issuing the
 XML-RPC operation.
 
-`create_supervisor_control_dags(supervisor_or_dag)` returns native DAGs keyed by
-their IDs. Pass a managed lifecycle or its native DAG, then register the returned
-mapping in the DAG module’s globals for inline Python. Repeated calls return the
-same controls. All controls are unscheduled. `airflow-config` registers controls
-automatically in both `generate_in_mem()` and generated Python files when using
-its generated-DAG registration support. Older Config releases require the manual
-helper call. Controls use the lifecycle task ID as their prefix; choose distinct
-task IDs across configured DAGs to avoid control DAG ID collisions.
+Manual controls are isolated TaskGroups in the lifecycle’s DAG:
+
+| Group or task                         | Purpose                              |
+|---------------------------------------|--------------------------------------|
+| `<task_id>-control-start-<program>`   | Start one program.                   |
+| `<task_id>-control-stop-<program>`    | Stop one program.                    |
+| `<task_id>-control-restart-<program>` | Restart one program.                 |
+| `<task_id>-control-start-programs`    | Start all programs in startup order. |
+| `<task_id>-control-stop-programs`     | Stop all programs in shutdown order. |
+| `<task_id>-control-restart-programs`  | Stop all programs, then start them.  |
+| `<task_id>-force-kill`                | Terminate supervisord.               |
+
+Each control group has a `trigger` task that raises `AirflowSkipException`.
+Operation tasks depend directly on that trigger and use `all_success`, including
+when the corresponding lifecycle task has a different trigger rule. Each group
+is disconnected from the lifecycle and other control groups. Force kill retains
+the `<task_id>-force-kill-dag` skip guard.
+
+Inline Python and `airflow-config` produce the same branches. No additional DAGs
+or module registration calls are required. `create_supervisor_control_dags` has
+been removed; remove its imports and calls when upgrading from 1.13.0.
 
 Aggregate start/stop/restart controls follow the lifecycle’s configured task
 dependencies, added wait tasks, and retry overrides. Single-program controls
 operate independently. Controls are not generated for the grouped lifecycle.
+The grouped lifecycle retains its existing force-kill branch.
 
 `supervisor_program_state` contains per-program failure counts, disabled flags,
 and manual-control revisions in monitoring XCom and retrigger configuration.
@@ -1477,7 +1500,7 @@ Both lifecycle classes set `catchup=False` and `max_active_runs=1` on their DAG.
 They leave `max_active_tasks` unchanged. If the DAG holds several lifecycles,
 set it to at least the number of lifecycles: each `check-programs` sensor holds
 a task slot while it runs.
-Generated task IDs, control DAG IDs, and control Variables use the lifecycle’s
+Generated task IDs, control group IDs, and control Variables use the lifecycle’s
 `task_id` as their prefix, e.g. `<task_id>-check-programs`. `task_id` defaults to the
 DAG ID. Task models pass their key as `task_id`, so a DAG can hold several
 lifecycles, such as one per host.
@@ -1660,7 +1683,6 @@ Bases: `object`
 | `check_programs`         |                                                                           |
 |--------------------------|---------------------------------------------------------------------------|
 | `configure_supervisor`   |                                                                           |
-| `generates_dags`         |                                                                           |
 | `leaves`                 | Return the leaves of the DAG.                                             |
 | `program_tasks`          | Discrete start, delay, and stop tasks, keyed by Supervisor program group. |
 | `restart_programs`       |                                                                           |
@@ -1701,7 +1723,6 @@ Bases: [`Supervisor`](airflow_supervisor.Supervisor.html.md#airflow_supervisor.S
 | `check_programs`         |                                                                           |
 |--------------------------|---------------------------------------------------------------------------|
 | `configure_supervisor`   |                                                                           |
-| `generates_dags`         |                                                                           |
 | `leaves`                 | Return the leaves of the DAG.                                             |
 | `program_tasks`          | Discrete start, delay, and stop tasks, keyed by Supervisor program group. |
 | `restart_programs`       |                                                                           |

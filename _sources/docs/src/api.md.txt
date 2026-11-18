@@ -108,7 +108,7 @@ Unknown dependencies and startup/shutdown cycles are rejected. A failure limit
 requires `required=False`. Duration fields accept `timedelta` or numeric seconds.
 `stop_on_exit` and `cleanup` still control terminal shutdown and file removal.
 The grouped `restart_programs` property is replaced by individual control tasks
-and generated restart control DAGs in this mode.
+and normally skipped restart control branches in this mode.
 
 `Supervisor.program_tasks[name]` exposes `start`, `delay`, and `stop` operators.
 `Supervisor.program_operator(name, action, **kwargs)` creates a separately composable
@@ -116,18 +116,32 @@ control task; action is `start`, `stop`, or `restart`. Task kwargs include retri
 task ID, and DAG. Control tasks update the desired state as well as issuing the
 XML-RPC operation.
 
-`create_supervisor_control_dags(supervisor_or_dag)` returns native DAGs keyed by
-their IDs. Pass a managed lifecycle or its native DAG, then register the returned
-mapping in the DAG module's globals for inline Python. Repeated calls return the
-same controls. All controls are unscheduled. `airflow-config` registers controls
-automatically in both `generate_in_mem()` and generated Python files when using
-its generated-DAG registration support. Older Config releases require the manual
-helper call. Controls use the lifecycle task ID as their prefix; choose distinct
-task IDs across configured DAGs to avoid control DAG ID collisions.
+Manual controls are isolated TaskGroups in the lifecycle's DAG:
+
+| Group or task                         | Purpose                              |
+| ------------------------------------- | ------------------------------------ |
+| `<task_id>-control-start-<program>`   | Start one program.                   |
+| `<task_id>-control-stop-<program>`    | Stop one program.                    |
+| `<task_id>-control-restart-<program>` | Restart one program.                 |
+| `<task_id>-control-start-programs`    | Start all programs in startup order. |
+| `<task_id>-control-stop-programs`     | Stop all programs in shutdown order. |
+| `<task_id>-control-restart-programs`  | Stop all programs, then start them.  |
+| `<task_id>-force-kill`                | Terminate supervisord.               |
+
+Each control group has a `trigger` task that raises `AirflowSkipException`.
+Operation tasks depend directly on that trigger and use `all_success`, including
+when the corresponding lifecycle task has a different trigger rule. Each group
+is disconnected from the lifecycle and other control groups. Force kill retains
+the `<task_id>-force-kill-dag` skip guard.
+
+Inline Python and `airflow-config` produce the same branches. No additional DAGs
+or module registration calls are required. `create_supervisor_control_dags` has
+been removed; remove its imports and calls when upgrading from 1.13.0.
 
 Aggregate start/stop/restart controls follow the lifecycle's configured task
 dependencies, added wait tasks, and retry overrides. Single-program controls
 operate independently. Controls are not generated for the grouped lifecycle.
+The grouped lifecycle retains its existing force-kill branch.
 
 `supervisor_program_state` contains per-program failure counts, disabled flags,
 and manual-control revisions in monitoring XCom and retrigger configuration.
@@ -173,7 +187,7 @@ Both lifecycle classes set `catchup=False` and `max_active_runs=1` on their DAG.
 They leave `max_active_tasks` unchanged. If the DAG holds several lifecycles,
 set it to at least the number of lifecycles: each `check-programs` sensor holds
 a task slot while it runs.
-Generated task IDs, control DAG IDs, and control Variables use the lifecycle's
+Generated task IDs, control group IDs, and control Variables use the lifecycle's
 `task_id` as their prefix, e.g. `<task_id>-check-programs`. `task_id` defaults to the
 DAG ID. Task models pass their key as `task_id`, so a DAG can hold several
 lifecycles, such as one per host.

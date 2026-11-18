@@ -34,7 +34,6 @@
    
       ~Supervisor.check_programs
       ~Supervisor.configure_supervisor
-      ~Supervisor.generates_dags
       ~Supervisor.leaves
       ~Supervisor.program_tasks
       ~Supervisor.restart_programs

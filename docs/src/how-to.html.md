@@ -439,7 +439,7 @@ consecutive failures; A and B keep running across recovery retriggers.
 from datetime import datetime, timedelta, timezone
 
 from airflow import DAG
-from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration, create_supervisor_control_dags
+from airflow_supervisor import Supervisor, SupervisorAirflowConfiguration
 
 with DAG(
     dag_id="ordered-services",
@@ -471,7 +471,6 @@ with DAG(
         ),
     )
 
-globals().update(create_supervisor_control_dags(service))
 ```
 
 The delay uses a rescheduling sensor, releasing its worker slot between checks.
@@ -520,8 +519,8 @@ dags:
 ```
 
 Use `SupervisorSSHTask` and `SupervisorSSHAirflowConfiguration` for SSH.
-`airflow-config` registers program controls automatically during in-memory or
-file generation when using its generated-DAG registration support:
+Both in-memory and file generation include normally skipped program controls in
+the configured DAG:
 
 ```python
 from airflow_config import load_config
@@ -529,38 +528,48 @@ from airflow_config import load_config
 load_config("config", "ordered_services").generate_in_mem()
 ```
 
-For an older Config release, register controls explicitly after generation with
-`globals().update(create_supervisor_control_dags(globals()["ordered-services"]))`.
-Import the helper from `airflow_supervisor`. For the grouped lifecycle, set
-`program_lifecycle: null` under `cfg` and omit `subtasks`; no program control DAGs
-are generated in that mode.
+Remove imports and calls to `create_supervisor_control_dags` when upgrading from
+1.13.0. No extra DAG registration is needed. For the grouped lifecycle, set
+`program_lifecycle: null` under `cfg` and omit `subtasks`; it retains only the
+existing force-kill control branch.
 
 ## How to control a program independently
 
-The YAML task key `run` above produces unscheduled `run-start-C`,
-`run-stop-C`, and `run-restart-C` DAGs, with equivalent
-controls for A and B. Aggregate `start-programs`, `stop-programs`, `restart-programs`,
-and `force-kill` DAGs are also exported. Aggregate restart stops programs in shutdown
-order, then starts them in startup order with the configured delays and subtask
-retry settings. Use distinct lifecycle task keys across DAGs so their control
-DAG IDs remain unique.
+Open an existing run of the workload DAG. For the YAML task key `run` above,
+the Graph view contains `run-control-start-C`, `run-control-stop-C`, and
+`run-control-restart-C` TaskGroups, with equivalent groups for A and B.
+Each group has its own normally skipped `trigger` task.
+
+To stop C:
+
+1. Mark `run-control-stop-C.trigger` successful.
+2. Clear `run-control-stop-C.stop` so Airflow schedules it. Leave the trigger
+   successful; do not clear it with the operation task.
+3. Resume the DAG run if it has already finished.
+4. After the operation finishes, mark the trigger skipped again before clearing
+   operation tasks in a later maintenance action.
+
+Use the corresponding start or restart group for those actions. Enabling one
+group does not enable other controls. These operations use the selected DAG run;
+they do not create another run or repeat the normal startup/cleanup pipeline.
+If monitoring is still running, leave a spare DAG task slot and pool slot for
+the control operation.
+
+The all-program groups are `run-control-start-programs`,
+`run-control-stop-programs`, and `run-control-restart-programs`. Mark the selected
+group’s trigger successful, then clear its operation tasks while excluding the
+trigger. Aggregate restart stops programs in shutdown order, then starts them in
+startup order with the configured waits and retries. For force kill, use
+`run-force-kill-dag` as the guard and `run-force-kill` as the operation task.
 
 A stop control suspends that program through an Airflow Variable, so monitoring
 does not immediately recover it. Start and restart controls re-enable it and reset
 its failure budget. The stop intent persists across fresh runs until explicitly
-re-enabled. Trigger one control operation at a time for a lifecycle; separate
-control DAGs do not provide a transaction or distributed lock around remote actions.
+re-enabled. Repeated start/restart actions within the same DAG run reset the
+failure budget again. Run one control operation at a time for a lifecycle; the
+branches do not provide a transaction or distributed lock around remote actions.
 The daemon must already exist for program controls. Force kill terminates the
 daemon and remains an emergency operation, not an orderly shutdown.
-
-To compose a control with other Airflow tasks, create it in another DAG:
-
-```python
-with DAG(dag_id="maintenance", schedule=None) as maintenance:
-    stop_b = service.program_operator("B", "stop", dag=maintenance)
-    restart_a = service.program_operator("A", "restart", dag=maintenance, retries=2)
-    stop_b >> restart_a
-```
 
 Program stdout and stderr are forwarded by default during operations and
 monitoring. Inspect the relevant task log; set `forward_logs=False` to opt out.

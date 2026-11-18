@@ -25,7 +25,6 @@ Bases: [`Supervisor`](airflow_supervisor.Supervisor.html.md#airflow_supervisor.S
 | `check_programs`         |                                                                           |
 |--------------------------|---------------------------------------------------------------------------|
 | `configure_supervisor`   |                                                                           |
-| `generates_dags`         |                                                                           |
 | `leaves`                 | Return the leaves of the DAG.                                             |
 | `program_tasks`          | Discrete start, delay, and stop tasks, keyed by Supervisor program group. |
 | `restart_programs`       |                                                                           |

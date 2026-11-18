@@ -34,7 +34,6 @@
    
       ~SupervisorSSH.check_programs
       ~SupervisorSSH.configure_supervisor
-      ~SupervisorSSH.generates_dags
       ~SupervisorSSH.leaves
       ~SupervisorSSH.program_tasks
       ~SupervisorSSH.restart_programs
