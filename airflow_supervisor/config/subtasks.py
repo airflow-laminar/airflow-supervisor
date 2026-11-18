@@ -1,7 +1,7 @@
 import ast
 
 from airflow_pydantic import Task, get_import_path
-from airflow_pydantic.core.render.utils import _get_parts_from_value
+from airflow_pydantic.core.render.utils import RawRenderedCode, _get_parts_from_value
 from pydantic import BaseModel, Field, SerializeAsAny, field_serializer, field_validator
 
 __all__ = ("SupervisorSubtasks",)
@@ -12,6 +12,7 @@ def _render_subtask(name, task, airflow_major_version):
     imports, _, call = Task.render(
         task.model_copy(update={"task_id": task.task_id or name}), raw=True, airflow_major_version=airflow_major_version
     )
+    assert isinstance(call, ast.Call)
     keys = [ast.Constant(value="_target_")]
     values = [ast.Constant(value=f"{type(task).__module__}.{type(task).__name__}")]
     # The first import is the operator class, which the dict form never references.
@@ -28,23 +29,23 @@ def _render_subtask(name, task, airflow_major_version):
     return imports, ast.Dict(keys=keys, values=values)
 
 
-class SupervisorSubtasksRender:
-    def render(self, raw=False, dag_from_context=False, airflow_major_version=2, **kwargs):
-        imports, globals_, call = super().render(
-            raw=True, dag_from_context=dag_from_context, airflow_major_version=airflow_major_version, **kwargs
-        )
-        for keyword in call.keywords:
-            if keyword.arg == "subtasks":
-                keys, values = [], []
-                for name, task in self.subtasks.items():
-                    new_imports, value = _render_subtask(name, task, airflow_major_version)
-                    imports.extend(new_imports)
-                    keys.append(ast.Constant(value=name))
-                    values.append(value)
-                keyword.value = ast.Dict(keys=keys, values=values)
-        if raw:
-            return imports, globals_, call
-        return [ast.unparse(i) for i in imports], [ast.unparse(i) for i in globals_], ast.unparse(call)
+def render_with_subtasks(rendered: RawRenderedCode, subtasks: dict[str, Task], raw: bool, airflow_major_version: int):
+    """Replace the dumped ``subtasks`` argument of a rendered supervisor task with per-task rendering."""
+    imports, globals_, call = rendered
+    assert isinstance(call, ast.Call)
+    for keyword in call.keywords:
+        if keyword.arg == "subtasks":
+            keys: list[ast.expr | None] = []
+            values: list[ast.expr] = []
+            for name, task in subtasks.items():
+                new_imports, value = _render_subtask(name, task, airflow_major_version)
+                imports.extend(new_imports)
+                keys.append(ast.Constant(value=name))
+                values.append(value)
+            keyword.value = ast.Dict(keys=keys, values=values)
+    if raw:
+        return imports, globals_, call
+    return [ast.unparse(i) for i in imports], [ast.unparse(i) for i in globals_], ast.unparse(call)
 
 
 class SupervisorSubtasks(BaseModel):

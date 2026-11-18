@@ -5,7 +5,7 @@ from typing import Any, cast
 from airflow_pydantic import CallablePath, Host, HostQuery, ImportPath, Port, PortQuery, Task, TaskArgs, get_import_path
 from pydantic import Field, TypeAdapter, field_validator, model_validator
 
-from .subtasks import SupervisorSubtasks, SupervisorSubtasksRender
+from .subtasks import SupervisorSubtasks, render_with_subtasks
 from .supervisor_ssh import SupervisorSSHAirflowConfiguration
 
 __all__ = (
@@ -157,7 +157,7 @@ class SupervisorSSHTaskArgs(TaskArgs, SupervisorSubtasks, extra="allow"):
 SupervisorSSHOperatorArgs = SupervisorSSHTaskArgs
 
 
-class SupervisorSSHTask(SupervisorSubtasksRender, Task, SupervisorSSHTaskArgs):
+class SupervisorSSHTask(Task, SupervisorSSHTaskArgs):
     operator: ImportPath = Field(default="airflow_supervisor.SupervisorSSH", validate_default=True)
 
     @field_validator("operator")
@@ -166,6 +166,12 @@ class SupervisorSSHTask(SupervisorSubtasksRender, Task, SupervisorSSHTaskArgs):
         if not isinstance(v, type) and issubclass(v, SupervisorSSHAirflowConfiguration):
             raise TypeError(f"operator must be 'airflow_supervisor.SupervisorSSH', got: {v}")
         return v
+
+    def render(self, raw=False, dag_from_context=False, airflow_major_version=2, **kwargs):
+        rendered = super().render(
+            raw=True, dag_from_context=dag_from_context, airflow_major_version=airflow_major_version, **kwargs
+        )
+        return render_with_subtasks(rendered, self.subtasks, raw, airflow_major_version)
 
 
 # Alias
